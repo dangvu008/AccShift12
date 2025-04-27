@@ -698,10 +698,10 @@ const ShiftFormModal = ({
   return (
     <Modal
       visible={visible}
-      animationType="fade"
+      animationType="none"
       transparent={true}
       onRequestClose={handleClose}
-      statusBarTranslucent={true}
+      statusBarTranslucent={false}
     >
       <View style={styles.modalContainer}>
         <View
@@ -739,25 +739,17 @@ const ShiftFormModal = ({
             </View>
           ) : (
             <KeyboardAvoidingView
-              style={{ flex: 1 }}
-              behavior={
-                Platform.OS === 'ios'
-                  ? 'padding'
-                  : Platform.OS === 'android'
-                  ? 'height'
-                  : undefined
-              }
-              keyboardVerticalOffset={
-                Platform.OS === 'ios' ? 80 : Platform.OS === 'android' ? 40 : 0
-              }
-              enabled={Platform.OS !== 'web'}
+              style={{ flex: 1, width: '100%' }}
+              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+              keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
             >
               <ScrollView
                 style={styles.formContainer}
-                contentContainerStyle={{ paddingBottom: 40 }}
+                contentContainerStyle={{ paddingBottom: 80 }}
                 showsVerticalScrollIndicator={true}
                 keyboardShouldPersistTaps="handled"
-                keyboardDismissMode="on-drag"
+                keyboardDismissMode="interactive"
+                nestedScrollEnabled={true}
               >
                 {/* Shift Name */}
                 <View style={styles.formGroup}>
@@ -1254,22 +1246,36 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     zIndex: 9999,
+    ...Platform.select({
+      android: {
+        width: '100%',
+        height: '100%',
+      },
+      ios: {
+        width: '100%',
+        height: '100%',
+      },
+    }),
   },
   modalContent: {
     width: '90%',
-    maxHeight: '85%',
+    maxHeight: '80%',
     backgroundColor: '#fff',
     borderRadius: 12,
     overflow: 'hidden',
     ...Platform.select({
       android: {
         elevation: 8,
+        width: '95%',
+        maxHeight: '90%',
       },
       ios: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 5,
+        width: '95%',
+        maxHeight: '90%',
       },
       web: {
         boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.3)',
@@ -1309,6 +1315,15 @@ const styles = StyleSheet.create({
   formContainer: {
     padding: 16,
     flexGrow: 1,
+    width: '100%',
+    ...Platform.select({
+      android: {
+        minHeight: 500,
+      },
+      ios: {
+        minHeight: 500,
+      },
+    }),
   },
   formGroup: {
     marginBottom: 16,
