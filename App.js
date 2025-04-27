@@ -236,7 +236,7 @@ function SettingsStack() {
   )
 }
 
-export default function App() {
+function MainApp() {
   const [notification, setNotification] = useState(false)
   const { darkMode } = useContext(AppContext)
 
@@ -267,8 +267,7 @@ export default function App() {
   }, [])
 
   return (
-    <AppProvider>
-      <NavigationContainer>
+    <NavigationContainer>
         <Tab.Navigator
           screenOptions={({ route }) => ({
             tabBarIcon: ({ focused, color, size }) => {
@@ -319,6 +318,13 @@ export default function App() {
         </Tab.Navigator>
       </NavigationContainer>
       <StatusBar style="auto" />
+  )
+}
+
+export default function App() {
+  return (
+    <AppProvider>
+      <MainApp />
     </AppProvider>
   )
 }
