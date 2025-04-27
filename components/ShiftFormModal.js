@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react'
+import React, { useState, useEffect, useContext, useCallback } from 'react'
 import {
   Modal,
   View,
@@ -64,9 +64,9 @@ const ShiftFormModal = ({ visible, shiftId, onClose, onSaved }) => {
       endDate.setHours(17, 0, 0)
       setEndTimeDate(endDate)
     }
-  }, [visible, shiftId])
+  }, [visible, shiftId, loadShiftData])
 
-  const loadShiftData = async () => {
+  const loadShiftData = useCallback(async () => {
     try {
       const shiftsData = await AsyncStorage.getItem(STORAGE_KEYS.SHIFT_LIST)
       if (shiftsData) {
@@ -103,7 +103,7 @@ const ShiftFormModal = ({ visible, shiftId, onClose, onSaved }) => {
     } catch (error) {
       console.error('Error loading shift data:', error)
     }
-  }
+  }, [shiftId])
 
   const handleSave = async () => {
     if (!shiftName.trim()) {

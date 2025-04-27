@@ -57,40 +57,45 @@ const AddEditShiftScreen = ({ route, navigation }) => {
 
   useEffect(() => {
     const loadShiftData = async () => {
-    try {
-      const shiftsData = await AsyncStorage.getItem(STORAGE_KEYS.SHIFT_LIST)
-      if (shiftsData) {
-        const shifts = JSON.parse(shiftsData)
-        const shift = shifts.find((s) => s.id === shiftId)
+      try {
+        const shiftsData = await AsyncStorage.getItem(STORAGE_KEYS.SHIFT_LIST)
+        if (shiftsData) {
+          const shifts = JSON.parse(shiftsData)
+          const shift = shifts.find((s) => s.id === shiftId)
 
-        if (shift) {
-          setShiftName(shift.name || '')
+          if (shift) {
+            setShiftName(shift.name || '')
 
-          // Convert string time to Date objects
-          const [startHour, startMinute] = shift.startTime
-            .split(':')
-            .map(Number)
-          const [endHour, endMinute] = shift.endTime.split(':').map(Number)
+            // Convert string time to Date objects
+            const [startHour, startMinute] = shift.startTime
+              .split(':')
+              .map(Number)
+            const [endHour, endMinute] = shift.endTime.split(':').map(Number)
 
-          const newStartTime = new Date()
-          newStartTime.setHours(startHour, startMinute, 0, 0)
-          setStartTime(newStartTime)
+            const newStartTime = new Date()
+            newStartTime.setHours(startHour, startMinute, 0, 0)
+            setStartTime(newStartTime)
 
-          const newEndTime = new Date()
-          newEndTime.setHours(endHour, endMinute, 0, 0)
-          setEndTime(newEndTime)
+            const newEndTime = new Date()
+            newEndTime.setHours(endHour, endMinute, 0, 0)
+            setEndTime(newEndTime)
 
-          setBreakTime(shift.breakTime.toString())
-          setIsActive(shift.isActive !== false) // Default to true if undefined
-          setIsDefault(shift.isDefault === true) // Default to false if undefined
-          setDaysApplied(shift.daysApplied || ['T2', 'T3', 'T4', 'T5', 'T6'])
+            setBreakTime(shift.breakTime.toString())
+            setIsActive(shift.isActive !== false) // Default to true if undefined
+            setIsDefault(shift.isDefault === true) // Default to false if undefined
+            setDaysApplied(shift.daysApplied || ['T2', 'T3', 'T4', 'T5', 'T6'])
+          }
         }
+      } catch (error) {
+        console.error('Error loading shift data:', error)
+        Alert.alert(t('Error'), t('Failed to load shift data'))
       }
-    } catch (error) {
-      console.error('Error loading shift data:', error)
-      Alert.alert(t('Error'), t('Failed to load shift data'))
     }
-  }
+
+    if (isEditing) {
+      loadShiftData()
+    }
+  }, [isEditing, shiftId, t])
 
   const handleStartTimeChange = (event, selectedTime) => {
     // Ẩn picker ngay lập tức trên Android

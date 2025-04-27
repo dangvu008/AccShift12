@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react'
+import React, { useState, useEffect, useContext, useCallback } from 'react'
 import {
   View,
   Text,
@@ -36,9 +36,9 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
     if (noteId) {
       loadNoteData()
     }
-  }, [noteId])
+  }, [noteId, loadNoteData])
 
-  const loadNoteData = async () => {
+  const loadNoteData = useCallback(async () => {
     try {
       const notesData = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
       if (notesData) {
@@ -70,7 +70,7 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
     } catch (error) {
       console.error('Error loading note data:', error)
     }
-  }
+  }, [noteId])
 
   const handleSave = async () => {
     if (!title.trim()) {
