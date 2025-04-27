@@ -37,7 +37,17 @@ const formatTimeFromDate = (date) => {
   return `${hours}:${minutes}`
 }
 
-const ShiftFormModal = ({ visible, shiftId, onClose, onSaved }) => {
+const ShiftFormModal = ({
+  visible,
+  shiftId,
+  onClose,
+  onSaved,
+}: {
+  visible: boolean,
+  shiftId?: string,
+  onClose: () => void,
+  onSaved: (shiftId: string, isDeleted?: boolean) => void,
+}) => {
   const { t, darkMode } = useContext(AppContext)
   const isEditMode = !!shiftId
 
@@ -688,11 +698,10 @@ const ShiftFormModal = ({ visible, shiftId, onClose, onSaved }) => {
   return (
     <Modal
       visible={visible}
-      animationType="slide"
+      animationType="fade"
       transparent={true}
       onRequestClose={handleClose}
       statusBarTranslucent={true}
-      hardwareAccelerated={true}
     >
       <View style={styles.modalContainer}>
         <View
@@ -731,13 +740,24 @@ const ShiftFormModal = ({ visible, shiftId, onClose, onSaved }) => {
           ) : (
             <KeyboardAvoidingView
               style={{ flex: 1 }}
-              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-              keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+              behavior={
+                Platform.OS === 'ios'
+                  ? 'padding'
+                  : Platform.OS === 'android'
+                  ? 'height'
+                  : undefined
+              }
+              keyboardVerticalOffset={
+                Platform.OS === 'ios' ? 80 : Platform.OS === 'android' ? 40 : 0
+              }
+              enabled={Platform.OS !== 'web'}
             >
               <ScrollView
                 style={styles.formContainer}
-                contentContainerStyle={{ paddingBottom: 20 }}
+                contentContainerStyle={{ paddingBottom: 40 }}
                 showsVerticalScrollIndicator={true}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
               >
                 {/* Shift Name */}
                 <View style={styles.formGroup}>
@@ -817,7 +837,6 @@ const ShiftFormModal = ({ visible, shiftId, onClose, onSaved }) => {
                       is24Hour={true}
                       display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                       onChange={handleDepartureTimeChange}
-                      themeVariant={darkMode ? 'dark' : 'light'}
                     />
                   )}
                   {errors.departureTime && (
@@ -871,7 +890,6 @@ const ShiftFormModal = ({ visible, shiftId, onClose, onSaved }) => {
                       is24Hour={true}
                       display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                       onChange={handleStartTimeChange}
-                      themeVariant={darkMode ? 'dark' : 'light'}
                     />
                   )}
                   {errors.startTime && (
@@ -925,7 +943,6 @@ const ShiftFormModal = ({ visible, shiftId, onClose, onSaved }) => {
                       is24Hour={true}
                       display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                       onChange={handleEndTimeChange}
-                      themeVariant={darkMode ? 'dark' : 'light'}
                     />
                   )}
                   {errors.endTime && (
@@ -979,7 +996,6 @@ const ShiftFormModal = ({ visible, shiftId, onClose, onSaved }) => {
                       is24Hour={true}
                       display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                       onChange={handleOfficeEndTimeChange}
-                      themeVariant={darkMode ? 'dark' : 'light'}
                     />
                   )}
                   {errors.officeEndTime && (
@@ -1231,29 +1247,32 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    ...Platform.select({
-      android: {
-        paddingTop: 0,
-        paddingBottom: 0,
-      },
-    }),
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 9999,
   },
   modalContent: {
-    width: '95%',
-    maxHeight: '95%',
+    width: '90%',
+    maxHeight: '85%',
     backgroundColor: '#fff',
     borderRadius: 12,
     overflow: 'hidden',
     ...Platform.select({
       android: {
-        elevation: 5,
+        elevation: 8,
       },
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+      },
+      web: {
+        boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.3)',
       },
     }),
   },
@@ -1267,6 +1286,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+    backgroundColor: '#f8f9fa',
   },
   modalTitle: {
     fontSize: 18,
@@ -1288,6 +1308,7 @@ const styles = StyleSheet.create({
 
   formContainer: {
     padding: 16,
+    flexGrow: 1,
   },
   formGroup: {
     marginBottom: 16,
