@@ -1,5 +1,12 @@
 import React, { useContext } from 'react'
-import { Modal, View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native'
+import {
+  Modal,
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
+} from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { AppContext } from '../context/AppContext'
 
@@ -14,7 +21,9 @@ const NoteFormModal = ({ visible, onClose, children }) => {
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <View style={[styles.modalContainer, darkMode && styles.darkModalContainer]}>
+        <View
+          style={[styles.modalContainer, darkMode && styles.darkModalContainer]}
+        >
           <View style={styles.modalHeader}>
             <Text style={[styles.title, darkMode && styles.darkText]}>
               {t('Thêm/Sửa ghi chú')}
@@ -83,6 +92,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
-}
+})
 
 export default NoteFormModal
