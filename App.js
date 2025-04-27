@@ -1,15 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useContext } from 'react'
 import { StatusBar } from 'expo-status-bar'
 import { NavigationContainer } from '@react-navigation/native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { createStackNavigator } from '@react-navigation/stack'
 import { Ionicons } from '@expo/vector-icons'
 import * as Notifications from 'expo-notifications'
-import { AppProvider } from './context/AppContext'
-import { useContext } from 'react'
-import { AppContext } from './context/AppContext'
+import { AppProvider, AppContext } from './context/AppContext'
 
 // Import screens
 import HomeScreen from './screens/HomeScreen'
@@ -237,7 +235,6 @@ function SettingsStack() {
 }
 
 export default function App() {
-  const { darkMode } = useContext(AppContext)
   const [notification, setNotification] = useState(false)
 
   useEffect(() => {
@@ -269,54 +266,65 @@ export default function App() {
   return (
     <AppProvider>
       <NavigationContainer>
-        <Tab.Navigator
-          screenOptions={({ route }) => ({
-            tabBarIcon: ({ focused, color, size }) => {
-              let iconName
-
-              if (route.name === 'HomeStack') {
-                iconName = focused ? 'home' : 'home-outline'
-              } else if (route.name === 'ShiftsStack') {
-                iconName = focused ? 'calendar' : 'calendar-outline'
-              } else if (route.name === 'StatisticsStack') {
-                iconName = focused ? 'stats-chart' : 'stats-chart-outline'
-              } else if (route.name === 'SettingsStack') {
-                iconName = focused ? 'settings' : 'settings-outline'
-              }
-
-              return <Ionicons name={iconName} size={size} color={color} />
-            },
-            tabBarActiveTintColor: '#8a56ff',
-            tabBarInactiveTintColor: 'gray',
-            tabBarStyle: {
-              backgroundColor: darkMode ? '#121212' : '#fff',
-              borderTopColor: darkMode ? '#333' : '#ddd',
-            },
-          })}
-        >
-          <Tab.Screen
-            name="HomeStack"
-            component={HomeStack}
-            options={{ title: 'Trang chủ', headerShown: false }}
-          />
-          <Tab.Screen
-            name="ShiftsStack"
-            component={ShiftsStack}
-            options={{ title: 'Ca làm việc', headerShown: false }}
-          />
-          <Tab.Screen
-            name="StatisticsStack"
-            component={StatisticsStack}
-            options={{ title: 'Thống kê', headerShown: false }}
-          />
-          <Tab.Screen
-            name="SettingsStack"
-            component={SettingsStack}
-            options={{ title: 'Cài đặt', headerShown: false }}
-          />
-        </Tab.Navigator>
-        <StatusBar style="auto" />
+        <AppContent notification={notification} />
       </NavigationContainer>
     </AppProvider>
+  )
+}
+
+// Separate component to use context safely
+function AppContent({ notification }) {
+  const { darkMode } = useContext(AppContext)
+
+  return (
+    <>
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName
+
+            if (route.name === 'HomeStack') {
+              iconName = focused ? 'home' : 'home-outline'
+            } else if (route.name === 'ShiftsStack') {
+              iconName = focused ? 'calendar' : 'calendar-outline'
+            } else if (route.name === 'StatisticsStack') {
+              iconName = focused ? 'stats-chart' : 'stats-chart-outline'
+            } else if (route.name === 'SettingsStack') {
+              iconName = focused ? 'settings' : 'settings-outline'
+            }
+
+            return <Ionicons name={iconName} size={size} color={color} />
+          },
+          tabBarActiveTintColor: '#8a56ff',
+          tabBarInactiveTintColor: 'gray',
+          tabBarStyle: {
+            backgroundColor: darkMode ? '#121212' : '#fff',
+            borderTopColor: darkMode ? '#333' : '#ddd',
+          },
+        })}
+      >
+        <Tab.Screen
+          name="HomeStack"
+          component={HomeStack}
+          options={{ title: 'Trang chủ', headerShown: false }}
+        />
+        <Tab.Screen
+          name="ShiftsStack"
+          component={ShiftsStack}
+          options={{ title: 'Ca làm việc', headerShown: false }}
+        />
+        <Tab.Screen
+          name="StatisticsStack"
+          component={StatisticsStack}
+          options={{ title: 'Thống kê', headerShown: false }}
+        />
+        <Tab.Screen
+          name="SettingsStack"
+          component={SettingsStack}
+          options={{ title: 'Cài đặt', headerShown: false }}
+        />
+      </Tab.Navigator>
+      <StatusBar style="auto" />
+    </>
   )
 }
