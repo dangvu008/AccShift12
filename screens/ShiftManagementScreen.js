@@ -123,25 +123,13 @@ const ShiftManagementScreen = ({ navigation }) => {
   }
 
   const handleAddShift = () => {
-    setEditingShift(null)
-    setShiftName('')
-    setStartTime('08:00')
-    setEndTime('17:00')
-    setBreakTime('60')
-    setIsActive(true)
-    setIsDefault(false)
-    setModalVisible(true)
+    // Chuyển hướng đến màn hình AddEditShift để thêm ca mới
+    navigation.navigate('AddEditShift')
   }
 
   const handleEditShift = (shift) => {
-    setEditingShift(shift)
-    setShiftName(shift.name)
-    setStartTime(shift.startTime)
-    setEndTime(shift.endTime)
-    setBreakTime(shift.breakTime.toString())
-    setIsActive(shift.isActive)
-    setIsDefault(shift.isDefault)
-    setModalVisible(true)
+    // Chuyển hướng đến màn hình AddEditShift để chỉnh sửa ca
+    navigation.navigate('AddEditShift', { shiftId: shift.id })
   }
 
   const handleDeleteShift = (shiftId) => {

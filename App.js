@@ -13,6 +13,7 @@ import { AppProvider } from './context/AppContext'
 import HomeScreen from './screens/HomeScreen'
 import ShiftListScreen from './screens/ShiftListScreen'
 import ShiftManagementScreen from './screens/ShiftManagementScreen'
+import AddEditShiftScreen from './screens/AddEditShiftScreen'
 import SettingsScreen from './screens/SettingsScreen'
 import BackupRestoreScreen from './screens/BackupRestoreScreen'
 import WeatherAlertsScreen from './screens/WeatherAlertsScreen'
@@ -89,6 +90,15 @@ function HomeStack() {
         name="ShiftManagement"
         component={ShiftManagementScreen}
         options={{ title: 'Quản lý ca làm việc' }}
+      />
+      <Stack.Screen
+        name="AddEditShift"
+        component={AddEditShiftScreen}
+        options={({ route }) => ({
+          title: route.params?.shiftId
+            ? 'Chỉnh sửa ca làm việc'
+            : 'Thêm ca làm việc',
+        })}
       />
       <Stack.Screen
         name="WeatherDetail"
