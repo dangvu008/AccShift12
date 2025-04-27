@@ -322,11 +322,59 @@ function MainApp() {
 }
 
 export default function App() {
+  const { darkMode } = useContext(AppContext)
+
   return (
     <>
-      <AppProvider>
-        <MainApp />
-      </AppProvider>
+      <NavigationContainer>
+        <Tab.Navigator
+          screenOptions={({ route }) => ({
+            tabBarIcon: ({ focused, color, size }) => {
+              let iconName
+
+              if (route.name === 'HomeStack') {
+                iconName = focused ? 'home' : 'home-outline'
+              } else if (route.name === 'ShiftsStack') {
+                iconName = focused ? 'calendar' : 'calendar-outline'
+              } else if (route.name === 'StatisticsStack') {
+                iconName = focused ? 'stats-chart' : 'stats-chart-outline'
+              } else if (route.name === 'SettingsStack') {
+                iconName = focused ? 'settings' : 'settings-outline'
+              }
+
+              return <Ionicons name={iconName} size={size} color={color} />
+            },
+            tabBarActiveTintColor: '#8a56ff',
+            tabBarInactiveTintColor: 'gray',
+            tabBarStyle: {
+              backgroundColor: darkMode ? '#121212' : '#fff',
+              borderTopColor: darkMode ? '#333' : '#ddd',
+            },
+          })}
+        >
+          <Tab.Screen
+            name="HomeStack"
+            component={HomeStack}
+            options={{ title: 'Trang chủ', headerShown: false }}
+          />
+          <Tab.Screen
+            name="ShiftsStack"
+            component={ShiftsStack}
+            options={{ title: 'Ca làm việc', headerShown: false }}
+          />
+          <Tab.Screen
+            name="StatisticsStack"
+            component={StatisticsStack}
+            options={{ title: 'Thống kê', headerShown: false }}
+          />
+          <Tab.Screen
+            name="SettingsStack"
+            component={SettingsStack}
+            options={{ title: 'Cài đặt', headerShown: false }}
+          />
+        </Tab.Navigator>
+      </NavigationContainer>
+      <StatusBar style="auto" />
     </>
   )
 }
