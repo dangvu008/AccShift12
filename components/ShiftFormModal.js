@@ -11,9 +11,9 @@ import {
   Switch,
   Alert,
   ActivityIndicator,
-  KeyboardAvoidingView,
   Platform,
   Modal,
+  SafeAreaView,
 } from 'react-native'
 import { Ionicons, MaterialIcons } from '@expo/vector-icons'
 import DateTimePicker from '@react-native-community/datetimepicker'
@@ -703,7 +703,7 @@ const ShiftFormModal = ({
       onRequestClose={handleClose}
       statusBarTranslucent={false}
     >
-      <View style={styles.modalContainer}>
+      <SafeAreaView style={styles.safeArea}>
         <View
           style={[styles.modalContent, darkMode && styles.darkModalContent]}
         >
@@ -738,18 +738,11 @@ const ShiftFormModal = ({
               </Text>
             </View>
           ) : (
-            <KeyboardAvoidingView
-              style={{ flex: 1, width: '100%' }}
-              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-              keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
-            >
+            <View style={{ flex: 1, width: '100%' }}>
               <ScrollView
                 style={styles.formContainer}
-                contentContainerStyle={{ paddingBottom: 80 }}
+                contentContainerStyle={{ paddingBottom: 20 }}
                 showsVerticalScrollIndicator={true}
-                keyboardShouldPersistTaps="handled"
-                keyboardDismissMode="interactive"
-                nestedScrollEnabled={true}
               >
                 {/* Shift Name */}
                 <View style={styles.formGroup}>
@@ -1226,59 +1219,41 @@ const ShiftFormModal = ({
                   </TouchableOpacity>
                 </View>
               </ScrollView>
-            </KeyboardAvoidingView>
+            </View>
           )}
         </View>
-      </View>
+      </SafeAreaView>
     </Modal>
   )
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 9999,
-    ...Platform.select({
-      android: {
-        width: '100%',
-        height: '100%',
-      },
-      ios: {
-        width: '100%',
-        height: '100%',
-      },
-    }),
   },
   modalContent: {
     width: '90%',
     maxHeight: '80%',
     backgroundColor: '#fff',
-    borderRadius: 12,
+    borderRadius: 10,
     overflow: 'hidden',
     ...Platform.select({
       android: {
-        elevation: 8,
-        width: '95%',
-        maxHeight: '90%',
+        width: '90%',
+        maxHeight: '80%',
       },
       ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-        width: '95%',
-        maxHeight: '90%',
-      },
-      web: {
-        boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.3)',
+        width: '90%',
+        maxHeight: '80%',
       },
     }),
   },
@@ -1315,15 +1290,6 @@ const styles = StyleSheet.create({
   formContainer: {
     padding: 16,
     flexGrow: 1,
-    width: '100%',
-    ...Platform.select({
-      android: {
-        minHeight: 500,
-      },
-      ios: {
-        minHeight: 500,
-      },
-    }),
   },
   formGroup: {
     marginBottom: 16,
