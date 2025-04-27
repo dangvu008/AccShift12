@@ -8,6 +8,8 @@ import { createStackNavigator } from '@react-navigation/stack'
 import { Ionicons } from '@expo/vector-icons'
 import * as Notifications from 'expo-notifications'
 import { AppProvider } from './context/AppContext'
+import { useContext } from 'react'
+import { AppContext } from './context/AppContext'
 
 // Import screens
 import HomeScreen from './screens/HomeScreen'
@@ -236,6 +238,7 @@ function SettingsStack() {
 
 export default function App() {
   const [notification, setNotification] = useState(false)
+  const { darkMode } = useContext(AppContext)
 
   useEffect(() => {
     // Listen for notifications
@@ -286,6 +289,11 @@ export default function App() {
             tabBarActiveTintColor: '#8a56ff',
             tabBarInactiveTintColor: 'gray',
             headerShown: false,
+            tabBarStyle: {
+              backgroundColor: darkMode ? '#121212' : '#f5f5f5',
+              borderTopWidth: 0,
+              elevation: 0,
+            },
           })}
         >
           <Tab.Screen
