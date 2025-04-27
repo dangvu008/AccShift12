@@ -12,6 +12,7 @@ import {
   Platform,
   Alert,
   Switch,
+  Modal,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import DateTimePicker from '@react-native-community/datetimepicker'
@@ -38,6 +39,7 @@ const AddEditShiftScreen = ({ route, navigation }) => {
   // Time picker state
   const [showStartTimePicker, setShowStartTimePicker] = useState(false)
   const [showEndTimePicker, setShowEndTimePicker] = useState(false)
+  const [pickerMode, setPickerMode] = useState(null) // 'start' hoặc 'end'
 
   // Validation state
   const [errors, setErrors] = useState({})
@@ -96,8 +98,18 @@ const AddEditShiftScreen = ({ route, navigation }) => {
   }
 
   const handleStartTimeChange = (event, selectedTime) => {
-    setShowStartTimePicker(false)
-    if (selectedTime) {
+    // Ẩn picker ngay lập tức trên Android
+    if (Platform.OS === 'android') {
+      setShowStartTimePicker(false)
+    }
+
+    // Trên iOS, chỉ ẩn picker khi người dùng nhấn Done
+    if (Platform.OS === 'ios' && event.type === 'set') {
+      setShowStartTimePicker(false)
+    }
+
+    // Chỉ cập nhật thời gian nếu người dùng đã chọn (không phải hủy)
+    if (selectedTime && event.type !== 'dismissed') {
       setStartTime(selectedTime)
 
       // If end time is before start time and not an overnight shift,
@@ -114,8 +126,18 @@ const AddEditShiftScreen = ({ route, navigation }) => {
   }
 
   const handleEndTimeChange = (event, selectedTime) => {
-    setShowEndTimePicker(false)
-    if (selectedTime) {
+    // Ẩn picker ngay lập tức trên Android
+    if (Platform.OS === 'android') {
+      setShowEndTimePicker(false)
+    }
+
+    // Trên iOS, chỉ ẩn picker khi người dùng nhấn Done
+    if (Platform.OS === 'ios' && event.type === 'set') {
+      setShowEndTimePicker(false)
+    }
+
+    // Chỉ cập nhật thời gian nếu người dùng đã chọn (không phải hủy)
+    if (selectedTime && event.type !== 'dismissed') {
       setEndTime(selectedTime)
     }
   }
@@ -251,7 +273,10 @@ const AddEditShiftScreen = ({ route, navigation }) => {
                 styles.timeInput,
                 darkMode && styles.darkInput,
               ]}
-              onPress={() => setShowStartTimePicker(true)}
+              onPress={() => {
+                setPickerMode('start')
+                setShowStartTimePicker(true)
+              }}
             >
               <Text style={[styles.timeText, darkMode && styles.darkTimeText]}>
                 {formatTimeForDisplay(startTime)}
@@ -262,14 +287,59 @@ const AddEditShiftScreen = ({ route, navigation }) => {
                 color={darkMode ? '#fff' : '#333'}
               />
             </TouchableOpacity>
-            {showStartTimePicker && (
+            {Platform.OS === 'android' && showStartTimePicker && (
               <DateTimePicker
                 value={startTime}
                 mode="time"
                 is24Hour={true}
                 display="default"
                 onChange={handleStartTimeChange}
+                themeVariant={darkMode ? 'dark' : 'light'}
               />
+            )}
+            {Platform.OS === 'ios' && showStartTimePicker && (
+              <Modal
+                transparent={true}
+                animationType="slide"
+                visible={showStartTimePicker}
+              >
+                <View style={styles.modalContainer}>
+                  <View
+                    style={[
+                      styles.pickerContainer,
+                      darkMode && styles.darkPickerContainer,
+                    ]}
+                  >
+                    <View style={styles.pickerHeader}>
+                      <TouchableOpacity
+                        onPress={() => setShowStartTimePicker(false)}
+                        style={styles.pickerButton}
+                      >
+                        <Text style={styles.pickerButtonText}>{t('Hủy')}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => setShowStartTimePicker(false)}
+                        style={styles.pickerButton}
+                      >
+                        <Text
+                          style={[styles.pickerButtonText, styles.doneButton]}
+                        >
+                          {t('Xong')}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                    <DateTimePicker
+                      value={startTime}
+                      mode="time"
+                      is24Hour={true}
+                      display="spinner"
+                      onChange={handleStartTimeChange}
+                      style={styles.iosPicker}
+                      themeVariant={darkMode ? 'dark' : 'light'}
+                    />
+                  </View>
+                </View>
+              </Modal>
             )}
           </View>
 
@@ -284,7 +354,10 @@ const AddEditShiftScreen = ({ route, navigation }) => {
                 styles.timeInput,
                 darkMode && styles.darkInput,
               ]}
-              onPress={() => setShowEndTimePicker(true)}
+              onPress={() => {
+                setPickerMode('end')
+                setShowEndTimePicker(true)
+              }}
             >
               <Text style={[styles.timeText, darkMode && styles.darkTimeText]}>
                 {formatTimeForDisplay(endTime)}
@@ -295,14 +368,59 @@ const AddEditShiftScreen = ({ route, navigation }) => {
                 color={darkMode ? '#fff' : '#333'}
               />
             </TouchableOpacity>
-            {showEndTimePicker && (
+            {Platform.OS === 'android' && showEndTimePicker && (
               <DateTimePicker
                 value={endTime}
                 mode="time"
                 is24Hour={true}
                 display="default"
                 onChange={handleEndTimeChange}
+                themeVariant={darkMode ? 'dark' : 'light'}
               />
+            )}
+            {Platform.OS === 'ios' && showEndTimePicker && (
+              <Modal
+                transparent={true}
+                animationType="slide"
+                visible={showEndTimePicker}
+              >
+                <View style={styles.modalContainer}>
+                  <View
+                    style={[
+                      styles.pickerContainer,
+                      darkMode && styles.darkPickerContainer,
+                    ]}
+                  >
+                    <View style={styles.pickerHeader}>
+                      <TouchableOpacity
+                        onPress={() => setShowEndTimePicker(false)}
+                        style={styles.pickerButton}
+                      >
+                        <Text style={styles.pickerButtonText}>{t('Hủy')}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => setShowEndTimePicker(false)}
+                        style={styles.pickerButton}
+                      >
+                        <Text
+                          style={[styles.pickerButtonText, styles.doneButton]}
+                        >
+                          {t('Xong')}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                    <DateTimePicker
+                      value={endTime}
+                      mode="time"
+                      is24Hour={true}
+                      display="spinner"
+                      onChange={handleEndTimeChange}
+                      style={styles.iosPicker}
+                      themeVariant={darkMode ? 'dark' : 'light'}
+                    />
+                  </View>
+                </View>
+              </Modal>
             )}
           </View>
 
@@ -419,6 +537,12 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     padding: 16,
+  },
+  datePicker: {
+    width: '100%',
+    backgroundColor: Platform.OS === 'ios' ? '#f5f5f5' : 'transparent',
+    marginTop: 10,
+    marginBottom: 10,
   },
   formContainer: {
     backgroundColor: '#fff',
