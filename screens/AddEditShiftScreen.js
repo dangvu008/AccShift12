@@ -59,7 +59,7 @@ const AddEditShiftScreen = ({ route, navigation }) => {
     if (isEditing) {
       loadShiftData()
     }
-  }, [shiftId])
+  }, [shiftId, isEditing, loadShiftData])
 
   const loadShiftData = async () => {
     try {
@@ -538,12 +538,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     padding: 16,
   },
-  datePicker: {
-    width: '100%',
-    backgroundColor: Platform.OS === 'ios' ? '#f5f5f5' : 'transparent',
-    marginTop: 10,
-    marginBottom: 10,
-  },
+
   formContainer: {
     backgroundColor: '#fff',
     borderRadius: 8,

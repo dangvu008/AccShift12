@@ -323,8 +323,10 @@ function MainApp() {
 
 export default function App() {
   return (
-    <AppProvider>
-      <MainApp />
-    </AppProvider>
+    <>
+      <AppProvider>
+        <MainApp />
+      </AppProvider>
+    </>
   )
 }
