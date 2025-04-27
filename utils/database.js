@@ -1,10 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { STORAGE_KEYS } from './constants'
 
 // Initialize database and load sample data
 export const initializeDatabase = async () => {
   try {
     // Check if shifts are already initialized
-    const shiftsJson = await AsyncStorage.getItem('shifts')
+    const shiftsJson = await AsyncStorage.getItem(STORAGE_KEYS.SHIFT_LIST)
     if (!shiftsJson) {
       // Initialize with sample shifts
       const sampleShifts = [
@@ -51,21 +52,29 @@ export const initializeDatabase = async () => {
           showCheckInButtonWhileWorking: true,
         },
       ]
-      await AsyncStorage.setItem('shifts', JSON.stringify(sampleShifts))
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.SHIFT_LIST,
+        JSON.stringify(sampleShifts)
+      )
     }
 
     // Check if check-in history is already initialized
-    const checkInHistoryJson = await AsyncStorage.getItem('checkInHistory')
+    const checkInHistoryJson = await AsyncStorage.getItem(
+      STORAGE_KEYS.ATTENDANCE_RECORDS
+    )
     if (!checkInHistoryJson) {
       // Initialize with empty array
-      await AsyncStorage.setItem('checkInHistory', JSON.stringify([]))
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.ATTENDANCE_RECORDS,
+        JSON.stringify([])
+      )
     }
 
     // Check if notes are already initialized
-    const notesJson = await AsyncStorage.getItem('notes')
+    const notesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
     if (!notesJson) {
       // Initialize with empty array
-      await AsyncStorage.setItem('notes', JSON.stringify([]))
+      await AsyncStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify([]))
     }
   } catch (error) {
     console.error('Error initializing database:', error)
@@ -75,7 +84,7 @@ export const initializeDatabase = async () => {
 // Get shifts
 export const getShifts = async () => {
   try {
-    const shiftsJson = await AsyncStorage.getItem('shifts')
+    const shiftsJson = await AsyncStorage.getItem(STORAGE_KEYS.SHIFT_LIST)
     if (shiftsJson) {
       return JSON.parse(shiftsJson)
     } else {
@@ -94,6 +103,8 @@ export const getShifts = async () => {
           roundUpMinutes: 30,
           showCheckInButton: true,
           showCheckInButtonWhileWorking: true,
+          isActive: true,
+          isDefault: false,
         },
         {
           id: '2',
@@ -108,6 +119,8 @@ export const getShifts = async () => {
           roundUpMinutes: 30,
           showCheckInButton: true,
           showCheckInButtonWhileWorking: true,
+          isActive: true,
+          isDefault: false,
         },
         {
           id: '3',
@@ -122,10 +135,25 @@ export const getShifts = async () => {
           roundUpMinutes: 30,
           showCheckInButton: true,
           showCheckInButtonWhileWorking: true,
+          isActive: true,
+          isDefault: false,
+        },
+        {
+          id: '4',
+          name: 'Ca Hành Chính',
+          startTime: '08:00',
+          endTime: '17:00',
+          breakTime: 60,
+          daysApplied: ['T2', 'T3', 'T4', 'T5', 'T6'],
+          isActive: true,
+          isDefault: true,
         },
       ]
       // Lưu dữ liệu mẫu vào AsyncStorage
-      await AsyncStorage.setItem('shifts', JSON.stringify(sampleShifts))
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.SHIFT_LIST,
+        JSON.stringify(sampleShifts)
+      )
       return sampleShifts
     }
   } catch (error) {
@@ -137,7 +165,9 @@ export const getShifts = async () => {
 // Get check-in history
 export const getCheckInHistory = async () => {
   try {
-    const checkInHistoryJson = await AsyncStorage.getItem('checkInHistory')
+    const checkInHistoryJson = await AsyncStorage.getItem(
+      STORAGE_KEYS.ATTENDANCE_RECORDS
+    )
     return checkInHistoryJson ? JSON.parse(checkInHistoryJson) : []
   } catch (error) {
     console.error('Error getting check-in history:', error)
@@ -148,8 +178,15 @@ export const getCheckInHistory = async () => {
 // Get current shift
 export const getCurrentShift = async () => {
   try {
-    const currentShiftId = await AsyncStorage.getItem('currentShiftId')
-    if (!currentShiftId) return null
+    const currentShiftId = await AsyncStorage.getItem(
+      STORAGE_KEYS.CURRENT_SHIFT
+    )
+    if (!currentShiftId) {
+      // If no current shift is set, get the default shift
+      const shifts = await getShifts()
+      const defaultShift = shifts.find((shift) => shift.isDefault)
+      return defaultShift || null
+    }
 
     const shifts = await getShifts()
     return shifts.find((shift) => shift.id === currentShiftId) || null
@@ -163,12 +200,23 @@ export const getCurrentShift = async () => {
 export const addShift = async (shiftData) => {
   try {
     const shifts = await getShifts()
+
+    // If isDefault is true, set all other shifts to not default
+    if (shiftData.isDefault) {
+      shifts.forEach((shift) => {
+        shift.isDefault = false
+      })
+    }
+
     const newShift = {
       id: Date.now().toString(),
       ...shiftData,
     }
     const updatedShifts = [...shifts, newShift]
-    await AsyncStorage.setItem('shifts', JSON.stringify(updatedShifts))
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.SHIFT_LIST,
+      JSON.stringify(updatedShifts)
+    )
     return newShift
   } catch (error) {
     console.error('Error adding shift:', error)
@@ -180,10 +228,23 @@ export const addShift = async (shiftData) => {
 export const updateShift = async (updatedShift) => {
   try {
     const shifts = await getShifts()
+
+    // If isDefault is true, set all other shifts to not default
+    if (updatedShift.isDefault) {
+      shifts.forEach((shift) => {
+        if (shift.id !== updatedShift.id) {
+          shift.isDefault = false
+        }
+      })
+    }
+
     const updatedShifts = shifts.map((shift) =>
       shift.id === updatedShift.id ? updatedShift : shift
     )
-    await AsyncStorage.setItem('shifts', JSON.stringify(updatedShifts))
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.SHIFT_LIST,
+      JSON.stringify(updatedShifts)
+    )
     return updatedShift
   } catch (error) {
     console.error('Error updating shift:', error)
@@ -194,10 +255,21 @@ export const updateShift = async (updatedShift) => {
 // Save shifts (for bulk operations)
 export const saveShifts = async (shifts) => {
   try {
-    await AsyncStorage.setItem('shifts', JSON.stringify(shifts))
+    await AsyncStorage.setItem(STORAGE_KEYS.SHIFT_LIST, JSON.stringify(shifts))
     return true
   } catch (error) {
     console.error('Error saving shifts:', error)
+    return false
+  }
+}
+
+// Set current shift
+export const setCurrentShift = async (shiftId) => {
+  try {
+    await AsyncStorage.setItem(STORAGE_KEYS.CURRENT_SHIFT, shiftId)
+    return true
+  } catch (error) {
+    console.error('Error setting current shift:', error)
     return false
   }
 }
@@ -207,7 +279,28 @@ export const deleteShift = async (id) => {
   try {
     const shifts = await getShifts()
     const updatedShifts = shifts.filter((shift) => shift.id !== id)
-    await AsyncStorage.setItem('shifts', JSON.stringify(updatedShifts))
+
+    // If we deleted the default shift, set a new default
+    if (
+      shifts.find((shift) => shift.id === id && shift.isDefault) &&
+      updatedShifts.length > 0
+    ) {
+      updatedShifts[0].isDefault = true
+    }
+
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.SHIFT_LIST,
+      JSON.stringify(updatedShifts)
+    )
+
+    // If we deleted the current shift, clear the current shift
+    const currentShiftId = await AsyncStorage.getItem(
+      STORAGE_KEYS.CURRENT_SHIFT
+    )
+    if (currentShiftId === id) {
+      await AsyncStorage.removeItem(STORAGE_KEYS.CURRENT_SHIFT)
+    }
+
     return true
   } catch (error) {
     console.error('Error deleting shift:', error)
@@ -224,7 +317,10 @@ export const addCheckInRecord = async (record) => {
       ...record,
     }
     const updatedHistory = [...checkInHistory, newRecord]
-    await AsyncStorage.setItem('checkInHistory', JSON.stringify(updatedHistory))
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.ATTENDANCE_RECORDS,
+      JSON.stringify(updatedHistory)
+    )
     return newRecord
   } catch (error) {
     console.error('Error adding check-in record:', error)
@@ -235,7 +331,7 @@ export const addCheckInRecord = async (record) => {
 // Get notes
 export const getNotes = async () => {
   try {
-    const notesJson = await AsyncStorage.getItem('notes')
+    const notesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
     return notesJson ? JSON.parse(notesJson) : []
   } catch (error) {
     console.error('Error getting notes:', error)
@@ -246,20 +342,20 @@ export const getNotes = async () => {
 // Add note
 export const addNote = async (noteData) => {
   try {
-    const notesJson = await AsyncStorage.getItem('notes')
+    const notesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
     let notes = notesJson ? JSON.parse(notesJson) : []
     const newNote = {
       id: Date.now().toString(),
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       title: noteData.title || '',
       content: noteData.content || '',
-      reminderTime: noteData.reminderTime || '',
+      reminderTime: noteData.reminderTime || null,
       linkedShifts: noteData.linkedShifts || [],
       reminderDays: noteData.reminderDays || [],
     }
     notes = [...notes, newNote]
-    await AsyncStorage.setItem('notes', JSON.stringify(notes))
+    await AsyncStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify(notes))
     return newNote
   } catch (error) {
     console.error('Error adding note:', error)
@@ -270,19 +366,19 @@ export const addNote = async (noteData) => {
 // Update note
 export const updateNote = async (updatedNote) => {
   try {
-    const notesJson = await AsyncStorage.getItem('notes')
+    const notesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
     let notes = notesJson ? JSON.parse(notesJson) : []
 
     // Make sure to update the updatedAt timestamp
     const noteWithTimestamp = {
       ...updatedNote,
-      updatedAt: Date.now(),
+      updatedAt: new Date().toISOString(),
     }
 
     notes = notes.map((note) =>
       note.id === noteWithTimestamp.id ? noteWithTimestamp : note
     )
-    await AsyncStorage.setItem('notes', JSON.stringify(notes))
+    await AsyncStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify(notes))
     return noteWithTimestamp
   } catch (error) {
     console.error('Error updating note:', error)
@@ -293,7 +389,7 @@ export const updateNote = async (updatedNote) => {
 // Get note by ID
 export const getNoteById = async (id) => {
   try {
-    const notesJson = await AsyncStorage.getItem('notes')
+    const notesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
     if (!notesJson) return null
 
     const notes = JSON.parse(notesJson)
@@ -307,10 +403,10 @@ export const getNoteById = async (id) => {
 // Delete note
 export const deleteNote = async (id) => {
   try {
-    const notesJson = await AsyncStorage.getItem('notes')
+    const notesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
     let notes = notesJson ? JSON.parse(notesJson) : []
     notes = notes.filter((note) => note.id !== id)
-    await AsyncStorage.setItem('notes', JSON.stringify(notes))
+    await AsyncStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify(notes))
     return true
   } catch (error) {
     console.error('Error deleting note:', error)
@@ -321,7 +417,7 @@ export const deleteNote = async (id) => {
 // Check for duplicate note
 export const checkDuplicateNote = async (title, content, excludeId = null) => {
   try {
-    const notesJson = await AsyncStorage.getItem('notes')
+    const notesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
     if (!notesJson) return false
 
     const notes = JSON.parse(notesJson)
@@ -334,5 +430,38 @@ export const checkDuplicateNote = async (title, content, excludeId = null) => {
   } catch (error) {
     console.error('Error checking duplicate note:', error)
     return false
+  }
+}
+
+// Save note
+export const saveNote = async (note) => {
+  try {
+    const notes = await getNotes()
+
+    // Check if note already exists
+    const existingNoteIndex = notes.findIndex((n) => n.id === note.id)
+
+    if (existingNoteIndex >= 0) {
+      // Update existing note
+      notes[existingNoteIndex] = {
+        ...notes[existingNoteIndex],
+        ...note,
+        updatedAt: new Date().toISOString(),
+      }
+    } else {
+      // Add new note
+      notes.push({
+        ...note,
+        id: note.id || Date.now().toString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+    }
+
+    await AsyncStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify(notes))
+    return note
+  } catch (error) {
+    console.error('Error saving note:', error)
+    throw error
   }
 }

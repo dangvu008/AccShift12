@@ -4,6 +4,7 @@ import { useContext, useState, useEffect } from 'react'
 import { View, ActivityIndicator, Text, StyleSheet } from 'react-native'
 import { AppContext } from '../context/AppContext'
 import NoteFormModal from '../components/NoteFormModal'
+import NoteForm from '../components/NoteForm'
 
 const NoteDetailScreen = ({ navigation, route }) => {
   const { t, darkMode } = useContext(AppContext)
@@ -23,7 +24,7 @@ const NoteDetailScreen = ({ navigation, route }) => {
     navigation.goBack()
   }
 
-  const handleNoteSaved = (note, isDeleted = false) => {
+  const handleNoteSaved = (noteId, isDeleted = false) => {
     // Close modal and navigate back
     setModalVisible(false)
     navigation.goBack()
@@ -49,12 +50,13 @@ const NoteDetailScreen = ({ navigation, route }) => {
   return (
     <View style={[styles.container, darkMode && styles.darkContainer]}>
       {/* Hiển thị modal */}
-      <NoteFormModal
-        visible={modalVisible}
-        noteId={noteId}
-        onClose={handleModalClose}
-        onSaved={handleNoteSaved}
-      />
+      <NoteFormModal visible={modalVisible} onClose={handleModalClose}>
+        <NoteForm
+          noteId={noteId}
+          onSave={handleNoteSaved}
+          onDelete={handleNoteSaved}
+        />
+      </NoteFormModal>
     </View>
   )
 }

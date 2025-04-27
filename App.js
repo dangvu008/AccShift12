@@ -236,9 +236,9 @@ function SettingsStack() {
   )
 }
 
-function MainApp() {
-  const [notification, setNotification] = useState(false)
+export default function App() {
   const { darkMode } = useContext(AppContext)
+  const [notification, setNotification] = useState(false)
 
   useEffect(() => {
     // Listen for notifications
@@ -267,65 +267,7 @@ function MainApp() {
   }, [])
 
   return (
-    <NavigationContainer>
-        <Tab.Navigator
-          screenOptions={({ route }) => ({
-            tabBarIcon: ({ focused, color, size }) => {
-              let iconName
-
-              if (route.name === 'HomeTab') {
-                iconName = focused ? 'home' : 'home-outline'
-              } else if (route.name === 'ShiftsTab') {
-                iconName = focused ? 'calendar' : 'calendar-outline'
-              } else if (route.name === 'StatisticsTab') {
-                iconName = focused ? 'stats-chart' : 'stats-chart-outline'
-              } else if (route.name === 'SettingsTab') {
-                iconName = focused ? 'settings' : 'settings-outline'
-              }
-
-              return <Ionicons name={iconName} size={size} color={color} />
-            },
-            tabBarActiveTintColor: '#8a56ff',
-            tabBarInactiveTintColor: 'gray',
-            headerShown: false,
-            tabBarStyle: {
-              backgroundColor: darkMode ? '#121212' : '#f5f5f5',
-              borderTopWidth: 0,
-              elevation: 0,
-            },
-          })}
-        >
-          <Tab.Screen
-            name="HomeTab"
-            component={HomeStack}
-            options={{ title: 'Trang chủ' }}
-          />
-          <Tab.Screen
-            name="ShiftsTab"
-            component={ShiftsStack}
-            options={{ title: 'Ca làm việc' }}
-          />
-          <Tab.Screen
-            name="StatisticsTab"
-            component={StatisticsStack}
-            options={{ title: 'Thống kê' }}
-          />
-          <Tab.Screen
-            name="SettingsTab"
-            component={SettingsStack}
-            options={{ title: 'Cài đặt' }}
-          />
-        </Tab.Navigator>
-      </NavigationContainer>
-      <StatusBar style="auto" />
-  )
-}
-
-export default function App() {
-  const { darkMode } = useContext(AppContext)
-
-  return (
-    <>
+    <AppProvider>
       <NavigationContainer>
         <Tab.Navigator
           screenOptions={({ route }) => ({
@@ -373,8 +315,8 @@ export default function App() {
             options={{ title: 'Cài đặt', headerShown: false }}
           />
         </Tab.Navigator>
+        <StatusBar style="auto" />
       </NavigationContainer>
-      <StatusBar style="auto" />
-    </>
+    </AppProvider>
   )
 }

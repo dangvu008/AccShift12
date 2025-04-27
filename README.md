@@ -227,3 +227,6 @@ GoogleService-Info.plist
 sentry.properties
 # AccShift12
 # accShift12
+# AccShift12
+# AccShift12
+# AccShift12

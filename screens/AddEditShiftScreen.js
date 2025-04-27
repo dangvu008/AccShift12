@@ -56,12 +56,7 @@ const AddEditShiftScreen = ({ route, navigation }) => {
   ]
 
   useEffect(() => {
-    if (isEditing) {
-      loadShiftData()
-    }
-  }, [shiftId, isEditing, loadShiftData])
-
-  const loadShiftData = async () => {
+    const loadShiftData = async () => {
     try {
       const shiftsData = await AsyncStorage.getItem(STORAGE_KEYS.SHIFT_LIST)
       if (shiftsData) {
