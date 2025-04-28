@@ -6,11 +6,12 @@ import {
   StyleSheet,
   TouchableOpacity,
   Platform,
+  KeyboardAvoidingView,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { AppContext } from '../context/AppContext'
 
-const NoteFormModal = ({ visible, onClose, children }) => {
+const NoteFormModal = ({ visible, onClose, children, title }) => {
   const { t, darkMode } = useContext(AppContext)
 
   return (
@@ -20,48 +21,55 @@ const NoteFormModal = ({ visible, onClose, children }) => {
       animationType="slide"
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
-        <View
-          style={[styles.modalContainer, darkMode && styles.darkModalContainer]}
-        >
-          <View style={styles.modalHeader}>
-            <Text style={[styles.title, darkMode && styles.darkText]}>
-              {t('Thêm/Sửa ghi chú')}
-            </Text>
-            <TouchableOpacity onPress={onClose}>
-              <Ionicons
-                name="close"
-                size={24}
-                color={darkMode ? '#fff' : '#000'}
-              />
-            </TouchableOpacity>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardAvoidingView}
+      >
+        <View style={styles.overlay}>
+          <View
+            style={[
+              styles.modalContainer,
+              darkMode && styles.darkModalContainer,
+            ]}
+          >
+            <View style={styles.modalHeader}>
+              <Text style={[styles.title, darkMode && styles.darkText]}>
+                {title || t('Thêm/Sửa ghi chú')}
+              </Text>
+              <TouchableOpacity onPress={onClose} style={styles.closeIcon}>
+                <Ionicons
+                  name="close"
+                  size={24}
+                  color={darkMode ? '#fff' : '#000'}
+                />
+              </TouchableOpacity>
+            </View>
+
+            {children}
           </View>
-
-          {children}
-
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeButtonText}>{t('Đóng')}</Text>
-          </TouchableOpacity>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   )
 }
 
 const styles = StyleSheet.create({
+  keyboardAvoidingView: {
+    flex: 1,
+  },
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 16,
   },
   modalContainer: {
-    width: '90%',
-    maxHeight: '80%',
+    width: '100%',
+    maxHeight: '90%',
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 20,
-    alignItems: 'center',
   },
   darkModalContainer: {
     backgroundColor: '#1e1e1e',
@@ -72,25 +80,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    paddingBottom: 12,
   },
   title: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#000',
+    flex: 1,
   },
   darkText: {
     color: '#fff',
   },
-  closeButton: {
-    marginTop: 16,
-    backgroundColor: '#8a56ff',
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  closeButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+  closeIcon: {
+    padding: 4,
   },
 })
 

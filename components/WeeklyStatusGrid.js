@@ -414,33 +414,67 @@ const WeeklyStatusGrid = () => {
   }
 
   // Render status icon
-  const renderStatusIcon = (status) => {
+  const renderStatusIcon = (status, isInGrid = false) => {
     const iconConfig = getStatusIcon(status)
+    // Use smaller size for grid view
+    const gridSize = 18
+    const modalSize = 24
+    const size = isInGrid ? gridSize : modalSize
+    const fontAwesizeSize = isInGrid ? gridSize - 2 : modalSize - 4
+
+    // Choose appropriate background style based on dark mode
+    const backgroundStyle = isInGrid
+      ? darkMode
+        ? styles.darkIconBackground
+        : styles.iconBackground
+      : null
 
     if (iconConfig.type === 'ionicons') {
       return (
-        <Ionicons name={iconConfig.name} size={24} color={iconConfig.color} />
+        <View style={backgroundStyle}>
+          <Ionicons
+            name={iconConfig.name}
+            size={size}
+            color={iconConfig.color}
+          />
+        </View>
       )
     } else if (iconConfig.type === 'material-community') {
       return (
-        <MaterialCommunityIcons
-          name={iconConfig.name}
-          size={24}
-          color={iconConfig.color}
-        />
+        <View style={backgroundStyle}>
+          <MaterialCommunityIcons
+            name={iconConfig.name}
+            size={size}
+            color={iconConfig.color}
+          />
+        </View>
       )
     } else if (iconConfig.type === 'font-awesome') {
       return (
-        <FontAwesome5
-          name={iconConfig.name}
-          size={20}
-          color={iconConfig.color}
-        />
+        <View style={backgroundStyle}>
+          <FontAwesome5
+            name={iconConfig.name}
+            size={fontAwesizeSize}
+            color={iconConfig.color}
+          />
+        </View>
       )
     }
 
+    // Choose appropriate text background style based on dark mode
+    const textBackgroundStyle = isInGrid
+      ? darkMode
+        ? styles.darkTextIconBackground
+        : styles.textIconBackground
+      : null
+
     return (
-      <Text style={{ fontSize: 18, color: iconConfig.color }}>
+      <Text
+        style={[
+          { fontSize: isInGrid ? 14 : 18, color: iconConfig.color },
+          textBackgroundStyle,
+        ]}
+      >
         {getStatusAbbreviation(status)}
       </Text>
     )
@@ -496,7 +530,7 @@ const WeeklyStatusGrid = () => {
                 {weekdayNames[new Date(day.date).getDay()]}
               </Text>
               <View style={styles.statusContainer}>
-                {renderStatusIcon(status)}
+                {renderStatusIcon(status, true)}
               </View>
             </TouchableOpacity>
           )
@@ -1006,7 +1040,7 @@ const styles = StyleSheet.create({
   },
   dayCell: {
     width: '13%',
-    aspectRatio: 0.7,
+    aspectRatio: 0.8,
     backgroundColor: '#f0f0f0',
     borderRadius: 8,
     padding: 4,
@@ -1047,6 +1081,36 @@ const styles = StyleSheet.create({
     marginTop: 4,
     alignItems: 'center',
     justifyContent: 'center',
+    height: 24,
+    width: '100%',
+  },
+  iconBackground: {
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    borderRadius: 12,
+    padding: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  darkIconBackground: {
+    backgroundColor: 'rgba(50, 50, 50, 0.7)',
+    borderRadius: 12,
+    padding: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  textIconBackground: {
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    borderRadius: 10,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    overflow: 'hidden',
+  },
+  darkTextIconBackground: {
+    backgroundColor: 'rgba(50, 50, 50, 0.7)',
+    borderRadius: 10,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    overflow: 'hidden',
   },
 
   modalContainer: {

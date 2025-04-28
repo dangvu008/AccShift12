@@ -11,6 +11,7 @@ const NoteDetailScreen = ({ navigation, route }) => {
   const noteId = route.params?.noteId
   const [isLoading, setIsLoading] = useState(true)
   const [modalVisible, setModalVisible] = useState(false)
+  const isEditing = !!noteId
 
   useEffect(() => {
     // Show modal immediately
@@ -41,7 +42,7 @@ const NoteDetailScreen = ({ navigation, route }) => {
       >
         <ActivityIndicator size="large" color="#8a56ff" />
         <Text style={[styles.loadingText, darkMode && styles.darkText]}>
-          {t('Loading...')}
+          {t('Đang tải...')}
         </Text>
       </View>
     )
@@ -50,7 +51,11 @@ const NoteDetailScreen = ({ navigation, route }) => {
   return (
     <View style={[styles.container, darkMode && styles.darkContainer]}>
       {/* Hiển thị modal */}
-      <NoteFormModal visible={modalVisible} onClose={handleModalClose}>
+      <NoteFormModal
+        visible={modalVisible}
+        onClose={handleModalClose}
+        title={isEditing ? t('Chỉnh Sửa Ghi Chú') : t('Thêm Ghi Chú Mới')}
+      >
         <NoteForm
           noteId={noteId}
           onSave={handleNoteSaved}
