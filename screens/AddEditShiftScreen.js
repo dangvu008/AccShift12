@@ -307,14 +307,20 @@ const AddEditShiftScreen = ({ route, navigation }) => {
       if (!shiftsData) return true
 
       const shifts = JSON.parse(shiftsData)
-      // Normalize name for comparison (trim and lowercase)
-      const normalizedName = name.trim().toLowerCase()
 
-      return !shifts.some(
-        (shift) =>
-          shift.id !== currentId &&
-          shift.name.trim().toLowerCase() === normalizedName
-      )
+      // Normalize name is already done before calling this function
+      // We expect name to be already normalized (trimmed, extra spaces removed, lowercase)
+      const normalizedName = name
+
+      return !shifts.some((shift) => {
+        // Normalize each shift name in the same way
+        const normalizedShiftName = shift.name
+          .trim()
+          .replace(/\s+/g, ' ')
+          .toLowerCase()
+
+        return shift.id !== currentId && normalizedShiftName === normalizedName
+      })
     } catch (error) {
       console.error('Error checking shift name uniqueness:', error)
       return true // Assume unique on error to not block user
@@ -341,9 +347,15 @@ const AddEditShiftScreen = ({ route, navigation }) => {
         newErrors.shiftName = t('Tên ca chứa ký tự không hợp lệ.')
         isValid = false
       } else {
+        // Normalize name by removing extra spaces and converting to lowercase
+        const normalizedName = shiftName
+          .trim()
+          .replace(/\s+/g, ' ')
+          .toLowerCase()
+
         // Check for uniqueness
         const isUnique = await isShiftNameUnique(
-          shiftName,
+          normalizedName,
           isEditing ? shiftId : null
         )
         if (!isUnique) {
@@ -354,18 +366,29 @@ const AddEditShiftScreen = ({ route, navigation }) => {
     }
 
     // Validate time fields
+    // Helper function to convert time to minutes since midnight
+    const timeToMinutes = (date) => date.getHours() * 60 + date.getMinutes()
+
+    // Helper function to calculate difference between times, handling overnight shifts
+    const getTimeDiff = (laterTime, earlierTime, isOvernight) => {
+      const laterMinutes = timeToMinutes(laterTime)
+      const earlierMinutes = timeToMinutes(earlierTime)
+
+      return isOvernight
+        ? laterMinutes + 24 * 60 - earlierMinutes
+        : laterMinutes - earlierMinutes
+    }
+
     // 1. Departure time vs Start time (at least 5 minutes before)
-    const depMinutes =
-      departureTime.getHours() * 60 + departureTime.getMinutes()
-    const startMinutes = startTime.getHours() * 60 + startTime.getMinutes()
+    const depMinutes = timeToMinutes(departureTime)
+    const startMinutes = timeToMinutes(startTime)
 
-    // Handle overnight case
+    // Handle overnight case - consider it overnight if start time is early morning (before 4 AM)
+    // and departure time is late night
     const isOvernightDep = startMinutes < depMinutes && startMinutes < 240 // 4 AM threshold
-    const depDiff = isOvernightDep
-      ? startMinutes + 24 * 60 - depMinutes
-      : startMinutes - depMinutes
+    const depDiff = getTimeDiff(startTime, departureTime, isOvernightDep)
 
-    if (depDiff >= -5) {
+    if (depDiff < 5) {
       // Should be at least 5 minutes before
       newErrors.departureTime = t(
         'Giờ xuất phát phải trước giờ bắt đầu ít nhất 5 phút.'
@@ -374,24 +397,18 @@ const AddEditShiftScreen = ({ route, navigation }) => {
     }
 
     // 2. Start time vs Office End time (start must be before office end)
-    const officeEndMinutes =
-      officeEndTime.getHours() * 60 + officeEndTime.getMinutes()
+    const officeEndMinutes = timeToMinutes(officeEndTime)
 
-    // Handle overnight case
-    const isOvernightOffice = officeEndMinutes < startMinutes
+    // Handle overnight case - consider it overnight if office end time is earlier in the day than start time
+    const isOvernightOffice =
+      officeEndMinutes < startMinutes && officeEndMinutes < 240
+    const officeDiff = getTimeDiff(officeEndTime, startTime, isOvernightOffice)
 
-    if (!isOvernightOffice && officeEndMinutes <= startMinutes) {
+    if (officeDiff <= 0) {
       newErrors.officeEndTime = t('Giờ bắt đầu phải trước giờ kết thúc HC.')
       isValid = false
-    }
-
-    // 3. Office work time must be at least 2 hours
-    const officeDiff = isOvernightOffice
-      ? officeEndMinutes + 24 * 60 - startMinutes
-      : officeEndMinutes - startMinutes
-
-    if (officeDiff < 120) {
-      // 2 hours = 120 minutes
+    } else if (officeDiff < 120) {
+      // 3. Office work time must be at least 2 hours (120 minutes)
       newErrors.officeEndTime = t(
         'Thời gian làm việc HC tối thiểu phải là 2 giờ.'
       )
@@ -399,13 +416,11 @@ const AddEditShiftScreen = ({ route, navigation }) => {
     }
 
     // 4. End time vs Office End time
-    const endMinutes = endTime.getHours() * 60 + endTime.getMinutes()
+    const endMinutes = timeToMinutes(endTime)
 
     // Handle overnight case for end time
     const isOvernightEnd = endMinutes < officeEndMinutes && endMinutes < 240
-    const endDiff = isOvernightEnd
-      ? endMinutes + 24 * 60 - officeEndMinutes
-      : endMinutes - officeEndMinutes
+    const endDiff = getTimeDiff(endTime, officeEndTime, isOvernightEnd)
 
     if (endDiff < 0) {
       newErrors.endTime = t(
@@ -413,6 +428,7 @@ const AddEditShiftScreen = ({ route, navigation }) => {
       )
       isValid = false
     } else if (endDiff > 0 && endDiff < 30) {
+      // If there's overtime (end time > office end time), it should be at least 30 minutes
       newErrors.endTime = t(
         'Nếu có OT, giờ kết thúc ca phải sau giờ kết thúc HC ít nhất 30 phút.'
       )
@@ -420,28 +436,64 @@ const AddEditShiftScreen = ({ route, navigation }) => {
     }
 
     // Validate numeric fields
-    // Break time
-    const breakTimeNum = parseInt(breakTime, 10)
-    if (isNaN(breakTimeNum) || breakTimeNum < 0) {
-      newErrors.breakTime = t('Thời gian nghỉ phải là số dương.')
-      isValid = false
+    // Helper function to validate numeric fields
+    const validateNumericField = (
+      value,
+      fieldName,
+      errorMessage,
+      minValue = 0,
+      maxValue = null
+    ) => {
+      const numValue = parseInt(value, 10)
+
+      if (isNaN(numValue)) {
+        newErrors[fieldName] = t('Vui lòng nhập một số hợp lệ.')
+        isValid = false
+        return false
+      }
+
+      if (numValue < minValue) {
+        newErrors[fieldName] =
+          errorMessage || t(`Giá trị phải lớn hơn hoặc bằng ${minValue}.`)
+        isValid = false
+        return false
+      }
+
+      if (maxValue !== null && numValue > maxValue) {
+        newErrors[fieldName] = t(`Giá trị không được vượt quá ${maxValue}.`)
+        isValid = false
+        return false
+      }
+
+      return true
     }
 
-    // Remind before start
-    const remindBeforeStartNum = parseInt(remindBeforeStart, 10)
-    if (isNaN(remindBeforeStartNum) || remindBeforeStartNum < 0) {
-      newErrors.remindBeforeStart = t(
-        'Thời gian nhắc nhở trước phải là số dương.'
-      )
-      isValid = false
-    }
+    // Break time (0-240 minutes, tối đa 4 giờ)
+    validateNumericField(
+      breakTime,
+      'breakTime',
+      t('Thời gian nghỉ phải là số dương.'),
+      0,
+      240
+    )
 
-    // Remind after end
-    const remindAfterEndNum = parseInt(remindAfterEnd, 10)
-    if (isNaN(remindAfterEndNum) || remindAfterEndNum < 0) {
-      newErrors.remindAfterEnd = t('Thời gian nhắc nhở sau phải là số dương.')
-      isValid = false
-    }
+    // Remind before start (0-120 minutes, tối đa 2 giờ)
+    validateNumericField(
+      remindBeforeStart,
+      'remindBeforeStart',
+      t('Thời gian nhắc nhở trước phải là số dương.'),
+      0,
+      120
+    )
+
+    // Remind after end (0-120 minutes, tối đa 2 giờ)
+    validateNumericField(
+      remindAfterEnd,
+      'remindAfterEnd',
+      t('Thời gian nhắc nhở sau phải là số dương.'),
+      0,
+      120
+    )
 
     // Validate days applied
     if (daysApplied.length === 0) {
@@ -911,9 +963,16 @@ const AddEditShiftScreen = ({ route, navigation }) => {
             officeEndTime.getHours() < startTime.getHours()) && (
             <View style={styles.overnightWarning}>
               <Ionicons name="information-circle" size={20} color="#ff9800" />
-              <Text style={styles.overnightText}>
-                {t('Ca qua đêm - kết thúc vào ngày hôm sau')}
-              </Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.overnightText}>
+                  {t('Ca qua đêm - kết thúc vào ngày hôm sau')}
+                </Text>
+                <Text
+                  style={[styles.overnightText, { fontSize: 12, marginTop: 4 }]}
+                >
+                  {t('Các thời gian kết thúc sẽ được tính vào ngày hôm sau')}
+                </Text>
+              </View>
             </View>
           )}
 
@@ -1087,9 +1146,19 @@ const AddEditShiftScreen = ({ route, navigation }) => {
               onPress={handleSaveShift}
               disabled={!isFormValid}
             >
-              <Text style={styles.saveButtonText}>
+              <Text
+                style={[
+                  styles.saveButtonText,
+                  !isFormValid && { opacity: 0.7 },
+                ]}
+              >
                 {isEditing ? t('Cập nhật') : t('Thêm mới')}
               </Text>
+              {!isFormValid && (
+                <Text style={styles.disabledButtonHint}>
+                  {t('Vui lòng sửa các lỗi để tiếp tục')}
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -1151,6 +1220,7 @@ const styles = StyleSheet.create({
   requiredMark: {
     color: '#ff3b30',
     fontWeight: 'bold',
+    marginLeft: 4,
   },
   input: {
     height: 48,
@@ -1174,6 +1244,7 @@ const styles = StyleSheet.create({
     color: '#ff3b30',
     fontSize: 14,
     marginTop: 4,
+    fontWeight: '500',
   },
   timeInput: {
     flexDirection: 'row',
@@ -1238,6 +1309,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flex: 1,
     marginLeft: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
   },
   resetButton: {
     backgroundColor: '#f0f0f0',
@@ -1247,10 +1323,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flex: 1,
     marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
   },
   disabledButton: {
     backgroundColor: '#cccccc',
     opacity: 0.7,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   saveButtonText: {
     color: '#fff',
@@ -1262,6 +1342,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  disabledButtonHint: {
+    color: '#fff',
+    fontSize: 10,
+    marginTop: 4,
+    opacity: 0.8,
+    position: 'absolute',
+    bottom: 5,
+    textAlign: 'center',
+    width: '100%',
+  },
   overnightWarning: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1269,11 +1359,14 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#ffcc80',
   },
   overnightText: {
     color: '#e65100',
     marginLeft: 8,
     fontSize: 14,
+    fontWeight: '500',
   },
   loadingOverlay: {
     position: 'absolute',

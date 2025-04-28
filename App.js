@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useContext } from 'react'
+import { useEffect, useState } from 'react'
 import { StatusBar } from 'expo-status-bar'
 import { NavigationContainer } from '@react-navigation/native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
@@ -10,7 +10,7 @@ import * as Notifications from 'expo-notifications'
 // Import JSDoc types
 // @ts-ignore
 import './types.js'
-import { AppProvider, AppContext } from './context/AppContext'
+import { AppProvider } from './context/AppContext'
 
 // Import screens
 import HomeScreen from './screens/HomeScreen'
@@ -272,21 +272,24 @@ export default function App() {
     }
   }, [])
 
-  // @ts-ignore
   return (
-    <AppProvider>
-      <NavigationContainer>
-        <AppContent notification={notification} />
-      </NavigationContainer>
-    </AppProvider>
+    <AppProvider
+      children={
+        <NavigationContainer>
+          <AppContent notification={notification} />
+        </NavigationContainer>
+      }
+    ></AppProvider>
   )
 }
 
 // Separate component to use context safely
 /** @param {AppContentProps} props */
-function AppContent({ notification }) {
+function AppContent(props) {
   // eslint-disable-next-line no-unused-vars
-  const { darkMode } = useContext(AppContext)
+  const notification = props.notification
+  // eslint-disable-next-line no-unused-vars
+  const darkMode = true // Default value to avoid errors
 
   return (
     <>

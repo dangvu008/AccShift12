@@ -22,14 +22,8 @@ const NotesScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('')
 
   // Tải danh sách ghi chú khi màn hình được focus
-  useFocusEffect(
-    useCallback(() => {
-      loadNotes()
-    }, [loadNotes])
-  )
-
   // Tải danh sách ghi chú
-  const loadNotes = async () => {
+  const loadNotes = useCallback(async () => {
     setIsLoading(true)
     try {
       const allNotes = await getNotes()
@@ -45,7 +39,14 @@ const NotesScreen = ({ navigation }) => {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [t])
+
+  // Tải danh sách ghi chú khi màn hình được focus
+  useFocusEffect(
+    useCallback(() => {
+      loadNotes()
+    }, [loadNotes])
+  )
 
   // Xử lý tìm kiếm
   const handleSearch = (text) => {

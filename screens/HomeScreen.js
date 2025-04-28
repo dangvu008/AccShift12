@@ -41,7 +41,11 @@ const HomeScreen = ({ navigation }) => {
 
       // Calculate work duration if working
       if (isWorking && workStartTime) {
-        const duration = Math.floor((new Date() - workStartTime) / (1000 * 60))
+        const currentTimeMs = new Date().getTime()
+        const workStartTimeMs = workStartTime.getTime()
+        const duration = Math.floor(
+          (currentTimeMs - workStartTimeMs) / (1000 * 60)
+        )
         setWorkDuration(duration)
       }
     }, 1000)

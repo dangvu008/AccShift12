@@ -8,7 +8,13 @@
       "@utils/*": ["./utils/*"],
       "@context/*": ["./context/*"],
       "@config/*": ["./config/*"]
-    }
+    },
+    "jsx": "react-native",
+    "checkJs": true,
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "noImplicitAny": false
   },
   "exclude": ["node_modules", "dist"]
 }

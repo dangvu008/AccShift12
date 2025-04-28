@@ -44,6 +44,16 @@ const WeeklyStatusGrid = () => {
   const [selectedDay, setSelectedDay] = useState(null)
   const [detailModalVisible, setDetailModalVisible] = useState(false)
   const [statusModalVisible, setStatusModalVisible] = useState(false)
+  const [updatingStatus, setUpdatingStatus] = useState(false)
+  const [updatingDay, setUpdatingDay] = useState(null)
+
+  // Format date to YYYY-MM-DD for storage key
+  const formatDateKey = useCallback((date) => {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+      2,
+      '0'
+    )}-${String(date.getDate()).padStart(2, '0')}`
+  }, [])
 
   // Initialize week days and load statuses
   useEffect(() => {
@@ -185,13 +195,7 @@ const WeeklyStatusGrid = () => {
     }
   }
 
-  // Format date to YYYY-MM-DD for storage key
-  const formatDateKey = useCallback((date) => {
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-      2,
-      '0'
-    )}-${String(date.getDate()).padStart(2, '0')}`
-  }, [])
+  // Hàm đã được khai báo ở trên
 
   // Get status for a specific day
   const getDayStatus = (day) => {
@@ -249,6 +253,10 @@ const WeeklyStatusGrid = () => {
   // Update status for a specific day
   const updateDayStatus = async (day, newStatus) => {
     try {
+      // Đánh dấu đang cập nhật và lưu ngày đang cập nhật
+      setUpdatingStatus(true)
+      setUpdatingDay(formatDateKey(day.date))
+
       const dateKey = formatDateKey(day.date)
       const existingStatus = dailyStatuses[dateKey] || {}
       const now = new Date()
@@ -259,7 +267,6 @@ const WeeklyStatusGrid = () => {
       })
 
       // Sử dụng currentShift từ props thay vì gọi useContext ở đây
-
       const updatedStatus = {
         ...existingStatus,
         status: newStatus,
@@ -287,21 +294,31 @@ const WeeklyStatusGrid = () => {
         }
       }
 
-      await AsyncStorage.setItem(
-        `dailyWorkStatus_${dateKey}`,
-        JSON.stringify(updatedStatus)
-      )
-
-      // Update local state
+      // Cập nhật trạng thái local trước để UI phản hồi ngay lập tức
       setDailyStatuses({
         ...dailyStatuses,
         [dateKey]: updatedStatus,
       })
 
-      // Close modal
+      // Đóng modal ngay lập tức để cải thiện UX
       setStatusModalVisible(false)
+
+      // Lưu vào AsyncStorage (có thể mất thời gian)
+      await AsyncStorage.setItem(
+        `dailyWorkStatus_${dateKey}`,
+        JSON.stringify(updatedStatus)
+      )
+
+      // Đánh dấu đã hoàn thành cập nhật
+      setTimeout(() => {
+        setUpdatingStatus(false)
+        setUpdatingDay(null)
+      }, 500) // Đợi 500ms để tránh nhấp nháy quá nhanh
     } catch (error) {
       console.error('Error updating day status:', error)
+      // Đánh dấu đã hoàn thành cập nhật ngay cả khi có lỗi
+      setUpdatingStatus(false)
+      setUpdatingDay(null)
     }
   }
 
@@ -414,20 +431,43 @@ const WeeklyStatusGrid = () => {
   }
 
   // Render status icon
-  const renderStatusIcon = (status, isInGrid = false) => {
-    const iconConfig = getStatusIcon(status)
-    // Use smaller size for grid view
-    const gridSize = 18
-    const modalSize = 24
-    const size = isInGrid ? gridSize : modalSize
-    const fontAwesizeSize = isInGrid ? gridSize - 2 : modalSize - 4
-
+  const renderStatusIcon = (status, isInGrid = false, day = null) => {
     // Choose appropriate background style based on dark mode
     const backgroundStyle = isInGrid
       ? darkMode
         ? styles.darkIconBackground
         : styles.iconBackground
       : null
+
+    // Kiểm tra xem ngày này có đang được cập nhật không
+    const isUpdating = (dayObj) => {
+      if (!updatingStatus || !updatingDay || !dayObj) return false
+      const dateKey = formatDateKey(dayObj.date)
+      return updatingDay === dateKey
+    }
+
+    // Nếu đang cập nhật và đang ở trong grid, hiển thị icon loading
+    if (isInGrid && day && isUpdating(day)) {
+      return (
+        <View
+          style={[
+            backgroundStyle,
+            { justifyContent: 'center', alignItems: 'center' },
+          ]}
+        >
+          <Ionicons name="sync" size={18} color="#8a56ff" />
+        </View>
+      )
+    }
+
+    const iconConfig = getStatusIcon(status)
+    // Use smaller size for grid view
+    const gridSize = 18
+    const modalSize = 24
+    const size = isInGrid ? gridSize : modalSize
+    const fontAwesomeSize = isInGrid ? gridSize - 2 : modalSize - 4
+
+    // Đã khai báo ở trên
 
     if (iconConfig.type === 'ionicons') {
       return (
@@ -454,7 +494,7 @@ const WeeklyStatusGrid = () => {
         <View style={backgroundStyle}>
           <FontAwesome5
             name={iconConfig.name}
-            size={fontAwesizeSize}
+            size={fontAwesomeSize}
             color={iconConfig.color}
           />
         </View>
@@ -493,7 +533,6 @@ const WeeklyStatusGrid = () => {
       <View style={styles.gridContainer}>
         {weekDays.map((day) => {
           const status = getDayStatus(day)
-          const statusAbbr = getStatusAbbreviation(status)
           const isToday = day.isToday
 
           return (
@@ -530,7 +569,7 @@ const WeeklyStatusGrid = () => {
                 {weekdayNames[new Date(day.date).getDay()]}
               </Text>
               <View style={styles.statusContainer}>
-                {renderStatusIcon(status, true)}
+                {renderStatusIcon(status, true, day)}
               </View>
             </TouchableOpacity>
           )

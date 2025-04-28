@@ -13,10 +13,8 @@ import {
   ActivityIndicator,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { AppContext } from '../context/AppContext'
-import { STORAGE_KEYS } from '../utils/constants'
 import {
   getNotes,
   getShifts,
@@ -59,44 +57,8 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [showTimePicker, setShowTimePicker] = useState(false)
 
-  // Load note data and shifts
-  useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true)
-      try {
-        // Load shifts
-        const allShifts = await getShifts()
-        setShifts(allShifts.filter((shift) => shift.isActive))
-
-        // Load note data if editing
-        if (noteId) {
-          await loadNoteData()
-        }
-      } catch (error) {
-        console.error('Error loading data:', error)
-        Alert.alert(t('Lỗi'), t('Không thể tải dữ liệu'))
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadData()
-  }, [noteId, loadNoteData, t])
-
-  // Validate form when values change
-  useEffect(() => {
-    validateForm()
-  }, [
-    title,
-    content,
-    hasReminder,
-    useShiftReminder,
-    linkedShifts,
-    reminderDays,
-    validateForm,
-  ])
-
-  const loadNoteData = async () => {
+  // Define loadNoteData with useCallback
+  const loadNoteData = useCallback(async () => {
     try {
       const notes = await getNotes()
       const note = notes.find((n) => n.id === noteId)
@@ -137,10 +99,10 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
       console.error('Error loading note data:', error)
       Alert.alert(t('Lỗi'), t('Không thể tải dữ liệu ghi chú'))
     }
-  }
+  }, [noteId, t])
 
   // Validate form
-  const validateForm = async () => {
+  const validateForm = useCallback(async () => {
     const newErrors = {}
 
     // Validate title
@@ -179,7 +141,56 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
     setErrors(newErrors)
     setIsFormValid(Object.keys(newErrors).length === 0)
     return Object.keys(newErrors).length === 0
-  }
+  }, [
+    title,
+    content,
+    hasReminder,
+    useShiftReminder,
+    linkedShifts,
+    reminderDays,
+    t,
+    MAX_TITLE_LENGTH,
+    MAX_CONTENT_LENGTH,
+  ])
+
+  // Load note data and shifts
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true)
+      try {
+        // Load shifts
+        const allShifts = await getShifts()
+        setShifts(allShifts.filter((shift) => shift.isActive))
+
+        // Load note data if editing
+        if (noteId) {
+          await loadNoteData()
+        }
+      } catch (error) {
+        console.error('Error loading data:', error)
+        Alert.alert(t('Lỗi'), t('Không thể tải dữ liệu'))
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadData()
+  }, [noteId, loadNoteData, t])
+
+  // Validate form when values change
+  useEffect(() => {
+    validateForm()
+  }, [
+    title,
+    content,
+    hasReminder,
+    useShiftReminder,
+    linkedShifts,
+    reminderDays,
+    validateForm,
+  ])
+
+  // Hàm validateForm đã được khai báo ở trên
 
   // Toggle day selection for reminder days
   const toggleDaySelection = (day) => {
@@ -741,7 +752,14 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
           onPress={handleSave}
           disabled={!isFormValid}
         >
-          <Text style={styles.buttonText}>{t('Lưu')}</Text>
+          <Text style={[styles.buttonText, !isFormValid && { opacity: 0.8 }]}>
+            {t('Lưu')}
+          </Text>
+          {!isFormValid && (
+            <Text style={styles.disabledButtonHint}>
+              {t('Vui lòng sửa các lỗi để tiếp tục')}
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -788,6 +806,7 @@ const styles = StyleSheet.create({
   requiredMark: {
     color: '#ff5252',
     fontWeight: 'bold',
+    marginLeft: 4,
   },
   input: {
     height: 48,
@@ -811,6 +830,7 @@ const styles = StyleSheet.create({
     color: '#ff5252',
     fontSize: 14,
     marginTop: 4,
+    fontWeight: '500',
   },
   inputFooter: {
     flexDirection: 'row',
@@ -821,6 +841,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#999',
     textAlign: 'right',
+    fontWeight: '500',
   },
   textArea: {
     height: 120,
@@ -842,6 +863,9 @@ const styles = StyleSheet.create({
     marginTop: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    backgroundColor: '#f9f9f9',
+    padding: 8,
+    borderRadius: 8,
   },
   reminderTypeContainer: {
     marginTop: 16,
@@ -872,6 +896,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+    elevation: 1,
   },
   checkboxSelected: {
     backgroundColor: '#8a56ff',
@@ -899,6 +928,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
     marginRight: 8,
     marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+    elevation: 1,
   },
   dayButtonSelected: {
     backgroundColor: '#8a56ff',
@@ -921,6 +955,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: '#fff',
   },
   dateTimeText: {
     fontSize: 16,
@@ -940,6 +975,11 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     backgroundColor: '#8a56ff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
   },
   deleteButton: {
     backgroundColor: '#ff5252',
@@ -947,6 +987,8 @@ const styles = StyleSheet.create({
   disabledButton: {
     backgroundColor: '#cccccc',
     opacity: 0.7,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   buttonText: {
     color: '#fff',
@@ -984,6 +1026,16 @@ const styles = StyleSheet.create({
   },
   iosPicker: {
     height: 200,
+  },
+  disabledButtonHint: {
+    color: '#fff',
+    fontSize: 10,
+    marginTop: 4,
+    opacity: 0.8,
+    position: 'absolute',
+    bottom: 5,
+    textAlign: 'center',
+    width: '100%',
   },
 })
 
