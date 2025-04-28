@@ -146,108 +146,7 @@ const AddEditShiftScreen = ({ route, navigation }) => {
     }
   }, [isEditing, loadShiftData])
 
-  // Generic time picker handler
-  const handleTimeChange = (pickerType, event, selectedTime) => {
-    // Trên Android, event.type không tồn tại và selectedTime sẽ là null nếu người dùng hủy
-    if (Platform.OS === 'android') {
-      // Ẩn picker ngay lập tức
-      switch (pickerType) {
-        case 'departure': {
-          setShowDepartureTimePicker(false)
-          break
-        }
-        case 'start': {
-          setShowStartTimePicker(false)
-          break
-        }
-        case 'officeEnd': {
-          setShowOfficeEndTimePicker(false)
-          break
-        }
-        case 'end': {
-          setShowEndTimePicker(false)
-          break
-        }
-      }
-
-      // Chỉ cập nhật nếu selectedTime không phải là null (người dùng không hủy)
-      if (selectedTime) {
-        setIsFormDirty(true)
-        updateTimeValue(pickerType, selectedTime)
-      }
-    }
-    // Trên iOS, chỉ ẩn picker khi người dùng nhấn Done và cập nhật giá trị
-    else if (Platform.OS === 'ios') {
-      if (event.type === 'set') {
-        switch (pickerType) {
-          case 'departure': {
-            setShowDepartureTimePicker(false)
-            break
-          }
-          case 'start': {
-            setShowStartTimePicker(false)
-            break
-          }
-          case 'officeEnd': {
-            setShowOfficeEndTimePicker(false)
-            break
-          }
-          case 'end': {
-            setShowEndTimePicker(false)
-            break
-          }
-        }
-
-        setIsFormDirty(true)
-        updateTimeValue(pickerType, selectedTime)
-      } else if (event.type === 'dismissed') {
-        switch (pickerType) {
-          case 'departure': {
-            setShowDepartureTimePicker(false)
-            break
-          }
-          case 'start': {
-            setShowStartTimePicker(false)
-            break
-          }
-          case 'officeEnd': {
-            setShowOfficeEndTimePicker(false)
-            break
-          }
-          case 'end': {
-            setShowEndTimePicker(false)
-            break
-          }
-        }
-      }
-    }
-    // Xử lý cho web hoặc các nền tảng khác
-    else {
-      switch (pickerType) {
-        case 'departure': {
-          setShowDepartureTimePicker(false)
-          break
-        }
-        case 'start': {
-          setShowStartTimePicker(false)
-          break
-        }
-        case 'officeEnd': {
-          setShowOfficeEndTimePicker(false)
-          break
-        }
-        case 'end': {
-          setShowEndTimePicker(false)
-          break
-        }
-      }
-
-      if (selectedTime) {
-        setIsFormDirty(true)
-        updateTimeValue(pickerType, selectedTime)
-      }
-    }
-  }
+  // Các hàm xử lý thời gian được triển khai riêng cho từng loại picker
 
   // Hàm cập nhật giá trị thời gian
   const updateTimeValue = (pickerType, selectedTime) => {
@@ -259,86 +158,185 @@ const AddEditShiftScreen = ({ route, navigation }) => {
       case 'start': {
         setStartTime(selectedTime)
 
-          // Adjust departure time if needed (should be at least 5 minutes before start time)
-          const depMinutes =
-            departureTime.getHours() * 60 + departureTime.getMinutes()
-          const startMinutes =
-            selectedTime.getHours() * 60 + selectedTime.getMinutes()
+        // Adjust departure time if needed (should be at least 5 minutes before start time)
+        const depMinutes =
+          departureTime.getHours() * 60 + departureTime.getMinutes()
+        const startMinutes =
+          selectedTime.getHours() * 60 + selectedTime.getMinutes()
 
-          // Check if departure time is less than 5 minutes before start time
-          // Handle overnight case: if start time is early morning and departure time is late night
-          const isOvernight = startMinutes < depMinutes && startMinutes < 240 // 4 AM threshold
-          const minutesDiff = isOvernight
-            ? startMinutes + 24 * 60 - depMinutes
-            : startMinutes - depMinutes
+        // Check if departure time is less than 5 minutes before start time
+        // Handle overnight case: if start time is early morning and departure time is late night
+        const isOvernight = startMinutes < depMinutes && startMinutes < 240 // 4 AM threshold
+        const minutesDiff = isOvernight
+          ? startMinutes + 24 * 60 - depMinutes
+          : startMinutes - depMinutes
 
-          if (minutesDiff > -5) {
-            // Set departure time to 30 minutes before start time
-            const newDepTime = new Date(selectedTime)
-            newDepTime.setMinutes(newDepTime.getMinutes() - 30)
-            setDepartureTime(newDepTime)
-          }
-
-          // Adjust office end time if needed (should be at least 2 hours after start time)
-          const officeEndMinutes =
-            officeEndTime.getHours() * 60 + officeEndTime.getMinutes()
-
-          // Check if office end time is less than 2 hours after start time
-          // Handle overnight case
-          const isOvernightOffice = officeEndMinutes < startMinutes
-          const officeDiff = isOvernightOffice
-            ? officeEndMinutes + 24 * 60 - startMinutes
-            : officeEndMinutes - startMinutes
-
-          if (officeDiff < 120) {
-            // 2 hours = 120 minutes
-            // Set office end time to 2 hours after start time
-            const newOfficeEndTime = new Date(selectedTime)
-            newOfficeEndTime.setHours(newOfficeEndTime.getHours() + 2)
-            setOfficeEndTime(newOfficeEndTime)
-
-            // Also adjust end time if needed
-            if (endTime <= officeEndTime) {
-              setEndTime(new Date(newOfficeEndTime))
-            }
-          }
-          break
+        if (minutesDiff > -5) {
+          // Set departure time to 30 minutes before start time
+          const newDepTime = new Date(selectedTime)
+          newDepTime.setMinutes(newDepTime.getMinutes() - 30)
+          setDepartureTime(newDepTime)
         }
-        case 'officeEnd': {
-          setOfficeEndTime(selectedTime)
 
-          // Adjust end time if needed (should be at least equal to office end time)
-          if (endTime < selectedTime) {
-            setEndTime(new Date(selectedTime))
+        // Adjust office end time if needed (should be at least 2 hours after start time)
+        const officeEndMinutes =
+          officeEndTime.getHours() * 60 + officeEndTime.getMinutes()
+
+        // Check if office end time is less than 2 hours after start time
+        // Handle overnight case
+        const isOvernightOffice = officeEndMinutes < startMinutes
+        const officeDiff = isOvernightOffice
+          ? officeEndMinutes + 24 * 60 - startMinutes
+          : officeEndMinutes - startMinutes
+
+        if (officeDiff < 120) {
+          // 2 hours = 120 minutes
+          // Set office end time to 2 hours after start time
+          const newOfficeEndTime = new Date(selectedTime)
+          newOfficeEndTime.setHours(newOfficeEndTime.getHours() + 2)
+          setOfficeEndTime(newOfficeEndTime)
+
+          // Also adjust end time if needed
+          if (endTime <= officeEndTime) {
+            setEndTime(new Date(newOfficeEndTime))
           }
-          break
         }
-        case 'end': {
-          setEndTime(selectedTime)
-          break
-        }
+        break
       }
+      case 'officeEnd': {
+        setOfficeEndTime(selectedTime)
 
-      // Validate after time changes
-      validateForm()
+        // Adjust end time if needed (should be at least equal to office end time)
+        if (endTime < selectedTime) {
+          setEndTime(new Date(selectedTime))
+        }
+        break
+      }
+      case 'end': {
+        setEndTime(selectedTime)
+        break
+      }
     }
+
+    // Validate after time changes
+    validateForm()
   }
 
   // Specific handlers for each time picker
   const handleDepartureTimeChange = (event, selectedTime) => {
-    handleTimeChange('departure', event, selectedTime)
+    // Trên Android, event.type không tồn tại và selectedTime sẽ là null nếu người dùng hủy
+    if (Platform.OS === 'android') {
+      setShowDepartureTimePicker(false)
+      if (selectedTime) {
+        setIsFormDirty(true)
+        updateTimeValue('departure', selectedTime)
+      }
+    }
+    // Trên iOS, chỉ ẩn picker khi người dùng nhấn Done và cập nhật giá trị
+    else if (Platform.OS === 'ios') {
+      if (event.type === 'set') {
+        setShowDepartureTimePicker(false)
+        setIsFormDirty(true)
+        updateTimeValue('departure', selectedTime)
+      } else if (event.type === 'dismissed') {
+        setShowDepartureTimePicker(false)
+      }
+    }
+    // Xử lý cho web hoặc các nền tảng khác
+    else {
+      setShowDepartureTimePicker(false)
+      if (selectedTime) {
+        setIsFormDirty(true)
+        updateTimeValue('departure', selectedTime)
+      }
+    }
   }
 
   const handleStartTimeChange = (event, selectedTime) => {
-    handleTimeChange('start', event, selectedTime)
+    // Trên Android, event.type không tồn tại và selectedTime sẽ là null nếu người dùng hủy
+    if (Platform.OS === 'android') {
+      setShowStartTimePicker(false)
+      if (selectedTime) {
+        setIsFormDirty(true)
+        updateTimeValue('start', selectedTime)
+      }
+    }
+    // Trên iOS, chỉ ẩn picker khi người dùng nhấn Done và cập nhật giá trị
+    else if (Platform.OS === 'ios') {
+      if (event.type === 'set') {
+        setShowStartTimePicker(false)
+        setIsFormDirty(true)
+        updateTimeValue('start', selectedTime)
+      } else if (event.type === 'dismissed') {
+        setShowStartTimePicker(false)
+      }
+    }
+    // Xử lý cho web hoặc các nền tảng khác
+    else {
+      setShowStartTimePicker(false)
+      if (selectedTime) {
+        setIsFormDirty(true)
+        updateTimeValue('start', selectedTime)
+      }
+    }
   }
 
   const handleOfficeEndTimeChange = (event, selectedTime) => {
-    handleTimeChange('officeEnd', event, selectedTime)
+    // Trên Android, event.type không tồn tại và selectedTime sẽ là null nếu người dùng hủy
+    if (Platform.OS === 'android') {
+      setShowOfficeEndTimePicker(false)
+      if (selectedTime) {
+        setIsFormDirty(true)
+        updateTimeValue('officeEnd', selectedTime)
+      }
+    }
+    // Trên iOS, chỉ ẩn picker khi người dùng nhấn Done và cập nhật giá trị
+    else if (Platform.OS === 'ios') {
+      if (event.type === 'set') {
+        setShowOfficeEndTimePicker(false)
+        setIsFormDirty(true)
+        updateTimeValue('officeEnd', selectedTime)
+      } else if (event.type === 'dismissed') {
+        setShowOfficeEndTimePicker(false)
+      }
+    }
+    // Xử lý cho web hoặc các nền tảng khác
+    else {
+      setShowOfficeEndTimePicker(false)
+      if (selectedTime) {
+        setIsFormDirty(true)
+        updateTimeValue('officeEnd', selectedTime)
+      }
+    }
   }
 
   const handleEndTimeChange = (event, selectedTime) => {
-    handleTimeChange('end', event, selectedTime)
+    // Trên Android, event.type không tồn tại và selectedTime sẽ là null nếu người dùng hủy
+    if (Platform.OS === 'android') {
+      setShowEndTimePicker(false)
+      if (selectedTime) {
+        setIsFormDirty(true)
+        updateTimeValue('end', selectedTime)
+      }
+    }
+    // Trên iOS, chỉ ẩn picker khi người dùng nhấn Done và cập nhật giá trị
+    else if (Platform.OS === 'ios') {
+      if (event.type === 'set') {
+        setShowEndTimePicker(false)
+        setIsFormDirty(true)
+        updateTimeValue('end', selectedTime)
+      } else if (event.type === 'dismissed') {
+        setShowEndTimePicker(false)
+      }
+    }
+    // Xử lý cho web hoặc các nền tảng khác
+    else {
+      setShowEndTimePicker(false)
+      if (selectedTime) {
+        setIsFormDirty(true)
+        updateTimeValue('end', selectedTime)
+      }
+    }
   }
 
   const formatTimeForDisplay = (date) => {

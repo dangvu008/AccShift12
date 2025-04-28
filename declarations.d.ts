@@ -76,7 +76,7 @@ declare module '@expo/vector-icons' {
 }
 
 declare module 'expo-status-bar' {
-  export const StatusBar: any
+  export const StatusBarComponent: any
 }
 
 declare module 'expo-notifications' {

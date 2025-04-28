@@ -164,6 +164,10 @@
     "hourglass",
     "ribbon",
     "datetimepicker",
+    "tảng",
+    "triển",
+    "riêng",
+    "từng",
     "tảng"
   ],
   "ignorePaths": ["node_modules/**", "build/**", "dist/**", ".git/**"]
