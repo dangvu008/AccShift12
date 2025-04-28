@@ -20,6 +20,7 @@ import DateTimePicker from '@react-native-community/datetimepicker'
 import { AppContext } from '../context/AppContext'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { STORAGE_KEYS } from '../utils/constants'
+import { useFocusEffect } from '@react-navigation/native'
 
 const AddEditShiftScreen = ({ route, navigation }) => {
   const { t, darkMode } = useContext(AppContext)
@@ -150,36 +151,44 @@ const AddEditShiftScreen = ({ route, navigation }) => {
     // Hide picker immediately on Android
     if (Platform.OS === 'android') {
       switch (pickerType) {
-        case 'departure':
+        case 'departure': {
           setShowDepartureTimePicker(false)
           break
-        case 'start':
+        }
+        case 'start': {
           setShowStartTimePicker(false)
           break
-        case 'officeEnd':
+        }
+        case 'officeEnd': {
           setShowOfficeEndTimePicker(false)
           break
-        case 'end':
+        }
+        case 'end': {
           setShowEndTimePicker(false)
           break
+        }
       }
     }
 
     // On iOS, only hide picker when user presses Done
     if (Platform.OS === 'ios' && event.type === 'set') {
       switch (pickerType) {
-        case 'departure':
+        case 'departure': {
           setShowDepartureTimePicker(false)
           break
-        case 'start':
+        }
+        case 'start': {
           setShowStartTimePicker(false)
           break
-        case 'officeEnd':
+        }
+        case 'officeEnd': {
           setShowOfficeEndTimePicker(false)
           break
-        case 'end':
+        }
+        case 'end': {
           setShowEndTimePicker(false)
           break
+        }
       }
     }
 
@@ -188,10 +197,11 @@ const AddEditShiftScreen = ({ route, navigation }) => {
       setIsFormDirty(true)
 
       switch (pickerType) {
-        case 'departure':
+        case 'departure': {
           setDepartureTime(selectedTime)
           break
-        case 'start':
+        }
+        case 'start': {
           setStartTime(selectedTime)
 
           // Adjust departure time if needed (should be at least 5 minutes before start time)
@@ -238,7 +248,8 @@ const AddEditShiftScreen = ({ route, navigation }) => {
             }
           }
           break
-        case 'officeEnd':
+        }
+        case 'officeEnd': {
           setOfficeEndTime(selectedTime)
 
           // Adjust end time if needed (should be at least equal to office end time)
@@ -246,9 +257,11 @@ const AddEditShiftScreen = ({ route, navigation }) => {
             setEndTime(new Date(selectedTime))
           }
           break
-        case 'end':
+        }
+        case 'end': {
           setEndTime(selectedTime)
           break
+        }
       }
 
       // Validate after time changes

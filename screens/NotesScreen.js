@@ -25,7 +25,7 @@ const NotesScreen = ({ navigation }) => {
   useFocusEffect(
     useCallback(() => {
       loadNotes()
-    }, [])
+    }, [loadNotes])
   )
 
   // Tải danh sách ghi chú
@@ -100,7 +100,7 @@ const NotesScreen = ({ navigation }) => {
           {item.title}
         </Text>
         <Text
-          style={[styles.noteContent, darkMode && styles.darkSubText]}
+          style={[styles.noteDescription, darkMode && styles.darkSubText]}
           numberOfLines={2}
           ellipsizeMode="tail"
         >
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     color: '#333',
   },
-  noteText: {
+  noteDescription: {
     fontSize: 14,
     color: '#666',
     marginBottom: 8,

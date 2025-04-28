@@ -1,0 +1,16 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "Thống", "tháng", "chấm", "công", "tiết", "Quản", "việc", 
+    "Chỉnh", "Thêm", "Thời", "Lịch", "Khôi", "phục", "Cảnh", 
+    "thời", "Chọn", "hình", "được", "đăng", "nhưng", "không", 
+    "hiển", "trong", "dành", "Khóa", "Trang"
+  ],
+  "ignorePaths": [
+    "node_modules/**",
+    "build/**",
+    "dist/**",
+    ".git/**"
+  ]
+}

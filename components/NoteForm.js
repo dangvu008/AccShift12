@@ -81,7 +81,7 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
     }
 
     loadData()
-  }, [noteId])
+  }, [noteId, loadNoteData, t])
 
   // Validate form when values change
   useEffect(() => {
@@ -93,6 +93,7 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
     useShiftReminder,
     linkedShifts,
     reminderDays,
+    validateForm,
   ])
 
   const loadNoteData = async () => {

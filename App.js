@@ -7,6 +7,9 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { createStackNavigator } from '@react-navigation/stack'
 import { Ionicons } from '@expo/vector-icons'
 import * as Notifications from 'expo-notifications'
+// Import JSDoc types
+// @ts-ignore
+import './types.js'
 import { AppProvider, AppContext } from './context/AppContext'
 
 // Import screens
@@ -94,11 +97,13 @@ function HomeStack() {
       <Stack.Screen
         name="AddEditShift"
         component={AddEditShiftScreen}
-        options={({ route }) => ({
-          title: route.params?.shiftId
-            ? 'Chỉnh sửa ca làm việc'
-            : 'Thêm ca làm việc',
-        })}
+        options={
+          /** @param {{route: Route}} param */ ({ route }) => ({
+            title: route.params?.shiftId
+              ? 'Chỉnh sửa ca làm việc'
+              : 'Thêm ca làm việc',
+          })
+        }
       />
       <Stack.Screen
         name="WeatherDetail"
@@ -240,6 +245,7 @@ export default function App() {
   useEffect(() => {
     // Listen for notifications
     const subscription = Notifications.addNotificationReceivedListener(
+      /** @param {Notification} notification */
       (notification) => {
         setNotification(notification)
       }
@@ -247,15 +253,18 @@ export default function App() {
 
     // Listen for notification responses
     const responseSubscription =
-      Notifications.addNotificationResponseReceivedListener((response) => {
-        const data = response.notification.request.content.data
+      Notifications.addNotificationResponseReceivedListener(
+        /** @param {NotificationResponse} response */
+        (response) => {
+          const data = response.notification.request.content.data
 
-        // Handle alarm notifications
-        if (data.isAlarm) {
-          // Navigate to alarm screen
-          // This will be handled by the navigation ref
+          // Handle alarm notifications
+          if (data.isAlarm) {
+            // Navigate to alarm screen
+            // This will be handled by the navigation ref
+          }
         }
-      })
+      )
 
     return () => {
       subscription.remove()
@@ -263,6 +272,7 @@ export default function App() {
     }
   }, [])
 
+  // @ts-ignore
   return (
     <AppProvider>
       <NavigationContainer>
@@ -273,35 +283,43 @@ export default function App() {
 }
 
 // Separate component to use context safely
+/** @param {AppContentProps} props */
 function AppContent({ notification }) {
+  // eslint-disable-next-line no-unused-vars
   const { darkMode } = useContext(AppContext)
 
   return (
     <>
       <Tab.Navigator
-        screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused, color, size }) => {
-            let iconName
+        screenOptions={
+          /** @param {{route: Route}} param */ ({ route }) => ({
+            tabBarIcon: /** @param {TabBarIconProps} props */ ({
+              focused,
+              color,
+              size,
+            }) => {
+              let iconName
 
-            if (route.name === 'HomeStack') {
-              iconName = focused ? 'home' : 'home-outline'
-            } else if (route.name === 'ShiftsStack') {
-              iconName = focused ? 'calendar' : 'calendar-outline'
-            } else if (route.name === 'StatisticsStack') {
-              iconName = focused ? 'stats-chart' : 'stats-chart-outline'
-            } else if (route.name === 'SettingsStack') {
-              iconName = focused ? 'settings' : 'settings-outline'
-            }
+              if (route.name === 'HomeStack') {
+                iconName = focused ? 'home' : 'home-outline'
+              } else if (route.name === 'ShiftsStack') {
+                iconName = focused ? 'calendar' : 'calendar-outline'
+              } else if (route.name === 'StatisticsStack') {
+                iconName = focused ? 'stats-chart' : 'stats-chart-outline'
+              } else if (route.name === 'SettingsStack') {
+                iconName = focused ? 'settings' : 'settings-outline'
+              }
 
-            return <Ionicons name={iconName} size={size} color={color} />
-          },
-          tabBarActiveTintColor: '#8a56ff',
-          tabBarInactiveTintColor: 'gray',
-          tabBarStyle: {
-            backgroundColor: darkMode ? '#121212' : '#fff',
-            borderTopColor: darkMode ? '#333' : '#ddd',
-          },
-        })}
+              return <Ionicons name={iconName} size={size} color={color} />
+            },
+            tabBarActiveTintColor: '#8a56ff',
+            tabBarInactiveTintColor: 'gray',
+            tabBarStyle: {
+              backgroundColor: darkMode ? '#121212' : '#fff',
+              borderTopColor: darkMode ? '#333' : '#ddd',
+            },
+          })
+        }
       >
         <Tab.Screen
           name="HomeStack"
