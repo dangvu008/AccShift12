@@ -159,7 +159,11 @@
     "đăng",
     "dành",
     "khóa",
-    "trang"
+    "trang",
+    "medkit",
+    "hourglass",
+    "ribbon",
+    "datetimepicker"
   ],
   "ignorePaths": ["node_modules/**", "build/**", "dist/**", ".git/**"]
 }

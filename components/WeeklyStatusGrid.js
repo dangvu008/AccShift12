@@ -330,13 +330,13 @@ const WeeklyStatusGrid = () => {
       case WORK_STATUS.DU_CONG:
         return { name: 'checkmark-circle', color: '#27ae60', type: 'ionicons' }
       case WORK_STATUS.NGHI_PHEP:
-        return { name: 'mail', color: '#3498db', type: 'ionicons' }
+        return { name: 'calendar-outline', color: '#3498db', type: 'ionicons' }
       case WORK_STATUS.NGHI_BENH:
-        return { name: 'bed', color: '#9b59b6', type: 'font-awesome' }
+        return { name: 'medkit-outline', color: '#9b59b6', type: 'ionicons' }
       case WORK_STATUS.NGHI_LE:
-        return { name: 'flag', color: '#f39c12', type: 'font-awesome' }
+        return { name: 'ribbon-outline', color: '#f39c12', type: 'ionicons' }
       case WORK_STATUS.NGHI_THUONG:
-        return { name: 'home', color: '#27ae60', type: 'ionicons' }
+        return { name: 'home-outline', color: '#27ae60', type: 'ionicons' }
       case WORK_STATUS.VANG_MAT:
         return { name: 'close-circle', color: '#e74c3c', type: 'ionicons' }
       case WORK_STATUS.DI_MUON:
@@ -344,15 +344,15 @@ const WeeklyStatusGrid = () => {
       case WORK_STATUS.VE_SOM:
         return { name: 'exit-outline', color: '#f39c12', type: 'ionicons' }
       case WORK_STATUS.DI_MUON_VE_SOM:
-        return {
-          name: 'timer-sand',
-          color: '#f39c12',
-          type: 'material-community',
-        }
+        return { name: 'hourglass-outline', color: '#f39c12', type: 'ionicons' }
       case WORK_STATUS.NGAY_TUONG_LAI:
-        return { name: 'remove', color: '#95a5a6', type: 'font-awesome' }
+        return { name: 'calendar', color: '#95a5a6', type: 'ionicons' }
       default:
-        return { name: 'help-circle', color: '#95a5a6', type: 'ionicons' }
+        return {
+          name: 'help-circle-outline',
+          color: '#95a5a6',
+          type: 'ionicons',
+        }
     }
   }
 
@@ -390,29 +390,29 @@ const WeeklyStatusGrid = () => {
   const getStatusAbbreviation = (status) => {
     switch (status) {
       case WORK_STATUS.THIEU_LOG:
-        return '❗'
+        return '⚠️'
       case WORK_STATUS.DU_CONG:
-        return '✅'
+        return '✓'
       case WORK_STATUS.NGHI_PHEP:
-        return '📩 P'
+        return 'NP'
       case WORK_STATUS.NGHI_BENH:
-        return '🛌 B'
+        return 'NB'
       case WORK_STATUS.NGHI_LE:
-        return '🎌 H'
+        return 'NL'
       case WORK_STATUS.NGHI_THUONG:
-        return '🏠 N'
+        return 'NT'
       case WORK_STATUS.VANG_MAT:
-        return '❌ X'
+        return '✗'
       case WORK_STATUS.DI_MUON:
-        return 'RV↓'
+        return 'DM'
       case WORK_STATUS.VE_SOM:
-        return 'RV↑'
+        return 'VS'
       case WORK_STATUS.DI_MUON_VE_SOM:
-        return 'RV'
+        return 'DV'
       case WORK_STATUS.NGAY_TUONG_LAI:
         return '--'
       default:
-        return '❓'
+        return '?'
     }
   }
 
