@@ -216,40 +216,76 @@ const ShiftFormModal = ({ visible, shiftId, onClose, onSaved }) => {
   }
 
   const handleStartTimeChange = (event, selectedDate) => {
-    // Hide picker immediately on Android
+    // Trên Android, event.type không tồn tại và selectedDate sẽ là null nếu người dùng hủy
     if (Platform.OS === 'android') {
       setShowStartTimePicker(false)
-    }
 
-    // On iOS, only hide picker when user presses Done
-    if (Platform.OS === 'ios' && event.type === 'set') {
+      // Chỉ cập nhật nếu selectedDate không phải là null (người dùng không hủy)
+      if (selectedDate) {
+        setStartTimeDate(selectedDate)
+        const hours = selectedDate.getHours().toString().padStart(2, '0')
+        const minutes = selectedDate.getMinutes().toString().padStart(2, '0')
+        setStartTime(`${hours}:${minutes}`)
+      }
+    }
+    // Trên iOS, chỉ ẩn picker khi người dùng nhấn Done và cập nhật giá trị
+    else if (Platform.OS === 'ios') {
+      if (event.type === 'set') {
+        setShowStartTimePicker(false)
+        setStartTimeDate(selectedDate)
+        const hours = selectedDate.getHours().toString().padStart(2, '0')
+        const minutes = selectedDate.getMinutes().toString().padStart(2, '0')
+        setStartTime(`${hours}:${minutes}`)
+      } else if (event.type === 'dismissed') {
+        setShowStartTimePicker(false)
+      }
+    }
+    // Xử lý cho web hoặc các nền tảng khác
+    else {
       setShowStartTimePicker(false)
-    }
-
-    if (selectedDate) {
-      setStartTimeDate(selectedDate)
-      const hours = selectedDate.getHours().toString().padStart(2, '0')
-      const minutes = selectedDate.getMinutes().toString().padStart(2, '0')
-      setStartTime(`${hours}:${minutes}`)
+      if (selectedDate) {
+        setStartTimeDate(selectedDate)
+        const hours = selectedDate.getHours().toString().padStart(2, '0')
+        const minutes = selectedDate.getMinutes().toString().padStart(2, '0')
+        setStartTime(`${hours}:${minutes}`)
+      }
     }
   }
 
   const handleEndTimeChange = (event, selectedDate) => {
-    // Hide picker immediately on Android
+    // Trên Android, event.type không tồn tại và selectedDate sẽ là null nếu người dùng hủy
     if (Platform.OS === 'android') {
       setShowEndTimePicker(false)
-    }
 
-    // On iOS, only hide picker when user presses Done
-    if (Platform.OS === 'ios' && event.type === 'set') {
+      // Chỉ cập nhật nếu selectedDate không phải là null (người dùng không hủy)
+      if (selectedDate) {
+        setEndTimeDate(selectedDate)
+        const hours = selectedDate.getHours().toString().padStart(2, '0')
+        const minutes = selectedDate.getMinutes().toString().padStart(2, '0')
+        setEndTime(`${hours}:${minutes}`)
+      }
+    }
+    // Trên iOS, chỉ ẩn picker khi người dùng nhấn Done và cập nhật giá trị
+    else if (Platform.OS === 'ios') {
+      if (event.type === 'set') {
+        setShowEndTimePicker(false)
+        setEndTimeDate(selectedDate)
+        const hours = selectedDate.getHours().toString().padStart(2, '0')
+        const minutes = selectedDate.getMinutes().toString().padStart(2, '0')
+        setEndTime(`${hours}:${minutes}`)
+      } else if (event.type === 'dismissed') {
+        setShowEndTimePicker(false)
+      }
+    }
+    // Xử lý cho web hoặc các nền tảng khác
+    else {
       setShowEndTimePicker(false)
-    }
-
-    if (selectedDate) {
-      setEndTimeDate(selectedDate)
-      const hours = selectedDate.getHours().toString().padStart(2, '0')
-      const minutes = selectedDate.getMinutes().toString().padStart(2, '0')
-      setEndTime(`${hours}:${minutes}`)
+      if (selectedDate) {
+        setEndTimeDate(selectedDate)
+        const hours = selectedDate.getHours().toString().padStart(2, '0')
+        const minutes = selectedDate.getMinutes().toString().padStart(2, '0')
+        setEndTime(`${hours}:${minutes}`)
+      }
     }
   }
 

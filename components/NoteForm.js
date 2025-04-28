@@ -336,44 +336,82 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
   }
 
   const handleDateChange = (event, selectedDate) => {
-    // Hide picker immediately on Android
+    // Trên Android, event.type không tồn tại và selectedDate sẽ là null nếu người dùng hủy
     if (Platform.OS === 'android') {
       setShowDatePicker(false)
-    }
 
-    // On iOS, only hide picker when user presses Done
-    if (Platform.OS === 'ios' && event.type === 'set') {
+      // Chỉ cập nhật nếu selectedDate không phải là null (người dùng không hủy)
+      if (selectedDate) {
+        const currentDate = new Date(reminderDate)
+        currentDate.setFullYear(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate()
+        )
+        setReminderDate(currentDate)
+      }
+    }
+    // Trên iOS, chỉ ẩn picker khi người dùng nhấn Done và cập nhật giá trị
+    else if (Platform.OS === 'ios') {
+      if (event.type === 'set') {
+        setShowDatePicker(false)
+        const currentDate = new Date(reminderDate)
+        currentDate.setFullYear(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate()
+        )
+        setReminderDate(currentDate)
+      } else if (event.type === 'dismissed') {
+        setShowDatePicker(false)
+      }
+    }
+    // Xử lý cho web hoặc các nền tảng khác
+    else {
       setShowDatePicker(false)
-    }
-
-    // Only update if user selected a date (not cancelled)
-    if (selectedDate && event.type !== 'dismissed') {
-      const currentDate = new Date(reminderDate)
-      currentDate.setFullYear(
-        selectedDate.getFullYear(),
-        selectedDate.getMonth(),
-        selectedDate.getDate()
-      )
-      setReminderDate(currentDate)
+      if (selectedDate) {
+        const currentDate = new Date(reminderDate)
+        currentDate.setFullYear(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate()
+        )
+        setReminderDate(currentDate)
+      }
     }
   }
 
   const handleTimeChange = (event, selectedTime) => {
-    // Hide picker immediately on Android
+    // Trên Android, event.type không tồn tại và selectedTime sẽ là null nếu người dùng hủy
     if (Platform.OS === 'android') {
       setShowTimePicker(false)
-    }
 
-    // On iOS, only hide picker when user presses Done
-    if (Platform.OS === 'ios' && event.type === 'set') {
+      // Chỉ cập nhật nếu selectedTime không phải là null (người dùng không hủy)
+      if (selectedTime) {
+        const currentDate = new Date(reminderDate)
+        currentDate.setHours(selectedTime.getHours(), selectedTime.getMinutes())
+        setReminderDate(currentDate)
+      }
+    }
+    // Trên iOS, chỉ ẩn picker khi người dùng nhấn Done và cập nhật giá trị
+    else if (Platform.OS === 'ios') {
+      if (event.type === 'set') {
+        setShowTimePicker(false)
+        const currentDate = new Date(reminderDate)
+        currentDate.setHours(selectedTime.getHours(), selectedTime.getMinutes())
+        setReminderDate(currentDate)
+      } else if (event.type === 'dismissed') {
+        setShowTimePicker(false)
+      }
+    }
+    // Xử lý cho web hoặc các nền tảng khác
+    else {
       setShowTimePicker(false)
-    }
-
-    // Only update if user selected a time (not cancelled)
-    if (selectedTime && event.type !== 'dismissed') {
-      const currentDate = new Date(reminderDate)
-      currentDate.setHours(selectedTime.getHours(), selectedTime.getMinutes())
-      setReminderDate(currentDate)
+      if (selectedTime) {
+        const currentDate = new Date(reminderDate)
+        currentDate.setHours(selectedTime.getHours(), selectedTime.getMinutes())
+        setReminderDate(currentDate)
+      }
     }
   }
 

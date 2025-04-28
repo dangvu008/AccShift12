@@ -163,7 +163,8 @@
     "medkit",
     "hourglass",
     "ribbon",
-    "datetimepicker"
+    "datetimepicker",
+    "tảng"
   ],
   "ignorePaths": ["node_modules/**", "build/**", "dist/**", ".git/**"]
 }

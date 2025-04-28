@@ -148,8 +148,9 @@ const AddEditShiftScreen = ({ route, navigation }) => {
 
   // Generic time picker handler
   const handleTimeChange = (pickerType, event, selectedTime) => {
-    // Hide picker immediately on Android
+    // Trên Android, event.type không tồn tại và selectedTime sẽ là null nếu người dùng hủy
     if (Platform.OS === 'android') {
+      // Ẩn picker ngay lập tức
       switch (pickerType) {
         case 'departure': {
           setShowDepartureTimePicker(false)
@@ -168,10 +169,60 @@ const AddEditShiftScreen = ({ route, navigation }) => {
           break
         }
       }
-    }
 
-    // On iOS, only hide picker when user presses Done
-    if (Platform.OS === 'ios' && event.type === 'set') {
+      // Chỉ cập nhật nếu selectedTime không phải là null (người dùng không hủy)
+      if (selectedTime) {
+        setIsFormDirty(true)
+        updateTimeValue(pickerType, selectedTime)
+      }
+    }
+    // Trên iOS, chỉ ẩn picker khi người dùng nhấn Done và cập nhật giá trị
+    else if (Platform.OS === 'ios') {
+      if (event.type === 'set') {
+        switch (pickerType) {
+          case 'departure': {
+            setShowDepartureTimePicker(false)
+            break
+          }
+          case 'start': {
+            setShowStartTimePicker(false)
+            break
+          }
+          case 'officeEnd': {
+            setShowOfficeEndTimePicker(false)
+            break
+          }
+          case 'end': {
+            setShowEndTimePicker(false)
+            break
+          }
+        }
+
+        setIsFormDirty(true)
+        updateTimeValue(pickerType, selectedTime)
+      } else if (event.type === 'dismissed') {
+        switch (pickerType) {
+          case 'departure': {
+            setShowDepartureTimePicker(false)
+            break
+          }
+          case 'start': {
+            setShowStartTimePicker(false)
+            break
+          }
+          case 'officeEnd': {
+            setShowOfficeEndTimePicker(false)
+            break
+          }
+          case 'end': {
+            setShowEndTimePicker(false)
+            break
+          }
+        }
+      }
+    }
+    // Xử lý cho web hoặc các nền tảng khác
+    else {
       switch (pickerType) {
         case 'departure': {
           setShowDepartureTimePicker(false)
@@ -190,19 +241,23 @@ const AddEditShiftScreen = ({ route, navigation }) => {
           break
         }
       }
+
+      if (selectedTime) {
+        setIsFormDirty(true)
+        updateTimeValue(pickerType, selectedTime)
+      }
     }
+  }
 
-    // Only update time if user has selected (not cancelled)
-    if (selectedTime && event.type !== 'dismissed') {
-      setIsFormDirty(true)
-
-      switch (pickerType) {
-        case 'departure': {
-          setDepartureTime(selectedTime)
-          break
-        }
-        case 'start': {
-          setStartTime(selectedTime)
+  // Hàm cập nhật giá trị thời gian
+  const updateTimeValue = (pickerType, selectedTime) => {
+    switch (pickerType) {
+      case 'departure': {
+        setDepartureTime(selectedTime)
+        break
+      }
+      case 'start': {
+        setStartTime(selectedTime)
 
           // Adjust departure time if needed (should be at least 5 minutes before start time)
           const depMinutes =
