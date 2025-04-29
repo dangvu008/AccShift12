@@ -5,7 +5,6 @@ import {
   TextInput,
   StyleSheet,
   TouchableOpacity,
-  Switch,
   Platform,
   Alert,
   ScrollView,
@@ -29,12 +28,9 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
   // Form state
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
-  const [reminderTime, setReminderTime] = useState('')
-  const [hasReminder, setHasReminder] = useState(true)
   const [reminderDate, setReminderDate] = useState(new Date())
   const [linkedShifts, setLinkedShifts] = useState([])
-  const [reminderDays, setReminderDays] = useState([])
-  const [useShiftReminder, setUseShiftReminder] = useState(true)
+  const [reminderType, setReminderType] = useState('specific') // 'specific' hoặc 'shift'
   const [isLoading, setIsLoading] = useState(true)
   const [shifts, setShifts] = useState([])
   const [errors, setErrors] = useState({})
@@ -43,15 +39,6 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
   // Constants
   const MAX_TITLE_LENGTH = 100
   const MAX_CONTENT_LENGTH = 300
-  const DAYS_OF_WEEK = [
-    { key: 'T2', label: 'T2' },
-    { key: 'T3', label: 'T3' },
-    { key: 'T4', label: 'T4' },
-    { key: 'T5', label: 'T5' },
-    { key: 'T6', label: 'T6' },
-    { key: 'T7', label: 'T7' },
-    { key: 'CN', label: 'CN' },
-  ]
 
   // Date/time picker state
   const [showDatePicker, setShowDatePicker] = useState(false)
@@ -70,18 +57,12 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
         // Set linked shifts
         setLinkedShifts(note.linkedShifts || [])
 
-        // Set reminder days
-        setReminderDays(note.reminderDays || [])
-
         // Determine if using shift-based reminders
         const isUsingShiftReminders =
           note.linkedShifts && note.linkedShifts.length > 0
-        setUseShiftReminder(isUsingShiftReminders)
+        setReminderType(isUsingShiftReminders ? 'shift' : 'specific')
 
         if (note.reminderTime) {
-          setHasReminder(true)
-          setReminderTime(note.reminderTime)
-
           // Parse reminder time to set date object
           const [datePart, timePart] = note.reminderTime.split(' ')
           if (datePart && timePart) {
@@ -124,17 +105,18 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
     }
 
     // Validate reminder settings
-    if (hasReminder) {
-      if (!useShiftReminder) {
-        // If not using shift-based reminders, validate reminder days
-        if (reminderDays.length === 0) {
-          newErrors.reminderDays = t('Vui lòng chọn ít nhất một ngày nhắc nhở')
-        }
-      } else {
-        // If using shift-based reminders, validate linked shifts
-        if (linkedShifts.length === 0) {
-          newErrors.linkedShifts = t('Vui lòng chọn ít nhất một ca làm việc')
-        }
+    if (reminderType === 'specific') {
+      // Kiểm tra thời gian nhắc nhở phải trong tương lai
+      const now = new Date()
+      if (reminderDate <= now) {
+        newErrors.reminderDate = t(
+          'Thời gian nhắc nhở phải là thời điểm trong tương lai'
+        )
+      }
+    } else if (reminderType === 'shift') {
+      // Kiểm tra phải chọn ít nhất một ca làm việc
+      if (linkedShifts.length === 0) {
+        newErrors.linkedShifts = t('Vui lòng chọn ít nhất một ca làm việc')
       }
     }
 
@@ -144,10 +126,9 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
   }, [
     title,
     content,
-    hasReminder,
-    useShiftReminder,
+    reminderType,
+    reminderDate,
     linkedShifts,
-    reminderDays,
     t,
     MAX_TITLE_LENGTH,
     MAX_CONTENT_LENGTH,
@@ -180,26 +161,7 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
   // Validate form when values change
   useEffect(() => {
     validateForm()
-  }, [
-    title,
-    content,
-    hasReminder,
-    useShiftReminder,
-    linkedShifts,
-    reminderDays,
-    validateForm,
-  ])
-
-  // Hàm validateForm đã được khai báo ở trên
-
-  // Toggle day selection for reminder days
-  const toggleDaySelection = (day) => {
-    if (reminderDays.includes(day)) {
-      setReminderDays(reminderDays.filter((d) => d !== day))
-    } else {
-      setReminderDays([...reminderDays, day])
-    }
-  }
+  }, [title, content, reminderType, reminderDate, linkedShifts, validateForm])
 
   // Toggle shift selection for linked shifts
   const toggleShiftSelection = (shiftId) => {
@@ -265,19 +227,18 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
   const saveNoteData = async () => {
     try {
       // Format reminder time
-      const formattedReminderTime = hasReminder
-        ? `${reminderDate.getDate().toString().padStart(2, '0')}/${(
-            reminderDate.getMonth() + 1
-          )
-            .toString()
-            .padStart(2, '0')}/${reminderDate.getFullYear()} ${reminderDate
-            .getHours()
-            .toString()
-            .padStart(2, '0')}:${reminderDate
-            .getMinutes()
-            .toString()
-            .padStart(2, '0')}`
-        : null
+      const formattedReminderTime = `${reminderDate
+        .getDate()
+        .toString()
+        .padStart(2, '0')}/${(reminderDate.getMonth() + 1)
+        .toString()
+        .padStart(2, '0')}/${reminderDate.getFullYear()} ${reminderDate
+        .getHours()
+        .toString()
+        .padStart(2, '0')}:${reminderDate
+        .getMinutes()
+        .toString()
+        .padStart(2, '0')}`
 
       // Prepare note data
       const noteData = {
@@ -285,8 +246,7 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
         title: title.trim(),
         content: content.trim(),
         reminderTime: formattedReminderTime,
-        linkedShifts: useShiftReminder ? linkedShifts : [],
-        reminderDays: !useShiftReminder ? reminderDays : [],
+        linkedShifts: reminderType === 'shift' ? linkedShifts : [],
         updatedAt: new Date().toISOString(),
       }
 
@@ -503,26 +463,69 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
         </View>
       </View>
 
-      {/* Reminder */}
+      {/* Reminder Type Selection */}
       <View style={styles.formGroup}>
-        <View style={styles.switchRow}>
-          <Text style={[styles.label, darkMode && styles.darkText]}>
-            {t('Đặt nhắc nhở')}
-          </Text>
-          <Switch
-            value={hasReminder}
-            onValueChange={setHasReminder}
-            trackColor={{ false: '#767577', true: '#8a56ff' }}
-            thumbColor={hasReminder ? '#f4f3f4' : '#f4f3f4'}
-          />
+        <Text style={[styles.label, darkMode && styles.darkText]}>
+          {t('Cài đặt nhắc nhở')} <Text style={styles.requiredMark}>*</Text>
+        </Text>
+
+        <View style={styles.reminderTypeSelector}>
+          <TouchableOpacity
+            style={[
+              styles.reminderTypeOption,
+              reminderType === 'specific' && styles.reminderTypeSelected,
+              darkMode && styles.darkReminderTypeOption,
+            ]}
+            onPress={() => setReminderType('specific')}
+          >
+            <View style={styles.radioButton}>
+              {reminderType === 'specific' && (
+                <View style={styles.radioButtonInner} />
+              )}
+            </View>
+            <Text
+              style={[styles.reminderTypeText, darkMode && styles.darkText]}
+            >
+              {t('Đặt lịch cụ thể')}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.reminderTypeOption,
+              reminderType === 'shift' && styles.reminderTypeSelected,
+              darkMode && styles.darkReminderTypeOption,
+            ]}
+            onPress={() => setReminderType('shift')}
+          >
+            <View style={styles.radioButton}>
+              {reminderType === 'shift' && (
+                <View style={styles.radioButtonInner} />
+              )}
+            </View>
+            <Text
+              style={[styles.reminderTypeText, darkMode && styles.darkText]}
+            >
+              {t('Nhắc theo ca')}
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        {hasReminder && (
-          <>
-            <View style={styles.reminderContainer}>
+        {/* Specific Date/Time Reminder */}
+        {reminderType === 'specific' && (
+          <View style={styles.reminderContainer}>
+            <Text style={[styles.subLabel, darkMode && styles.darkText]}>
+              {t('Chọn thời gian nhắc nhở')}
+            </Text>
+
+            <View style={styles.dateTimeContainer}>
               {/* Date Picker */}
               <TouchableOpacity
-                style={[styles.dateTimeButton, darkMode && styles.darkInput]}
+                style={[
+                  styles.dateTimeButton,
+                  darkMode && styles.darkInput,
+                  errors.reminderDate && styles.inputError,
+                ]}
                 onPress={() => setShowDatePicker(true)}
               >
                 <Text
@@ -539,7 +542,11 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
 
               {/* Time Picker */}
               <TouchableOpacity
-                style={[styles.dateTimeButton, darkMode && styles.darkInput]}
+                style={[
+                  styles.dateTimeButton,
+                  darkMode && styles.darkInput,
+                  errors.reminderDate && styles.inputError,
+                ]}
                 onPress={() => setShowTimePicker(true)}
               >
                 <Text
@@ -555,251 +562,253 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
               </TouchableOpacity>
             </View>
 
-            {/* Reminder Type Selection */}
-            <View style={styles.reminderTypeContainer}>
-              <View style={styles.switchRow}>
-                <Text style={[styles.subLabel, darkMode && styles.darkText]}>
-                  {t('Nhắc nhở theo ca làm việc')}
-                </Text>
-                <Switch
-                  value={useShiftReminder}
-                  onValueChange={setUseShiftReminder}
-                  trackColor={{ false: '#767577', true: '#8a56ff' }}
-                  thumbColor={useShiftReminder ? '#f4f3f4' : '#f4f3f4'}
+            {errors.reminderDate && (
+              <Text style={styles.errorText}>{errors.reminderDate}</Text>
+            )}
+          </View>
+        )}
+
+        {/* Shift-based Reminder */}
+        {reminderType === 'shift' && (
+          <View style={styles.linkedItemsContainer}>
+            <Text style={[styles.subLabel, darkMode && styles.darkText]}>
+              {t('Chọn ca làm việc')} <Text style={styles.requiredMark}>*</Text>
+            </Text>
+
+            <Text
+              style={[
+                styles.reminderDescription,
+                darkMode && styles.darkSubText,
+              ]}
+            >
+              {t(
+                'Nhắc nhở sẽ được đặt trước 5 phút giờ xuất phát (departureTime) của (các) ca đã chọn.'
+              )}
+            </Text>
+
+            {shifts.length > 0 ? (
+              <View style={styles.checkboxContainer}>
+                {shifts.map((shift) => (
+                  <TouchableOpacity
+                    key={shift.id}
+                    style={styles.checkboxRow}
+                    onPress={() => toggleShiftSelection(shift.id)}
+                  >
+                    <View
+                      style={[
+                        styles.checkbox,
+                        linkedShifts.includes(shift.id) &&
+                          styles.checkboxSelected,
+                      ]}
+                    >
+                      {linkedShifts.includes(shift.id) && (
+                        <Ionicons name="checkmark" size={16} color="#fff" />
+                      )}
+                    </View>
+                    <Text
+                      style={[
+                        styles.checkboxLabel,
+                        darkMode && styles.darkText,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {shift.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : (
+              <Text style={[styles.noDataText, darkMode && styles.darkSubText]}>
+                {t('Không có ca làm việc nào')}
+              </Text>
+            )}
+            {errors.linkedShifts && (
+              <Text style={styles.errorText}>{errors.linkedShifts}</Text>
+            )}
+          </View>
+        )}
+
+        {/* Date Picker for Android */}
+        {Platform.OS === 'android' && showDatePicker && (
+          <DateTimePicker
+            value={reminderDate}
+            mode="date"
+            display="default"
+            onChange={handleDateChange}
+            themeVariant={darkMode ? 'dark' : 'light'}
+            minimumDate={new Date()}
+          />
+        )}
+
+        {/* Time Picker for Android */}
+        {Platform.OS === 'android' && showTimePicker && (
+          <DateTimePicker
+            value={reminderDate}
+            mode="time"
+            is24Hour={true}
+            display="default"
+            onChange={handleTimeChange}
+            themeVariant={darkMode ? 'dark' : 'light'}
+          />
+        )}
+
+        {/* Date Picker for iOS */}
+        {Platform.OS === 'ios' && showDatePicker && (
+          <Modal
+            transparent={true}
+            animationType="slide"
+            visible={showDatePicker}
+          >
+            <View style={styles.pickerModalContainer}>
+              <View
+                style={[
+                  styles.pickerContainer,
+                  darkMode && styles.darkPickerContainer,
+                ]}
+              >
+                <View style={styles.pickerHeader}>
+                  <TouchableOpacity
+                    onPress={() => setShowDatePicker(false)}
+                    style={styles.pickerButton}
+                  >
+                    <Text style={styles.pickerButtonText}>{t('Hủy')}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setShowDatePicker(false)}
+                    style={styles.pickerButton}
+                  >
+                    <Text style={[styles.pickerButtonText, styles.doneButton]}>
+                      {t('Xong')}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                <DateTimePicker
+                  value={reminderDate}
+                  mode="date"
+                  display="spinner"
+                  onChange={handleDateChange}
+                  style={styles.iosPicker}
+                  themeVariant={darkMode ? 'dark' : 'light'}
+                  minimumDate={new Date()}
                 />
               </View>
             </View>
+          </Modal>
+        )}
 
-            {/* Linked Shifts */}
-            {useShiftReminder ? (
-              <View style={styles.linkedItemsContainer}>
-                <Text style={[styles.subLabel, darkMode && styles.darkText]}>
-                  {t('Chọn ca làm việc')}{' '}
-                  <Text style={styles.requiredMark}>*</Text>
-                </Text>
-                {shifts.length > 0 ? (
-                  <View style={styles.checkboxContainer}>
-                    {shifts.map((shift) => (
-                      <TouchableOpacity
-                        key={shift.id}
-                        style={styles.checkboxRow}
-                        onPress={() => toggleShiftSelection(shift.id)}
-                      >
-                        <View
-                          style={[
-                            styles.checkbox,
-                            linkedShifts.includes(shift.id) &&
-                              styles.checkboxSelected,
-                          ]}
-                        >
-                          {linkedShifts.includes(shift.id) && (
-                            <Ionicons name="checkmark" size={16} color="#fff" />
-                          )}
-                        </View>
-                        <Text
-                          style={[
-                            styles.checkboxLabel,
-                            darkMode && styles.darkText,
-                          ]}
-                          numberOfLines={1}
-                        >
-                          {shift.name}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                ) : (
-                  <Text
-                    style={[styles.noDataText, darkMode && styles.darkSubText]}
-                  >
-                    {t('Không có ca làm việc nào')}
-                  </Text>
-                )}
-                {errors.linkedShifts && (
-                  <Text style={styles.errorText}>{errors.linkedShifts}</Text>
-                )}
-              </View>
-            ) : (
-              <View style={styles.linkedItemsContainer}>
-                <Text style={[styles.subLabel, darkMode && styles.darkText]}>
-                  {t('Chọn ngày nhắc')}{' '}
-                  <Text style={styles.requiredMark}>*</Text>
-                </Text>
-                <View style={styles.daysContainer}>
-                  {DAYS_OF_WEEK.map((day) => (
-                    <TouchableOpacity
-                      key={day.key}
-                      style={[
-                        styles.dayButton,
-                        reminderDays.includes(day.key) &&
-                          styles.dayButtonSelected,
-                      ]}
-                      onPress={() => toggleDaySelection(day.key)}
-                    >
-                      <Text
-                        style={[
-                          styles.dayButtonText,
-                          reminderDays.includes(day.key) &&
-                            styles.dayButtonTextSelected,
-                        ]}
-                      >
-                        {day.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-                {errors.reminderDays && (
-                  <Text style={styles.errorText}>{errors.reminderDays}</Text>
-                )}
-              </View>
-            )}
-
-            {/* Date Picker for Android */}
-            {Platform.OS === 'android' && showDatePicker && (
-              <DateTimePicker
-                value={reminderDate}
-                mode="date"
-                display="default"
-                onChange={handleDateChange}
-                themeVariant={darkMode ? 'dark' : 'light'}
-              />
-            )}
-
-            {/* Time Picker for Android */}
-            {Platform.OS === 'android' && showTimePicker && (
-              <DateTimePicker
-                value={reminderDate}
-                mode="time"
-                is24Hour={true}
-                display="default"
-                onChange={handleTimeChange}
-                themeVariant={darkMode ? 'dark' : 'light'}
-              />
-            )}
-
-            {/* Date Picker for iOS */}
-            {Platform.OS === 'ios' && showDatePicker && (
-              <Modal
-                transparent={true}
-                animationType="slide"
-                visible={showDatePicker}
+        {/* Time Picker for iOS */}
+        {Platform.OS === 'ios' && showTimePicker && (
+          <Modal
+            transparent={true}
+            animationType="slide"
+            visible={showTimePicker}
+          >
+            <View style={styles.pickerModalContainer}>
+              <View
+                style={[
+                  styles.pickerContainer,
+                  darkMode && styles.darkPickerContainer,
+                ]}
               >
-                <View style={styles.pickerModalContainer}>
-                  <View
-                    style={[
-                      styles.pickerContainer,
-                      darkMode && styles.darkPickerContainer,
-                    ]}
+                <View style={styles.pickerHeader}>
+                  <TouchableOpacity
+                    onPress={() => setShowTimePicker(false)}
+                    style={styles.pickerButton}
                   >
-                    <View style={styles.pickerHeader}>
-                      <TouchableOpacity
-                        onPress={() => setShowDatePicker(false)}
-                        style={styles.pickerButton}
-                      >
-                        <Text style={styles.pickerButtonText}>{t('Hủy')}</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() => setShowDatePicker(false)}
-                        style={styles.pickerButton}
-                      >
-                        <Text
-                          style={[styles.pickerButtonText, styles.doneButton]}
-                        >
-                          {t('Xong')}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                    <DateTimePicker
-                      value={reminderDate}
-                      mode="date"
-                      display="spinner"
-                      onChange={handleDateChange}
-                      style={styles.iosPicker}
-                      themeVariant={darkMode ? 'dark' : 'light'}
-                    />
-                  </View>
-                </View>
-              </Modal>
-            )}
-
-            {/* Time Picker for iOS */}
-            {Platform.OS === 'ios' && showTimePicker && (
-              <Modal
-                transparent={true}
-                animationType="slide"
-                visible={showTimePicker}
-              >
-                <View style={styles.pickerModalContainer}>
-                  <View
-                    style={[
-                      styles.pickerContainer,
-                      darkMode && styles.darkPickerContainer,
-                    ]}
+                    <Text style={styles.pickerButtonText}>{t('Hủy')}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setShowTimePicker(false)}
+                    style={styles.pickerButton}
                   >
-                    <View style={styles.pickerHeader}>
-                      <TouchableOpacity
-                        onPress={() => setShowTimePicker(false)}
-                        style={styles.pickerButton}
-                      >
-                        <Text style={styles.pickerButtonText}>{t('Hủy')}</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() => setShowTimePicker(false)}
-                        style={styles.pickerButton}
-                      >
-                        <Text
-                          style={[styles.pickerButtonText, styles.doneButton]}
-                        >
-                          {t('Xong')}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                    <DateTimePicker
-                      value={reminderDate}
-                      mode="time"
-                      is24Hour={true}
-                      display="spinner"
-                      onChange={handleTimeChange}
-                      style={styles.iosPicker}
-                      themeVariant={darkMode ? 'dark' : 'light'}
-                    />
-                  </View>
+                    <Text style={[styles.pickerButtonText, styles.doneButton]}>
+                      {t('Xong')}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
-              </Modal>
-            )}
-          </>
+                <DateTimePicker
+                  value={reminderDate}
+                  mode="time"
+                  is24Hour={true}
+                  display="spinner"
+                  onChange={handleTimeChange}
+                  style={styles.iosPicker}
+                  themeVariant={darkMode ? 'dark' : 'light'}
+                />
+              </View>
+            </View>
+          </Modal>
         )}
       </View>
 
       {/* Buttons */}
       <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={[styles.iconButton, styles.resetButton]}
+          onPress={() => {
+            Alert.alert(
+              t('Xác nhận đặt lại'),
+              t(
+                'Bạn có chắc chắn muốn đặt lại tất cả các trường về giá trị ban đầu không?'
+              ),
+              [
+                {
+                  text: t('Hủy'),
+                  style: 'cancel',
+                },
+                {
+                  text: t('Đặt lại'),
+                  style: 'destructive',
+                  onPress: () => {
+                    if (noteId) {
+                      // Nếu đang sửa, tải lại dữ liệu gốc
+                      loadNoteData()
+                    } else {
+                      // Nếu đang tạo mới, đặt về giá trị mặc định
+                      setTitle('')
+                      setContent('')
+                      setReminderDate(new Date())
+                      setLinkedShifts([])
+                      setReminderType('specific')
+                      setErrors({})
+                    }
+                  },
+                },
+              ]
+            )
+          }}
+        >
+          <Ionicons name="refresh-outline" size={24} color="#333" />
+        </TouchableOpacity>
+
         {noteId && (
           <TouchableOpacity
-            style={[styles.button, styles.deleteButton]}
+            style={[styles.iconButton, styles.deleteButton]}
             onPress={handleDelete}
           >
-            <Text style={styles.buttonText}>{t('Xóa')}</Text>
+            <Ionicons name="trash-outline" size={24} color="#fff" />
           </TouchableOpacity>
         )}
+
         <TouchableOpacity
           style={[
-            styles.button,
+            styles.iconButton,
             styles.saveButton,
             !isFormValid && styles.disabledButton,
           ]}
           onPress={handleSave}
           disabled={!isFormValid}
         >
-          <Text style={[styles.buttonText, !isFormValid && { opacity: 0.8 }]}>
-            {t('Lưu')}
-          </Text>
-          {!isFormValid && (
-            <Text style={styles.disabledButtonHint}>
-              {t('Vui lòng sửa các lỗi để tiếp tục')}
-            </Text>
-          )}
+          <Ionicons name="save-outline" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
+
+      {/* Thông báo lỗi */}
+      {!isFormValid && (
+        <Text style={styles.formErrorText}>
+          {t('Vui lòng sửa các lỗi để tiếp tục')}
+        </Text>
+      )}
     </ScrollView>
   )
 }
@@ -821,12 +830,12 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   formGroup: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   label: {
     fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 8,
+    fontWeight: '600',
+    marginBottom: 10,
     color: '#333',
   },
   subLabel: {
@@ -892,37 +901,79 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     color: '#333',
   },
-  switchRow: {
+  reminderTypeSelector: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    marginTop: 10,
+    marginBottom: 16,
+  },
+  reminderTypeOption: {
+    flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginRight: 16,
+    backgroundColor: '#f5f5f5',
+  },
+  darkReminderTypeOption: {
+    backgroundColor: '#2a2a2a',
+  },
+  reminderTypeSelected: {
+    backgroundColor: '#f0e6ff',
+  },
+  reminderTypeText: {
+    fontSize: 14,
+    color: '#333',
+    marginLeft: 8,
+  },
+  radioButton: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#8a56ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  radioButtonInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#8a56ff',
   },
   reminderContainer: {
     marginTop: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     backgroundColor: '#f9f9f9',
-    padding: 8,
+    padding: 12,
     borderRadius: 8,
   },
-  reminderTypeContainer: {
-    marginTop: 16,
-    marginBottom: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
+  dateTimeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  reminderDescription: {
+    fontSize: 13,
+    color: '#666',
+    marginTop: 4,
+    marginBottom: 12,
+    fontStyle: 'italic',
   },
   linkedItemsContainer: {
-    marginTop: 8,
+    marginTop: 12,
+    backgroundColor: '#f9f9f9',
+    padding: 12,
+    borderRadius: 8,
     marginBottom: 16,
   },
   checkboxContainer: {
-    marginTop: 8,
+    marginTop: 12,
   },
   checkboxRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
+    paddingVertical: 4,
   },
   checkbox: {
     width: 24,
@@ -930,7 +981,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     borderWidth: 1,
     borderColor: '#ddd',
-    marginRight: 8,
+    marginRight: 10,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#fff',
@@ -947,40 +998,13 @@ const styles = StyleSheet.create({
   checkboxLabel: {
     fontSize: 14,
     color: '#333',
+    flex: 1,
   },
   noDataText: {
     fontSize: 14,
     color: '#999',
     fontStyle: 'italic',
     marginTop: 8,
-  },
-  daysContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 8,
-  },
-  dayButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
-    marginRight: 8,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-    elevation: 1,
-  },
-  dayButtonSelected: {
-    backgroundColor: '#8a56ff',
-  },
-  dayButtonText: {
-    fontSize: 14,
-    color: '#333',
-  },
-  dayButtonTextSelected: {
-    color: '#fff',
   },
   dateTimeButton: {
     flex: 1,
@@ -1002,14 +1026,30 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginTop: 16,
-    marginBottom: 16,
+    marginTop: 20,
+    marginBottom: 12,
   },
   button: {
     paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     borderRadius: 8,
     marginLeft: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginLeft: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
   },
   saveButton: {
     backgroundColor: '#8a56ff',
@@ -1022,6 +1062,11 @@ const styles = StyleSheet.create({
   deleteButton: {
     backgroundColor: '#ff5252',
   },
+  resetButton: {
+    backgroundColor: '#f0f0f0',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
   disabledButton: {
     backgroundColor: '#cccccc',
     opacity: 0.7,
@@ -1032,6 +1077,20 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
+    marginLeft: 6,
+  },
+  resetButtonText: {
+    color: '#333',
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginLeft: 6,
+  },
+  formErrorText: {
+    color: '#ff5252',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 16,
+    fontWeight: '500',
   },
   pickerModalContainer: {
     flex: 1,
@@ -1064,16 +1123,6 @@ const styles = StyleSheet.create({
   },
   iosPicker: {
     height: 200,
-  },
-  disabledButtonHint: {
-    color: '#fff',
-    fontSize: 10,
-    marginTop: 4,
-    opacity: 0.8,
-    position: 'absolute',
-    bottom: 5,
-    textAlign: 'center',
-    width: '100%',
   },
 })
 

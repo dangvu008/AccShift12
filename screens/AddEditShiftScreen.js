@@ -1191,6 +1191,7 @@ const AddEditShiftScreen = ({ route, navigation }) => {
           {/* Action Buttons */}
           <View style={styles.buttonRow}>
             <TouchableOpacity style={styles.resetButton} onPress={resetForm}>
+              <Ionicons name="refresh-outline" size={22} color="#333" />
               <Text style={styles.resetButtonText}>{t('Đặt lại')}</Text>
             </TouchableOpacity>
 
@@ -1199,6 +1200,7 @@ const AddEditShiftScreen = ({ route, navigation }) => {
               onPress={handleSaveShift}
               disabled={!isFormValid}
             >
+              <Ionicons name="save-outline" size={22} color="#fff" />
               <Text
                 style={[
                   styles.saveButtonText,
@@ -1207,13 +1209,15 @@ const AddEditShiftScreen = ({ route, navigation }) => {
               >
                 {isEditing ? t('Cập nhật') : t('Thêm mới')}
               </Text>
-              {!isFormValid && (
-                <Text style={styles.disabledButtonHint}>
-                  {t('Vui lòng sửa các lỗi để tiếp tục')}
-                </Text>
-              )}
             </TouchableOpacity>
           </View>
+
+          {/* Thông báo lỗi */}
+          {!isFormValid && (
+            <Text style={styles.formErrorText}>
+              {t('Vui lòng sửa các lỗi để tiếp tục')}
+            </Text>
+          )}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -1367,6 +1371,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 3,
     elevation: 3,
+    flexDirection: 'row',
   },
   resetButton: {
     backgroundColor: '#f0f0f0',
@@ -1378,6 +1383,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
     borderWidth: 1,
     borderColor: '#ddd',
+    flexDirection: 'row',
   },
   disabledButton: {
     backgroundColor: '#cccccc',
@@ -1389,21 +1395,20 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+    marginLeft: 6,
   },
   resetButtonText: {
     color: '#333',
     fontSize: 16,
     fontWeight: '600',
+    marginLeft: 6,
   },
-  disabledButtonHint: {
-    color: '#fff',
-    fontSize: 10,
-    marginTop: 4,
-    opacity: 0.8,
-    position: 'absolute',
-    bottom: 5,
+  formErrorText: {
+    color: '#ff3b30',
+    fontSize: 14,
     textAlign: 'center',
-    width: '100%',
+    marginBottom: 16,
+    fontWeight: '500',
   },
   overnightWarning: {
     flexDirection: 'row',

@@ -12,14 +12,11 @@ import {
 import { Ionicons, Feather, MaterialIcons } from '@expo/vector-icons'
 import { AppContext } from '../context/AppContext'
 import { getShifts, deleteShift, getCurrentShift } from '../utils/database'
-import ShiftFormModal from '../components/ShiftFormModal'
 
 const ShiftListScreen = ({ navigation }) => {
   const { t, darkMode, setCurrentShift } = useContext(AppContext)
   const [shifts, setShifts] = useState([])
   const [currentShiftId, setCurrentShiftId] = useState(null)
-  const [modalVisible, setModalVisible] = useState(false)
-  const [editingShiftId, setEditingShiftId] = useState(null)
 
   useEffect(() => {
     const loadData = async () => {
@@ -42,36 +39,11 @@ const ShiftListScreen = ({ navigation }) => {
   }, [navigation])
 
   const handleEditShift = (shift) => {
-    setEditingShiftId(shift.id)
-    setModalVisible(true)
+    navigation.navigate('AddEditShift', { shiftId: shift.id })
   }
 
   const handleAddShift = () => {
-    setEditingShiftId(null)
-    setModalVisible(true)
-  }
-
-  const handleModalClose = () => {
-    setModalVisible(false)
-    setEditingShiftId(null)
-  }
-
-  const handleShiftSaved = async (shiftId, isDeleted = false) => {
-    try {
-      // Reload shifts after save/delete
-      const loadedShifts = await getShifts()
-      setShifts(loadedShifts)
-
-      // If current shift was deleted, reset currentShiftId
-      if (isDeleted && shiftId === currentShiftId) {
-        setCurrentShiftId(null)
-      }
-
-      // Log success
-      console.log('Shifts reloaded successfully after save/delete')
-    } catch (error) {
-      console.error('Error reloading shifts:', error)
-    }
+    navigation.navigate('AddEditShift')
   }
 
   const handleDeleteShift = async (id) => {
@@ -233,14 +205,6 @@ const ShiftListScreen = ({ navigation }) => {
       <TouchableOpacity style={styles.addButton} onPress={handleAddShift}>
         <Ionicons name="add" size={24} color="#fff" />
       </TouchableOpacity>
-
-      {/* Shift Form Modal */}
-      <ShiftFormModal
-        visible={modalVisible}
-        shiftId={editingShiftId}
-        onClose={handleModalClose}
-        onSaved={handleShiftSaved}
-      />
     </View>
   )
 }

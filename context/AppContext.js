@@ -22,6 +22,8 @@ import { Platform, Alert } from 'react-native'
 import locationUtils from '../utils/location'
 // Thêm import weather alert service
 import weatherAlertService from '../services/weatherAlertService'
+// Import STORAGE_KEYS
+import { STORAGE_KEYS } from '../utils/constants'
 
 export const AppContext = createContext()
 
@@ -266,9 +268,9 @@ export const AppProvider = ({ children }) => {
   const updateCurrentShift = async (shift) => {
     setCurrentShift(shift)
     if (shift) {
-      await AsyncStorage.setItem('currentShiftId', shift.id)
+      await AsyncStorage.setItem(STORAGE_KEYS.CURRENT_SHIFT, shift.id)
     } else {
-      await AsyncStorage.removeItem('currentShiftId')
+      await AsyncStorage.removeItem(STORAGE_KEYS.CURRENT_SHIFT)
     }
   }
 

@@ -7,173 +7,234 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { AppContext } from '../context/AppContext'
-import { getNotes } from '../utils/database'
+import { getNotes, getShifts } from '../utils/database'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { STORAGE_KEYS } from '../utils/constants'
 
 const WorkNotesSection = ({ navigation }) => {
   const { t, darkMode, currentShift, shifts } = useContext(AppContext)
   const [filteredNotes, setFilteredNotes] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [expandedNoteId, setExpandedNoteId] = useState(null)
 
   // Load and filter notes
   useEffect(() => {
     const loadNotes = async () => {
       setIsLoading(true)
       const allNotes = await getNotes()
+      const allShifts = await getShifts()
 
-      // Get current day of week in format T2, T3, etc.
-      const today = new Date()
-      const dayMap = {
-        0: 'CN',
-        1: 'T2',
-        2: 'T3',
-        3: 'T4',
-        4: 'T5',
-        5: 'T6',
-        6: 'T7',
-      }
-      const currentDay = dayMap[today.getDay()]
+      // Tính toán nextReminderTime cho mỗi ghi chú
+      const notesWithReminders = calculateNextReminderTimes(allNotes, allShifts)
 
-      // Filter notes based on requirements
-      const filtered = allNotes.filter((note) => {
-        // Condition 1: Note has associatedShiftIds containing the active shift ID
-        if (
-          currentShift &&
-          note.linkedShifts &&
-          note.linkedShifts.includes(currentShift.id)
-        ) {
-          return true
-        }
+      // Lọc các ghi chú có nextReminderTime trong tương lai
+      const validNotes = notesWithReminders.filter(
+        (note) => note.nextReminderTime
+      )
 
-        // Condition 2: Note has empty associatedShiftIds AND explicitReminderDays contains current day
-        if (
-          (!note.linkedShifts || note.linkedShifts.length === 0) &&
-          note.reminderDays &&
-          note.reminderDays.includes(currentDay)
-        ) {
-          return true
-        }
+      // Sắp xếp theo nextReminderTime tăng dần
+      const sortedNotes = validNotes.sort(
+        (a, b) => a.nextReminderTime - b.nextReminderTime
+      )
 
-        return false
-      })
-
-      // Sort notes by next reminder time
-      const sortedNotes = sortNotesByNextReminder(filtered)
-
-      // Limit to 3 notes
+      // Giới hạn 3 ghi chú
       setFilteredNotes(sortedNotes.slice(0, 3))
       setIsLoading(false)
     }
 
     loadNotes()
-  }, [currentShift, sortNotesByNextReminder, shifts])
+  }, [currentShift, shifts])
 
-  // Calculate next reminder time for a note and sort notes
-  const sortNotesByNextReminder = useCallback(
-    (notes) => {
-      const now = new Date()
-      const dayMap = { CN: 0, T2: 1, T3: 2, T4: 3, T5: 4, T6: 5, T7: 6 }
+  // Tính toán nextReminderTime cho tất cả các ghi chú
+  const calculateNextReminderTimes = (notes, allShifts) => {
+    const now = new Date()
+    const dayMap = { CN: 0, T2: 1, T3: 2, T4: 3, T5: 4, T6: 5, T7: 6 }
+    const reverseDayMap = {
+      0: 'CN',
+      1: 'T2',
+      2: 'T3',
+      3: 'T4',
+      4: 'T5',
+      5: 'T6',
+      6: 'T7',
+    }
 
-      // Calculate next reminder time for each note
-      const notesWithNextReminder = notes.map((note) => {
-        let nextReminderDate = null
+    return notes.map((note) => {
+      let nextReminderTime = null
+      let reminderDescription = ''
 
-        if (note.reminderTime) {
-          const [hours, minutes] = note.reminderTime.split(':').map(Number)
-
-          // If note is linked to shifts
-          if (note.linkedShifts && note.linkedShifts.length > 0) {
-            // Get all days from linked shifts
-            const shiftDays = new Set()
-            note.linkedShifts.forEach((shiftId) => {
-              const shift = shifts.find((s) => s.id === shiftId)
-              if (shift && shift.daysApplied) {
-                shift.daysApplied.forEach((day) => shiftDays.add(day))
-              }
-            })
-
-            nextReminderDate = calculateNextReminderDate(
-              Array.from(shiftDays),
-              hours,
-              minutes,
-              dayMap,
-              now
-            )
-          }
-          // If note uses custom days
-          else if (note.reminderDays && note.reminderDays.length > 0) {
-            nextReminderDate = calculateNextReminderDate(
-              note.reminderDays,
-              hours,
-              minutes,
-              dayMap,
-              now
-            )
-          }
-        }
-
-        return {
-          ...note,
-          nextReminderDate,
-        }
-      })
-
-      // Sort notes by next reminder time (null values at the end)
-      return notesWithNextReminder.sort((a, b) => {
-        if (!a.nextReminderDate && !b.nextReminderDate) {
-          // If both don't have next reminder, sort by updatedAt (most recent first)
-          return (
-            (b.updatedAt || b.timestamp || 0) -
-            (a.updatedAt || a.timestamp || 0)
-          )
-        }
-        if (!a.nextReminderDate) return 1
-        if (!b.nextReminderDate) return -1
-        return a.nextReminderDate - b.nextReminderDate
-      })
-    },
-    [shifts]
-  )
-
-  // Helper function to calculate next reminder date
-  const calculateNextReminderDate = (days, hours, minutes, dayMap, now) => {
-    const today = now.getDay()
-    const currentTime = now.getHours() * 60 + now.getMinutes()
-    const reminderTime = hours * 60 + minutes
-
-    // Convert days to numbers and sort them
-    const dayNumbers = days.map((day) => dayMap[day]).sort((a, b) => a - b)
-
-    // Find the next day that has a reminder
-    let nextDay = null
-    let daysToAdd = 0
-
-    // First check if there's a reminder later today
-    if (dayNumbers.includes(today) && reminderTime > currentTime) {
-      nextDay = today
-      daysToAdd = 0
-    } else {
-      // Find the next day in the week
-      for (let i = 1; i <= 7; i++) {
-        const checkDay = (today + i) % 7
-        if (dayNumbers.includes(checkDay)) {
-          nextDay = checkDay
-          daysToAdd = i
-          break
+      // Trường hợp 1: Note có reminderDateTime và thời điểm đó chưa qua
+      if (note.reminderTime) {
+        const reminderDate = parseReminderTime(note.reminderTime)
+        if (reminderDate && reminderDate > now) {
+          nextReminderTime = reminderDate
+          reminderDescription = formatReminderTime(reminderDate)
         }
       }
+
+      // Trường hợp 2: Note có associatedShiftIds
+      if (
+        !nextReminderTime &&
+        note.linkedShifts &&
+        note.linkedShifts.length > 0
+      ) {
+        // Tìm thời điểm nhắc nhở gần nhất từ các ca liên kết
+        let earliestReminder = null
+        let associatedShiftName = ''
+
+        for (const shiftId of note.linkedShifts) {
+          const shift = allShifts.find((s) => s.id === shiftId)
+          if (!shift || !shift.daysApplied || !shift.departureTime) continue
+
+          // Tính toán thời điểm nhắc nhở cho mỗi ngày của ca
+          for (const day of shift.daysApplied) {
+            const dayNumber = dayMap[day]
+            if (dayNumber === undefined) continue
+
+            // Tính toán thời gian nhắc nhở (5 phút trước departureTime)
+            const reminderTime = calculateShiftReminderTime(
+              dayNumber,
+              shift.departureTime,
+              5, // 5 phút trước departureTime
+              now
+            )
+
+            if (
+              reminderTime &&
+              (!earliestReminder || reminderTime < earliestReminder)
+            ) {
+              earliestReminder = reminderTime
+              associatedShiftName = shift.name
+            }
+          }
+        }
+
+        if (earliestReminder) {
+          nextReminderTime = earliestReminder
+          reminderDescription = `${associatedShiftName}, ${formatReminderTime(
+            earliestReminder
+          )}`
+        }
+      }
+
+      return {
+        ...note,
+        nextReminderTime,
+        reminderDescription,
+      }
+    })
+  }
+
+  // Phân tích chuỗi thời gian nhắc nhở thành đối tượng Date
+  const parseReminderTime = (reminderTimeStr) => {
+    try {
+      // Xử lý các định dạng thời gian khác nhau
+      if (reminderTimeStr.includes('/')) {
+        // Định dạng đầy đủ: DD/MM/YYYY HH:MM
+        const [datePart, timePart] = reminderTimeStr.split(' ')
+        const [day, month, year] = datePart.split('/').map(Number)
+        const [hours, minutes] = timePart.split(':').map(Number)
+
+        const date = new Date()
+        date.setFullYear(year || date.getFullYear())
+        date.setMonth(month - 1 || date.getMonth())
+        date.setDate(day || date.getDate())
+        date.setHours(hours, minutes, 0, 0)
+        return date
+      } else {
+        // Định dạng chỉ có giờ: HH:MM
+        const [hours, minutes] = reminderTimeStr.split(':').map(Number)
+        const date = new Date()
+        date.setHours(hours, minutes, 0, 0)
+
+        // Nếu thời gian đã qua trong ngày, chuyển sang ngày mai
+        if (date <= new Date()) {
+          date.setDate(date.getDate() + 1)
+        }
+
+        return date
+      }
+    } catch (error) {
+      console.error('Lỗi khi phân tích thời gian nhắc nhở:', error)
+      return null
+    }
+  }
+
+  // Tính toán thời gian nhắc nhở cho ca làm việc
+  const calculateShiftReminderTime = (
+    dayOfWeek,
+    departureTimeStr,
+    minutesBefore,
+    now
+  ) => {
+    try {
+      const today = now.getDay()
+      const [hours, minutes] = departureTimeStr.split(':').map(Number)
+
+      // Tính số ngày cần thêm để đến ngày trong tuần tiếp theo
+      let daysToAdd = dayOfWeek - today
+      if (daysToAdd < 0) daysToAdd += 7
+
+      // Nếu là hôm nay, kiểm tra xem thời gian đã qua chưa
+      if (daysToAdd === 0) {
+        const departureMinutes = hours * 60 + minutes
+        const currentMinutes = now.getHours() * 60 + now.getMinutes()
+        const reminderMinutes = departureMinutes - minutesBefore
+
+        if (reminderMinutes <= currentMinutes) {
+          // Thời gian nhắc nhở hôm nay đã qua, chuyển sang tuần sau
+          daysToAdd = 7
+        }
+      }
+
+      // Tạo đối tượng Date cho thời gian nhắc nhở
+      const reminderTime = new Date(now)
+      reminderTime.setDate(reminderTime.getDate() + daysToAdd)
+      reminderTime.setHours(hours, minutes - minutesBefore, 0, 0)
+
+      return reminderTime
+    } catch (error) {
+      console.error('Lỗi khi tính toán thời gian nhắc nhở ca làm việc:', error)
+      return null
+    }
+  }
+
+  // Định dạng thời gian nhắc nhở để hiển thị
+  const formatReminderTime = (date) => {
+    if (!date) return ''
+
+    const now = new Date()
+    const today = now.setHours(0, 0, 0, 0)
+    const reminderDay = new Date(date).setHours(0, 0, 0, 0)
+    const dayNames = {
+      0: 'CN',
+      1: 'T2',
+      2: 'T3',
+      3: 'T4',
+      4: 'T5',
+      5: 'T6',
+      6: 'T7',
     }
 
-    if (nextDay !== null) {
-      const nextDate = new Date(now)
-      nextDate.setDate(nextDate.getDate() + daysToAdd)
-      nextDate.setHours(hours, minutes, 0, 0)
-      return nextDate
-    }
+    // Định dạng giờ:phút
+    const hours = date.getHours().toString().padStart(2, '0')
+    const minutes = date.getMinutes().toString().padStart(2, '0')
+    const timeStr = `${hours}:${minutes}`
 
-    return null
+    // Xác định cách hiển thị ngày
+    if (reminderDay === today) {
+      return `Hôm nay, ${timeStr}`
+    } else if (reminderDay === today + 86400000) {
+      // 24 giờ tính bằng mili giây
+      return `Ngày mai, ${timeStr}`
+    } else {
+      const dayOfWeek = dayNames[date.getDay()]
+      return `${dayOfWeek}, ${timeStr}`
+    }
   }
 
   const handleAddNote = () => {
@@ -184,18 +245,72 @@ const WorkNotesSection = ({ navigation }) => {
     navigation.navigate('NoteDetail', { noteId })
   }
 
+  const handleDeleteNote = (noteId) => {
+    // Hiển thị xác nhận trước khi xóa
+    Alert.alert(
+      t('Xóa ghi chú'),
+      t('Bạn có chắc chắn muốn xóa ghi chú này không?'),
+      [
+        {
+          text: t('Hủy'),
+          style: 'cancel',
+        },
+        {
+          text: t('Xóa'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // Lấy danh sách ghi chú hiện tại
+              const allNotes = await getNotes()
+              // Lọc bỏ ghi chú cần xóa
+              const updatedNotes = allNotes.filter((note) => note.id !== noteId)
+              // Lưu lại danh sách ghi chú đã cập nhật
+              await AsyncStorage.setItem(
+                STORAGE_KEYS.NOTES,
+                JSON.stringify(updatedNotes)
+              )
+              // Cập nhật state để hiển thị lại danh sách
+              setFilteredNotes(
+                filteredNotes.filter((note) => note.id !== noteId)
+              )
+            } catch (error) {
+              console.error('Lỗi khi xóa ghi chú:', error)
+              Alert.alert(
+                t('Lỗi'),
+                t('Không thể xóa ghi chú. Vui lòng thử lại.')
+              )
+            }
+          },
+        },
+      ]
+    )
+  }
+
+  // Xử lý khi nhấn vào ghi chú (mở rộng/thu gọn)
+  const handleNotePress = (noteId) => {
+    setExpandedNoteId(expandedNoteId === noteId ? null : noteId)
+  }
+
   return (
     <View style={[styles.container, darkMode && styles.darkCard]}>
       <View style={styles.header}>
         <Text style={[styles.title, darkMode && styles.darkText]}>
           {t('Work Notes')}
         </Text>
-        <TouchableOpacity
-          style={styles.viewAllButton}
-          onPress={() => navigation.navigate('Notes')}
-        >
-          <Text style={styles.viewAllText}>{t('View All')}</Text>
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.viewAllButton}
+            onPress={() => navigation.navigate('Notes')}
+          >
+            <Ionicons name="list" size={20} color="#8a56ff" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.addNoteButton}
+            onPress={handleAddNote}
+          >
+            <Ionicons name="add" size={24} color="#8a56ff" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {isLoading ? (
@@ -205,69 +320,96 @@ const WorkNotesSection = ({ navigation }) => {
           </Text>
         </View>
       ) : filteredNotes.length > 0 ? (
-        <ScrollView style={styles.notesScrollView}>
-          {filteredNotes.map((note) => (
-            <View key={note.id} style={styles.noteItem}>
-              <View style={styles.noteContent}>
-                <Text
-                  style={[styles.noteTitle, darkMode && styles.darkText]}
-                  numberOfLines={2}
-                  ellipsizeMode="tail"
-                >
-                  {note.title || ''}
-                </Text>
-                <Text
-                  style={[styles.noteText, darkMode && styles.darkSubtitle]}
-                  numberOfLines={3}
-                  ellipsizeMode="tail"
-                >
-                  {note.content || ''}
-                </Text>
+        <View style={styles.notesContainer}>
+          {filteredNotes.map((note) => {
+            const isExpanded = expandedNoteId === note.id
 
-                <View style={styles.noteFooter}>
-                  {note.reminderTime && (
-                    <View style={styles.reminderBadge}>
-                      <Ionicons
-                        name="alarm-outline"
-                        size={12}
-                        color="#fff"
-                        style={styles.reminderIcon}
-                      />
-                      <Text style={styles.reminderText}>
-                        {note.reminderTime}
-                      </Text>
-                    </View>
-                  )}
+            return (
+              <TouchableOpacity
+                key={note.id}
+                style={[styles.noteItem, isExpanded && styles.noteItemExpanded]}
+                onPress={() => handleNotePress(note.id)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.noteContent}>
+                  <Text
+                    style={[styles.noteTitle, darkMode && styles.darkText]}
+                    numberOfLines={isExpanded ? undefined : 1}
+                    ellipsizeMode="tail"
+                  >
+                    {note.title || ''}
+                  </Text>
+
+                  <Text
+                    style={[styles.noteText, darkMode && styles.darkSubtitle]}
+                    numberOfLines={isExpanded ? undefined : 2}
+                    ellipsizeMode="tail"
+                  >
+                    {note.content || ''}
+                  </Text>
+
+                  <View style={styles.noteFooter}>
+                    {note.reminderDescription && (
+                      <View style={styles.reminderBadge}>
+                        <Ionicons
+                          name="alarm-outline"
+                          size={12}
+                          color="#fff"
+                          style={styles.reminderIcon}
+                        />
+                        <Text style={styles.reminderText}>
+                          {note.reminderDescription}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
                 </View>
-              </View>
 
-              <View style={styles.noteActions}>
-                <TouchableOpacity
-                  style={styles.actionButton}
-                  onPress={() => handleEditNote(note.id)}
-                >
-                  <Ionicons
-                    name="pencil"
-                    size={18}
-                    color={darkMode ? '#aaa' : '#666'}
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))}
-        </ScrollView>
+                <View style={styles.noteActions}>
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={(e) => {
+                      e.stopPropagation()
+                      handleEditNote(note.id)
+                    }}
+                  >
+                    <Ionicons
+                      name="pencil"
+                      size={18}
+                      color={darkMode ? '#aaa' : '#666'}
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={(e) => {
+                      e.stopPropagation()
+                      handleDeleteNote(note.id)
+                    }}
+                  >
+                    <Ionicons
+                      name="trash"
+                      size={18}
+                      color={darkMode ? '#aaa' : '#666'}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
+            )
+          })}
+        </View>
       ) : (
         <View style={styles.emptyContainer}>
           <Text style={[styles.emptyText, darkMode && styles.darkSubtitle]}>
             {t('No work notes for today')}
           </Text>
+          <TouchableOpacity
+            style={styles.emptyAddButton}
+            onPress={handleAddNote}
+          >
+            <Text style={styles.emptyAddButtonText}>{t('Add Note')}</Text>
+          </TouchableOpacity>
         </View>
       )}
-
-      <TouchableOpacity style={styles.addButton} onPress={handleAddNote}>
-        <Ionicons name="add-circle" size={20} color="#8a56ff" />
-        <Text style={styles.addButtonText}>{t('Add Note')}</Text>
-      </TouchableOpacity>
     </View>
   )
 }
@@ -288,6 +430,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   title: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -300,7 +446,11 @@ const styles = StyleSheet.create({
     color: '#aaa',
   },
   viewAllButton: {
-    padding: 4,
+    padding: 8,
+    marginRight: 8,
+  },
+  addNoteButton: {
+    padding: 6,
   },
   viewAllText: {
     color: '#8a56ff',
@@ -318,8 +468,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     fontStyle: 'italic',
+    marginBottom: 12,
   },
-  notesScrollView: {
+  emptyAddButton: {
+    backgroundColor: '#8a56ff',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  emptyAddButtonText: {
+    color: '#fff',
+    fontWeight: '500',
+  },
+  notesContainer: {
     maxHeight: 300,
   },
   noteItem: {
@@ -327,6 +488,19 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+    backgroundColor: 'transparent',
+    borderRadius: 8,
+    marginBottom: 4,
+  },
+  noteItemExpanded: {
+    backgroundColor: '#f9f5ff',
+    padding: 8,
+    borderBottomWidth: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   noteContent: {
     flex: 1,
@@ -368,18 +542,6 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     padding: 6,
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 12,
-    padding: 8,
-  },
-  addButtonText: {
-    color: '#8a56ff',
-    fontWeight: '500',
-    marginLeft: 4,
   },
 })
 

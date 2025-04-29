@@ -165,9 +165,15 @@ const WeatherWidget = ({ onPress }) => {
 
   const location = homeLocation || workLocation
 
-  // Lấy tên địa điểm từ địa chỉ đầy đủ
-  let locationName = t('Current Location')
-  if (location?.address) {
+  // Lấy tên địa điểm từ API thời tiết hoặc địa chỉ đã lưu
+  let locationName = ''
+
+  // Ưu tiên sử dụng tên thành phố từ API thời tiết
+  if (currentWeather && currentWeather.name) {
+    locationName = currentWeather.name
+  }
+  // Nếu không có tên từ API, sử dụng địa chỉ đã lưu
+  else if (location?.address) {
     // Nếu có địa chỉ đầy đủ, lấy phần tên địa điểm (thường là phần đầu tiên)
     const addressParts = location.address.split(',')
     if (addressParts.length > 0) {
@@ -179,6 +185,10 @@ const WeatherWidget = ({ onPress }) => {
     } else {
       locationName = location.address
     }
+  }
+  // Nếu không có cả hai, sử dụng "Vị trí hiện tại"
+  else {
+    locationName = t('Current Location')
   }
 
   return (

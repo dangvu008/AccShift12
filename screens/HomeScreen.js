@@ -95,13 +95,13 @@ const HomeScreen = ({ navigation }) => {
 
   const formatDateDisplay = (date) => {
     const days = [
-      'Chủ Nhật',
-      'Thứ Hai',
-      'Thứ Ba',
-      'Thứ Tư',
-      'Thứ Năm',
-      'Thứ Sáu',
-      'Thứ Bảy',
+      t('Sunday'),
+      t('Monday'),
+      t('Tuesday'),
+      t('Wednesday'),
+      t('Thursday'),
+      t('Friday'),
+      t('Saturday'),
     ]
     return `${days[date.getDay()]}, ${date.getDate()}/${date.getMonth() + 1}`
   }
@@ -132,12 +132,12 @@ const HomeScreen = ({ navigation }) => {
         onPress={() => navigation.navigate('ShiftManagement')}
       >
         <Text style={[styles.shiftText, darkMode && styles.darkText]}>
-          {t('Work Shift')}
+          {currentShift ? currentShift.name : t('No shift selected')}
         </Text>
         <Text style={[styles.shiftTimeText, darkMode && styles.darkSubtitle]}>
           {currentShift
-            ? `${currentShift.name} (${currentShift.startTime} - ${currentShift.endTime})`
-            : t('No shift selected')}
+            ? `${currentShift.startTime} - ${currentShift.endTime}`
+            : ''}
         </Text>
         <View style={styles.shiftEditIcon}>
           <Ionicons
@@ -182,7 +182,11 @@ const HomeScreen = ({ navigation }) => {
             style={styles.viewStatsButton}
             onPress={() => navigation.navigate('AttendanceStats')}
           >
-            <Text style={styles.viewStatsButtonText}>{t('View Patterns')}</Text>
+            <Ionicons
+              name="chevron-forward"
+              size={24}
+              color={darkMode ? '#fff' : '#000'}
+            />
           </TouchableOpacity>
         </View>
         <WeeklyStatusGrid />

@@ -293,6 +293,45 @@ export const translations = {
     'old attendance photos.': 'ảnh chấm công cũ.',
     'Failed to clean up old photos.': 'Không thể dọn dẹp ảnh cũ.',
     'An unexpected error occurred.': 'Đã xảy ra lỗi không mong muốn.',
+
+    // Các chuỗi mới thêm vào
+    'Xác nhận đặt lại': 'Xác nhận đặt lại',
+    'Bạn có chắc chắn muốn đặt lại tất cả các trường về giá trị ban đầu không?':
+      'Bạn có chắc chắn muốn đặt lại tất cả các trường về giá trị ban đầu không?',
+    'Đặt lại': 'Đặt lại',
+    'Vui lòng sửa các lỗi để tiếp tục': 'Vui lòng sửa các lỗi để tiếp tục',
+    'Thêm mới': 'Thêm mới',
+    'Cập nhật': 'Cập nhật',
+
+    // Navigation
+    Home: 'Trang chủ',
+    Statistics: 'Thống kê',
+    Settings: 'Cài đặt',
+    'Back to Home': 'Về trang chủ',
+    'Note Detail': 'Chi tiết ghi chú',
+    'Edit Shift': 'Chỉnh sửa ca làm việc',
+    'Add Shift': 'Thêm ca làm việc',
+    Weather: 'Thời tiết',
+    History: 'Lịch sử',
+    Details: 'Chi tiết',
+    'View Image': 'Xem ảnh',
+    'Select Location': 'Chọn vị trí',
+
+    // Table headers
+    Ngày: 'Ngày',
+    Thứ: 'Thứ',
+    'Vào ca': 'Vào ca',
+    'Tan ca': 'Tan ca',
+    regularHours: 'Giờ tiêu chuẩn',
+    'OT 150%': 'OT 150%',
+    'OT 200%': 'OT 200%',
+    'OT 300%': 'OT 300%',
+
+    // Weather
+    'Current Location': 'Vị trí hiện tại',
+    'Set up your location for weather information':
+      'Thiết lập vị trí của bạn để xem thông tin thời tiết',
+    'Unable to load weather data': 'Không thể tải dữ liệu thời tiết',
   },
   en: {
     // General
@@ -579,5 +618,44 @@ export const translations = {
     'old attendance photos.': 'old attendance photos.',
     'Failed to clean up old photos.': 'Failed to clean up old photos.',
     'An unexpected error occurred.': 'An unexpected error occurred.',
+
+    // Các chuỗi mới thêm vào
+    'Xác nhận đặt lại': 'Reset Confirmation',
+    'Bạn có chắc chắn muốn đặt lại tất cả các trường về giá trị ban đầu không?':
+      'Are you sure you want to reset all fields to their default values?',
+    'Đặt lại': 'Reset',
+    'Vui lòng sửa các lỗi để tiếp tục': 'Please fix the errors to continue',
+    'Thêm mới': 'Add New',
+    'Cập nhật': 'Update',
+
+    // Navigation
+    Home: 'Home',
+    Statistics: 'Statistics',
+    Settings: 'Settings',
+    'Back to Home': 'Back to Home',
+    'Note Detail': 'Note Detail',
+    'Edit Shift': 'Edit Shift',
+    'Add Shift': 'Add Shift',
+    Weather: 'Weather',
+    History: 'History',
+    Details: 'Details',
+    'View Image': 'View Image',
+    'Select Location': 'Select Location',
+
+    // Table headers
+    Ngày: 'Day',
+    Thứ: 'Weekday',
+    'Vào ca': 'Check In',
+    'Tan ca': 'Check Out',
+    regularHours: 'Regular Hours',
+    'OT 150%': 'OT 150%',
+    'OT 200%': 'OT 200%',
+    'OT 300%': 'OT 300%',
+
+    // Weather
+    'Current Location': 'Current Location',
+    'Set up your location for weather information':
+      'Set up your location for weather information',
+    'Unable to load weather data': 'Unable to load weather data',
   },
 }

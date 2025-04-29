@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useContext } from 'react'
 import { StatusBar } from 'expo-status-bar'
 import { NavigationContainer } from '@react-navigation/native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
@@ -10,7 +10,7 @@ import * as Notifications from 'expo-notifications'
 // Import JSDoc types
 // @ts-ignore
 import './types.js'
-import { AppProvider } from './context/AppContext'
+import { AppProvider, AppContext } from './context/AppContext'
 
 // Import screens
 import HomeScreen from './screens/HomeScreen'
@@ -67,22 +67,22 @@ function HomeStack() {
       <Stack.Screen
         name="Statistics"
         component={StatisticsScreen}
-        options={{ title: 'Thống kê' }}
+        options={{ title: t('Statistics') }}
       />
       <Stack.Screen
         name="MonthlyReport"
         component={MonthlyReportScreen}
-        options={{ title: 'Báo cáo tháng' }}
+        options={{ title: t('Monthly Report') }}
       />
       <Stack.Screen
         name="AttendanceStats"
         component={AttendanceStatsScreen}
-        options={{ title: 'Thống kê chấm công' }}
+        options={{ title: t('Attendance Statistics') }}
       />
       <Stack.Screen
         name="NoteDetail"
         component={NoteDetailScreen}
-        options={{ title: 'Chi tiết ghi chú' }}
+        options={{ title: t('Note Detail') }}
       />
       <Stack.Screen
         name="AlarmScreen"
@@ -92,23 +92,21 @@ function HomeStack() {
       <Stack.Screen
         name="ShiftManagement"
         component={ShiftManagementScreen}
-        options={{ title: 'Quản lý ca làm việc' }}
+        options={{ title: t('Manage Shifts') }}
       />
       <Stack.Screen
         name="AddEditShift"
         component={AddEditShiftScreen}
         options={
           /** @param {{route: Route}} param */ ({ route }) => ({
-            title: route.params?.shiftId
-              ? 'Chỉnh sửa ca làm việc'
-              : 'Thêm ca làm việc',
+            title: route.params?.shiftId ? t('Edit Shift') : t('Add Shift'),
           })
         }
       />
       <Stack.Screen
         name="WeatherDetail"
         component={WeatherDetailScreen}
-        options={{ title: 'Thời tiết' }}
+        options={{ title: t('Weather') }}
       />
     </Stack.Navigator>
   )
@@ -131,7 +129,16 @@ function ShiftsStack() {
       <Stack.Screen
         name="ShiftList"
         component={ShiftListScreen}
-        options={{ title: 'Ca làm việc' }}
+        options={{ title: t('Shifts') }}
+      />
+      <Stack.Screen
+        name="AddEditShift"
+        component={AddEditShiftScreen}
+        options={
+          /** @param {{route: Route}} param */ ({ route }) => ({
+            title: route.params?.shiftId ? t('Edit Shift') : t('Add Shift'),
+          })
+        }
       />
     </Stack.Navigator>
   )
@@ -154,32 +161,32 @@ function StatisticsStack() {
       <Stack.Screen
         name="Statistics"
         component={StatisticsScreen}
-        options={{ title: 'Thống kê' }}
+        options={{ title: t('Statistics') }}
       />
       <Stack.Screen
         name="MonthlyReport"
         component={MonthlyReportScreen}
-        options={{ title: 'Báo cáo tháng' }}
+        options={{ title: t('Monthly Report') }}
       />
       <Stack.Screen
         name="AttendanceStats"
         component={AttendanceStatsScreen}
-        options={{ title: 'Thống kê chấm công' }}
+        options={{ title: t('Attendance Statistics') }}
       />
       <Stack.Screen
         name="LogHistory"
         component={LogHistoryScreen}
-        options={{ title: 'Lịch sử' }}
+        options={{ title: t('History') }}
       />
       <Stack.Screen
         name="LogHistoryDetail"
         component={LogHistoryDetailScreen}
-        options={{ title: 'Chi tiết' }}
+        options={{ title: t('Details') }}
       />
       <Stack.Screen
         name="ImageViewer"
         component={ImageViewerScreen}
-        options={{ title: 'Xem ảnh' }}
+        options={{ title: t('View Image') }}
       />
     </Stack.Navigator>
   )
@@ -202,38 +209,38 @@ function SettingsStack() {
       <Stack.Screen
         name="Settings"
         component={SettingsScreen}
-        options={{ title: 'Cài đặt' }}
+        options={{ title: t('Settings') }}
       />
       <Stack.Screen
         name="BackupRestore"
         component={BackupRestoreScreen}
-        options={{ title: 'Sao lưu & Khôi phục' }}
+        options={{ title: t('Backup & Restore') }}
       />
       <Stack.Screen
         name="WeatherAlerts"
         component={WeatherAlertsScreen}
-        options={{ title: 'Cảnh báo thời tiết' }}
+        options={{ title: t('Weather Alerts') }}
       />
       <Stack.Screen
         name="Notes"
         component={NotesScreen}
-        options={{ title: 'Ghi chú' }}
+        options={{ title: t('Notes') }}
       />
       <Stack.Screen
         name="NoteDetail"
         component={NoteDetailScreen}
-        options={{ title: 'Chi tiết ghi chú' }}
+        options={{ title: t('Note Detail') }}
       />
       <Stack.Screen
         name="MapPickerScreen"
         component={MapPickerScreen}
-        options={{ title: 'Chọn vị trí' }}
+        options={{ title: t('Select Location') }}
       />
       {/* Màn hình này vẫn được đăng ký nhưng không hiển thị trong UI, chỉ dành cho dev */}
       <Stack.Screen
         name="WeatherApiKeys"
         component={WeatherApiKeysScreen}
-        options={{ title: 'Khóa API thời tiết' }}
+        options={{ title: t('Weather API Keys') }}
       />
     </Stack.Navigator>
   )
@@ -288,8 +295,8 @@ export default function App() {
 function AppContent(props) {
   // eslint-disable-next-line no-unused-vars
   const notification = props.notification
-  // eslint-disable-next-line no-unused-vars
-  const darkMode = true // Default value to avoid errors
+  // Import context to use t() function and darkMode
+  const { t, darkMode } = useContext(AppContext)
 
   return (
     <>
@@ -327,22 +334,22 @@ function AppContent(props) {
         <Tab.Screen
           name="HomeStack"
           component={HomeStack}
-          options={{ title: 'Trang chủ', headerShown: false }}
+          options={{ title: t('Home'), headerShown: false }}
         />
         <Tab.Screen
           name="ShiftsStack"
           component={ShiftsStack}
-          options={{ title: 'Ca làm việc', headerShown: false }}
+          options={{ title: t('Shifts'), headerShown: false }}
         />
         <Tab.Screen
           name="StatisticsStack"
           component={StatisticsStack}
-          options={{ title: 'Thống kê', headerShown: false }}
+          options={{ title: t('Statistics'), headerShown: false }}
         />
         <Tab.Screen
           name="SettingsStack"
           component={SettingsStack}
-          options={{ title: 'Cài đặt', headerShown: false }}
+          options={{ title: t('Settings'), headerShown: false }}
         />
       </Tab.Navigator>
       <StatusBar style="auto" />
