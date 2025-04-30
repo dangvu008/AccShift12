@@ -47,6 +47,9 @@ const Stack = createStackNavigator()
 
 // Home stack navigator
 function HomeStack() {
+  // Import context to use t() function
+  const { t } = useContext(AppContext)
+
   return (
     <Stack.Navigator
       screenOptions={{
@@ -114,6 +117,9 @@ function HomeStack() {
 
 // Shifts stack navigator
 function ShiftsStack() {
+  // Import context to use t() function
+  const { t } = useContext(AppContext)
+
   return (
     <Stack.Navigator
       screenOptions={{
@@ -146,6 +152,9 @@ function ShiftsStack() {
 
 // Statistics stack navigator
 function StatisticsStack() {
+  // Import context to use t() function
+  const { t } = useContext(AppContext)
+
   return (
     <Stack.Navigator
       screenOptions={{
@@ -194,6 +203,9 @@ function StatisticsStack() {
 
 // Settings stack navigator
 function SettingsStack() {
+  // Import context to use t() function
+  const { t } = useContext(AppContext)
+
   return (
     <Stack.Navigator
       screenOptions={{
