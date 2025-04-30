@@ -473,16 +473,6 @@ const StatisticsScreen = ({ navigation }) => {
     <ScrollView
       style={[styles.container, { backgroundColor: theme.backgroundColor }]}
     >
-      {/* Header with back button */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color={theme.textColor} />
-        </TouchableOpacity>
-      </View>
-
       {/* Time Range Selector */}
       <View
         style={[
@@ -505,7 +495,7 @@ const StatisticsScreen = ({ navigation }) => {
               timeRange === 'week' && styles.activeTimeRangeButtonText,
             ]}
           >
-            {t('Tuần này')}
+            {language === 'vi' ? 'Tuần này' : 'This week'}
           </Text>
         </TouchableOpacity>
 
@@ -524,7 +514,7 @@ const StatisticsScreen = ({ navigation }) => {
               timeRange === 'month' && styles.activeTimeRangeButtonText,
             ]}
           >
-            {t('Tháng này')}
+            {language === 'vi' ? 'Tháng này' : 'This month'}
           </Text>
         </TouchableOpacity>
 
@@ -543,7 +533,7 @@ const StatisticsScreen = ({ navigation }) => {
               timeRange === 'year' && styles.activeTimeRangeButtonText,
             ]}
           >
-            {t('Năm nay')}
+            {language === 'vi' ? 'Năm nay' : 'This year'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -567,7 +557,7 @@ const StatisticsScreen = ({ navigation }) => {
           {/* Tổng giờ làm */}
           <View style={[styles.statCard, { backgroundColor: theme.cardColor }]}>
             <Text style={[styles.statTitle, { color: theme.textColor }]}>
-              {t('Tổng giờ làm')}
+              {language === 'vi' ? 'Tổng giờ làm' : 'Total work hours'}
             </Text>
             <Text style={[styles.statValue, { color: '#8a56ff' }]}>
               {formatDecimalHours(stats.totalWorkTime)}
@@ -577,7 +567,7 @@ const StatisticsScreen = ({ navigation }) => {
           {/* Tổng giờ OT */}
           <View style={[styles.statCard, { backgroundColor: theme.cardColor }]}>
             <Text style={[styles.statTitle, { color: theme.textColor }]}>
-              {t('Tổng giờ OT')}
+              {language === 'vi' ? 'Tổng giờ OT' : 'Total OT hours'}
             </Text>
             <Text style={[styles.statValue, { color: '#3498db' }]}>
               {formatDecimalHours(stats.overtime)}
@@ -587,7 +577,7 @@ const StatisticsScreen = ({ navigation }) => {
           {/* Ngày làm việc */}
           <View style={[styles.statCard, { backgroundColor: theme.cardColor }]}>
             <Text style={[styles.statTitle, { color: theme.textColor }]}>
-              {t('Ngày làm việc')}
+              {language === 'vi' ? 'Ngày làm việc' : 'Work days'}
             </Text>
             <Text style={[styles.statValue, { color: '#27ae60' }]}>
               {Object.values(stats.statusCounts).reduce((a, b) => a + b, 0)}
@@ -597,7 +587,7 @@ const StatisticsScreen = ({ navigation }) => {
           {/* Phân bố trạng thái */}
           <View style={[styles.statCard, { backgroundColor: theme.cardColor }]}>
             <Text style={[styles.statTitle, { color: theme.textColor }]}>
-              {t('Phân bố trạng thái')}
+              {language === 'vi' ? 'Phân bố trạng thái' : 'Status distribution'}
             </Text>
 
             <View style={styles.statusGrid}>
@@ -609,7 +599,7 @@ const StatisticsScreen = ({ navigation }) => {
                   </Text>
                 </View>
                 <Text style={[styles.statusLabel, { color: theme.textColor }]}>
-                  {t('Hoàn thành')}
+                  {language === 'vi' ? 'Hoàn thành' : 'Completed'}
                 </Text>
               </View>
 
@@ -621,7 +611,7 @@ const StatisticsScreen = ({ navigation }) => {
                   </Text>
                 </View>
                 <Text style={[styles.statusLabel, { color: theme.textColor }]}>
-                  {t('Đi muộn')}
+                  {language === 'vi' ? 'Đi muộn' : 'Late'}
                 </Text>
               </View>
 
@@ -633,7 +623,7 @@ const StatisticsScreen = ({ navigation }) => {
                   </Text>
                 </View>
                 <Text style={[styles.statusLabel, { color: theme.textColor }]}>
-                  {t('Về sớm')}
+                  {language === 'vi' ? 'Về sớm' : 'Early leave'}
                 </Text>
               </View>
 
@@ -645,7 +635,7 @@ const StatisticsScreen = ({ navigation }) => {
                   </Text>
                 </View>
                 <Text style={[styles.statusLabel, { color: theme.textColor }]}>
-                  {t('Muộn & sớm')}
+                  {language === 'vi' ? 'Muộn & sớm' : 'Late & early'}
                 </Text>
               </View>
 
@@ -657,7 +647,7 @@ const StatisticsScreen = ({ navigation }) => {
                   </Text>
                 </View>
                 <Text style={[styles.statusLabel, { color: theme.textColor }]}>
-                  {t('Thiếu log')}
+                  {language === 'vi' ? 'Thiếu log' : 'Missing log'}
                 </Text>
               </View>
 
@@ -669,7 +659,7 @@ const StatisticsScreen = ({ navigation }) => {
                   </Text>
                 </View>
                 <Text style={[styles.statusLabel, { color: theme.textColor }]}>
-                  {t('Nghỉ phép')}
+                  {language === 'vi' ? 'Nghỉ phép' : 'Leave'}
                 </Text>
               </View>
             </View>
@@ -695,7 +685,7 @@ const StatisticsScreen = ({ navigation }) => {
                   { color: theme.textColor },
                 ]}
               >
-                {t('Ngày')}
+                {language === 'vi' ? 'Ngày' : 'Date'}
               </Text>
               <Text
                 style={[
@@ -704,7 +694,7 @@ const StatisticsScreen = ({ navigation }) => {
                   { color: theme.textColor },
                 ]}
               >
-                {t('Thứ')}
+                {language === 'vi' ? 'Thứ' : 'Day'}
               </Text>
               <Text
                 style={[
@@ -713,7 +703,7 @@ const StatisticsScreen = ({ navigation }) => {
                   { color: theme.textColor },
                 ]}
               >
-                {t('Vào ca')}
+                {language === 'vi' ? 'Vào ca' : 'Check in'}
               </Text>
               <Text
                 style={[
@@ -722,7 +712,7 @@ const StatisticsScreen = ({ navigation }) => {
                   { color: theme.textColor },
                 ]}
               >
-                {t('Tan ca')}
+                {language === 'vi' ? 'Tan ca' : 'Check out'}
               </Text>
               <Text
                 style={[
@@ -731,7 +721,7 @@ const StatisticsScreen = ({ navigation }) => {
                   { color: theme.textColor },
                 ]}
               >
-                {t('Giờ HC')}
+                {language === 'vi' ? 'Giờ HC' : 'Work hrs'}
               </Text>
               <Text
                 style={[
@@ -740,7 +730,7 @@ const StatisticsScreen = ({ navigation }) => {
                   { color: theme.textColor },
                 ]}
               >
-                {t('OT')}
+                {language === 'vi' ? 'OT' : 'OT'}
               </Text>
             </View>
 
@@ -824,7 +814,9 @@ const StatisticsScreen = ({ navigation }) => {
                 <Text
                   style={[styles.noDataText, { color: theme.subtextColor }]}
                 >
-                  {t('Không có dữ liệu trong khoảng thời gian này')}
+                  {language === 'vi'
+                    ? 'Không có dữ liệu trong khoảng thời gian này'
+                    : 'No data available for this time range'}
                 </Text>
               )}
             </View>
@@ -1076,9 +1068,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
-  backButton: {
-    padding: 8,
-  },
+
   cancelButton: {
     backgroundColor: '#ddd',
   },
@@ -1125,11 +1115,7 @@ const styles = StyleSheet.create({
   earlyBox: {
     backgroundColor: '#e67e22',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
+
   hoursCell: {
     flex: 1,
     textAlign: 'center',
