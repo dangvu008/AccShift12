@@ -486,7 +486,12 @@ const StatisticsScreen = ({ navigation }) => {
       </View>
 
       {/* Time Range Selector */}
-      <View style={styles.timeRangeSelector}>
+      <View
+        style={[
+          styles.timeRangeSelector,
+          darkMode && styles.darkTimeRangeSelector,
+        ]}
+      >
         <TouchableOpacity
           style={[
             styles.timeRangeButton,
@@ -1156,7 +1161,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   dateRange: {
-    color: '#fff',
+    color: '#aaa',
     fontSize: 16,
     textAlign: 'center',
   },
@@ -1294,7 +1299,7 @@ const styles = StyleSheet.create({
     width: '30%',
   },
   statusLabel: {
-    color: '#fff',
+    color: '#333',
     fontSize: 12,
     textAlign: 'center',
   },
@@ -1340,7 +1345,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#2a2a2a',
   },
   timeRangeButtonText: {
-    color: '#fff',
+    color: '#aaa',
     fontWeight: '500',
   },
   timeRangeSelector: {
@@ -1349,6 +1354,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 16,
     padding: 4,
+  },
+  darkTimeRangeSelector: {
+    backgroundColor: '#1a1a1a',
   },
   weekdayCell: {
     flex: 1,
