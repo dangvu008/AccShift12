@@ -23,11 +23,16 @@ const WeatherDetailScreen = ({ navigation }) => {
   const [selectedLocation, setSelectedLocation] = useState('home')
 
   // Di chuyển hàm fetchWeatherData ra ngoài useEffect để có thể sử dụng ở nhiều nơi
-  const fetchWeatherData = async (location) => {
+  const fetchWeatherData = async (location, forceRefresh = false) => {
     if (!location) return null
 
     try {
       setLoading(true)
+
+      // Nếu yêu cầu làm mới, xóa cache thời tiết trước
+      if (forceRefresh) {
+        await weatherService.clearWeatherCache()
+      }
 
       // Lấy thời tiết hiện tại
       const current = await weatherService.getCurrentWeather(
@@ -62,6 +67,12 @@ const WeatherDetailScreen = ({ navigation }) => {
       console.error('Error fetching weather data:', error)
       setLoading(false)
     }
+  }
+
+  // Hàm làm mới dữ liệu thời tiết
+  const refreshWeatherData = async () => {
+    const location = selectedLocation === 'home' ? homeLocation : workLocation
+    await fetchWeatherData(location, true) // Truyền true để xóa cache
   }
 
   useEffect(() => {
@@ -205,6 +216,23 @@ const WeatherDetailScreen = ({ navigation }) => {
   return (
     <View style={[styles.container, darkMode && styles.darkContainer]}>
       {renderLocationSelector()}
+
+      {/* Nút làm mới */}
+      <View style={styles.refreshButtonContainer}>
+        <TouchableOpacity
+          style={[styles.refreshButton, darkMode && styles.darkRefreshButton]}
+          onPress={refreshWeatherData}
+        >
+          <Ionicons
+            name="refresh"
+            size={20}
+            color={darkMode ? '#fff' : '#000'}
+          />
+          <Text style={[styles.refreshButtonText, darkMode && styles.darkText]}>
+            {t('Refresh')}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Thông tin thời tiết hiện tại */}
@@ -467,9 +495,29 @@ const styles = StyleSheet.create({
   },
   locationSelector: {
     flexDirection: 'row',
-    marginBottom: 16,
+    marginBottom: 12,
     borderRadius: 8,
     overflow: 'hidden',
+  },
+  refreshButtonContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  refreshButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+  },
+  darkRefreshButton: {
+    backgroundColor: '#2a2a2a',
+  },
+  refreshButtonText: {
+    marginLeft: 8,
+    fontWeight: '500',
+    color: '#000',
   },
   locationButton: {
     flex: 1,

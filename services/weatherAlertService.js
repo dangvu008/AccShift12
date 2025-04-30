@@ -2,7 +2,11 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as Notifications from 'expo-notifications'
-import { getCurrentWeather, getWeatherForecast } from './weatherService'
+import {
+  getCurrentWeather,
+  getWeatherForecast,
+  getHourlyForecast,
+} from './weatherService'
 import { STORAGE_KEYS } from '../config/appConfig'
 import locationUtils from '../utils/location'
 import { translations } from '../utils/translations'
@@ -20,6 +24,16 @@ const EXTREME_WEATHER_THRESHOLDS = {
   LOW_TEMP: 10, // °C
   WIND: 10, // m/s
   SNOW: 1, // mm/h
+}
+
+// Các loại điều kiện thời tiết cực đoan
+const WEATHER_CONDITIONS = {
+  RAIN: 'rain',
+  HIGH_TEMP: 'high_temp',
+  LOW_TEMP: 'low_temp',
+  WIND: 'wind',
+  THUNDERSTORM: 'thunderstorm',
+  SNOW: 'snow',
 }
 
 // Danh sách cảnh báo đã hiển thị
@@ -143,6 +157,207 @@ const getCheckLocation = (timeType, userSettings) => {
 }
 
 /**
+ * Tìm dự báo thời tiết gần nhất với thời điểm cụ thể
+ * @param {Array} forecastList Danh sách dự báo thời tiết
+ * @param {string} timeString Thời gian cần tìm (định dạng "HH:MM")
+ * @returns {Object|null} Dự báo thời tiết gần nhất hoặc null nếu không tìm thấy
+ */
+const findForecastForTime = (forecastList, timeString) => {
+  if (!forecastList || forecastList.length === 0 || !timeString) return null
+
+  // Chuyển đổi timeString thành số phút trong ngày
+  const [hours, minutes] = timeString.split(':').map(Number)
+  const targetMinutes = hours * 60 + minutes
+
+  // Tạo một bản sao của danh sách dự báo để không ảnh hưởng đến dữ liệu gốc
+  const forecasts = [...forecastList]
+
+  // Chuyển đổi thời gian dự báo thành số phút trong ngày và tính khoảng cách
+  forecasts.forEach((forecast) => {
+    const forecastDate = new Date(forecast.dt * 1000)
+    const forecastHours = forecastDate.getHours()
+    const forecastMinutes = forecastDate.getMinutes()
+    const forecastTotalMinutes = forecastHours * 60 + forecastMinutes
+
+    // Tính khoảng cách thời gian (có xử lý trường hợp qua ngày)
+    let timeDiff = Math.abs(forecastTotalMinutes - targetMinutes)
+    if (timeDiff > 12 * 60) {
+      // Nếu khoảng cách > 12 giờ, có thể là qua ngày
+      timeDiff = 24 * 60 - timeDiff
+    }
+
+    forecast.timeDiff = timeDiff
+  })
+
+  // Sắp xếp theo khoảng cách thời gian tăng dần
+  forecasts.sort((a, b) => a.timeDiff - b.timeDiff)
+
+  // Trả về dự báo gần nhất
+  return forecasts[0]
+}
+
+/**
+ * Phân tích dự báo thời tiết và tạo cảnh báo
+ * @param {Object} shift Ca làm việc
+ * @param {Object} homeLocation Vị trí nhà
+ * @param {Object} workLocation Vị trí công ty
+ * @param {boolean} useSingleLocation Sử dụng chung một vị trí
+ * @returns {Promise<Object>} Thông tin cảnh báo
+ */
+const analyzeWeatherForecast = async (
+  shift,
+  homeLocation,
+  workLocation,
+  useSingleLocation
+) => {
+  try {
+    if (!shift || !homeLocation) return { hasAlert: false }
+
+    // Lấy dự báo thời tiết cho vị trí nhà
+    const homeForecast = await getHourlyForecast(
+      homeLocation.lat,
+      homeLocation.lon
+    )
+
+    // Lấy dự báo thời tiết cho vị trí công ty (nếu có và không dùng chung vị trí)
+    let workForecast = []
+    if (workLocation && !useSingleLocation) {
+      workForecast = await getHourlyForecast(workLocation.lat, workLocation.lon)
+    } else {
+      // Nếu dùng chung vị trí hoặc không có vị trí công ty, sử dụng dự báo của nhà
+      workForecast = homeForecast
+    }
+
+    // Phân tích dự báo tại NHÀ (lúc sắp đi)
+    const departureTime = shift.departureTime || shift.startTime
+    const homeDepartureForecast = findForecastForTime(
+      homeForecast,
+      departureTime
+    )
+
+    // Phân tích dự báo tại CÔNG TY (lúc sẽ tan làm)
+    const returnTime = shift.officeEndTime || shift.endTime
+    const workReturnForecast = findForecastForTime(workForecast, returnTime)
+
+    // Kiểm tra điều kiện cực đoan
+    const departureAlert = homeDepartureForecast
+      ? checkExtremeConditions(homeDepartureForecast)
+      : { hasAlert: false }
+    const returnAlert = workReturnForecast
+      ? checkExtremeConditions(workReturnForecast)
+      : { hasAlert: false }
+
+    // Tạo thông báo cụ thể
+    const alerts = []
+    const departureTimeFormatted = departureTime
+    const returnTimeFormatted = returnTime
+
+    if (departureAlert.hasAlert) {
+      // Tạo thông báo cho thời điểm đi làm
+      const departureAlertMessages = []
+
+      departureAlert.conditions.forEach((condition) => {
+        let message = ''
+
+        switch (condition.type) {
+          case WEATHER_CONDITIONS.RAIN:
+            message = `Cảnh báo: Sắp có mưa tại nhà (~${departureTimeFormatted}). Nhớ mang áo mưa!`
+            break
+          case WEATHER_CONDITIONS.HIGH_TEMP:
+            message = `Cảnh báo: Nhiệt độ tại nhà khá cao (~${departureTimeFormatted}). Nên chuẩn bị đồ thoáng mát.`
+            break
+          case WEATHER_CONDITIONS.LOW_TEMP:
+            message = `Cảnh báo: Nhiệt độ tại nhà khá thấp (~${departureTimeFormatted}). Nên mặc ấm.`
+            break
+          case WEATHER_CONDITIONS.WIND:
+            message = `Cảnh báo: Gió mạnh tại nhà (~${departureTimeFormatted}). Cẩn thận khi di chuyển.`
+            break
+          case WEATHER_CONDITIONS.THUNDERSTORM:
+            message = `Cảnh báo: Có giông bão tại nhà (~${departureTimeFormatted}). Cân nhắc mang ô/áo mưa.`
+            break
+          case WEATHER_CONDITIONS.SNOW:
+            message = `Cảnh báo: Có tuyết rơi tại nhà (~${departureTimeFormatted}). Mặc đủ ấm và cẩn thận đường trơn.`
+            break
+          default:
+            message = `Cảnh báo: ${condition.message} tại nhà (~${departureTimeFormatted}).`
+        }
+
+        departureAlertMessages.push(message)
+      })
+
+      alerts.push({
+        timeType: 'departure',
+        locationName: 'nhà',
+        time: departureTimeFormatted,
+        messages: departureAlertMessages,
+        conditions: departureAlert.conditions,
+        forecast: homeDepartureForecast,
+      })
+    }
+
+    if (returnAlert.hasAlert) {
+      // Tạo thông báo cho thời điểm tan làm
+      const returnAlertMessages = []
+      const locationName = useSingleLocation ? 'nhà' : 'công ty'
+
+      returnAlert.conditions.forEach((condition) => {
+        let message = ''
+
+        switch (condition.type) {
+          case WEATHER_CONDITIONS.RAIN:
+            message = `Lưu ý: Dự báo có mưa tại ${locationName} lúc tan làm (~${returnTimeFormatted}). Hãy chuẩn bị áo mưa từ nhà!`
+            break
+          case WEATHER_CONDITIONS.HIGH_TEMP:
+            message = `Lưu ý: Dự báo nhiệt độ tại ${locationName} rất cao lúc tan làm (~${returnTimeFormatted}). Cân nhắc trang phục phù hợp mang từ nhà.`
+            break
+          case WEATHER_CONDITIONS.LOW_TEMP:
+            message = `Lưu ý: Dự báo nhiệt độ tại ${locationName} khá thấp lúc tan làm (~${returnTimeFormatted}). Nên mang thêm áo ấm từ nhà.`
+            break
+          case WEATHER_CONDITIONS.WIND:
+            message = `Lưu ý: Dự báo gió mạnh tại ${locationName} lúc tan làm (~${returnTimeFormatted}). Cẩn thận khi di chuyển.`
+            break
+          case WEATHER_CONDITIONS.THUNDERSTORM:
+            message = `Lưu ý: Dự báo có giông bão tại ${locationName} lúc tan làm (~${returnTimeFormatted}). Chuẩn bị ô/áo mưa từ nhà.`
+            break
+          case WEATHER_CONDITIONS.SNOW:
+            message = `Lưu ý: Dự báo có tuyết rơi tại ${locationName} lúc tan làm (~${returnTimeFormatted}). Chuẩn bị quần áo ấm từ nhà.`
+            break
+          default:
+            message = `Lưu ý: ${condition.message} tại ${locationName} lúc tan làm (~${returnTimeFormatted}).`
+        }
+
+        returnAlertMessages.push(message)
+      })
+
+      alerts.push({
+        timeType: 'return',
+        locationName: useSingleLocation ? 'nhà' : 'công ty',
+        time: returnTimeFormatted,
+        messages: returnAlertMessages,
+        conditions: returnAlert.conditions,
+        forecast: workReturnForecast,
+      })
+    }
+
+    // Tổng hợp cảnh báo
+    const hasAlert = alerts.length > 0
+
+    if (hasAlert) {
+      return {
+        hasAlert,
+        alerts,
+        shift,
+      }
+    }
+
+    return { hasAlert: false }
+  } catch (error) {
+    console.error('Lỗi khi phân tích dự báo thời tiết:', error)
+    return { hasAlert: false }
+  }
+}
+
+/**
  * Kiểm tra thời tiết cực đoan cho một ca làm việc
  * @param {Object} shift Ca làm việc
  * @returns {Promise<Object>} Thông tin cảnh báo
@@ -166,66 +381,19 @@ export const checkWeatherForShift = async (shift) => {
       return { hasAlert: false }
     }
 
-    // Lấy vị trí kiểm tra cho thời điểm đi làm
-    const departureLocation = getCheckLocation('departure', userSettings)
-    if (!departureLocation) return { hasAlert: false }
+    // Lấy vị trí nhà và công ty
+    const homeLocation = userSettings.weatherLocation.home
+    const workLocation = userSettings.weatherLocation.work
+    const useSingleLocation =
+      userSettings.weatherLocation.useSingleLocation === true
 
-    // Lấy vị trí kiểm tra cho thời điểm về nhà
-    const returnLocation = getCheckLocation('return', userSettings)
-    if (!returnLocation) return { hasAlert: false }
-
-    // Lấy dự báo thời tiết cho vị trí đi làm
-    const departureWeather = await getCurrentWeather(
-      departureLocation.lat,
-      departureLocation.lon
+    // Sử dụng phân tích dự báo thời tiết mới
+    return await analyzeWeatherForecast(
+      shift,
+      homeLocation,
+      workLocation,
+      useSingleLocation
     )
-
-    // Lấy dự báo thời tiết cho vị trí về nhà
-    const returnWeather = await getCurrentWeather(
-      returnLocation.lat,
-      returnLocation.lon
-    )
-
-    // Kiểm tra điều kiện cực đoan
-    const departureAlert = checkExtremeConditions(departureWeather)
-    const returnAlert = checkExtremeConditions(returnWeather)
-
-    // Tổng hợp cảnh báo
-    const hasAlert = departureAlert.hasAlert || returnAlert.hasAlert
-
-    if (hasAlert) {
-      const alerts = []
-
-      if (departureAlert.hasAlert) {
-        alerts.push({
-          ...departureAlert,
-          timeType: 'departure',
-          locationName: 'nhà',
-          shiftId: shift.id,
-          shiftName: shift.name,
-        })
-      }
-
-      if (returnAlert.hasAlert) {
-        alerts.push({
-          ...returnAlert,
-          timeType: 'return',
-          locationName: userSettings.weatherLocation.useSingleLocation
-            ? 'nhà'
-            : 'công ty',
-          shiftId: shift.id,
-          shiftName: shift.name,
-        })
-      }
-
-      return {
-        hasAlert,
-        alerts,
-        shift,
-      }
-    }
-
-    return { hasAlert: false }
   } catch (error) {
     console.error('Lỗi khi kiểm tra thời tiết cho ca làm việc:', error)
     return { hasAlert: false }
@@ -319,16 +487,30 @@ export const showWeatherAlert = async (alertData) => {
     let title = `Cảnh báo thời tiết - Ca ${alertData.shift.name}`
     let body = ''
 
+    // Tổng hợp các thông báo từ tất cả các cảnh báo
+    const allMessages = []
     alertData.alerts.forEach((alert) => {
-      const locationText =
-        alert.timeType === 'departure'
-          ? 'đi làm từ nhà'
-          : `về nhà từ ${alert.locationName}`
-
-      alert.conditions.forEach((condition) => {
-        body += `${condition.message} khi ${locationText}. ${condition.suggestion}\n`
-      })
+      if (alert.messages && alert.messages.length > 0) {
+        allMessages.push(...alert.messages)
+      }
     })
+
+    // Nếu có thông báo mới, sử dụng chúng
+    if (allMessages.length > 0) {
+      body = allMessages.join('\n\n')
+    } else {
+      // Ngược lại, sử dụng định dạng cũ
+      alertData.alerts.forEach((alert) => {
+        const locationText =
+          alert.timeType === 'departure'
+            ? 'đi làm từ nhà'
+            : `về nhà từ ${alert.locationName}`
+
+        alert.conditions.forEach((condition) => {
+          body += `${condition.message} khi ${locationText}. ${condition.suggestion}\n`
+        })
+      })
+    }
 
     // Lưu cảnh báo vào AsyncStorage
     const alertsJson = await AsyncStorage.getItem(STORAGE_KEYS.WEATHER_ALERTS)

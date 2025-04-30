@@ -20,97 +20,116 @@ const WeatherWidget = ({ onPress }) => {
   const [forecast, setForecast] = useState([])
   const [weatherAlert, setWeatherAlert] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
 
-  useEffect(() => {
-    let isMounted = true // Để tránh cập nhật state sau khi component unmount
+  // Di chuyển hàm fetchWeatherData ra ngoài useEffect để có thể tái sử dụng
+  const fetchWeatherData = async (forceRefresh = false) => {
+    let isMounted = true
+    try {
+      setLoading(true)
+      // Sử dụng vị trí nhà làm vị trí chính
+      const location = homeLocation || workLocation
 
-    const fetchWeatherData = async () => {
+      if (!location) {
+        setLoading(false)
+        return
+      }
+
+      // Nếu yêu cầu làm mới, xóa cache thời tiết trước
+      if (forceRefresh) {
+        await weatherService.clearWeatherCache()
+      }
+
       try {
-        if (!isMounted) return
-        setLoading(true)
-        // Sử dụng vị trí nhà làm vị trí chính
-        const location = homeLocation || workLocation
+        // Lấy thời tiết hiện tại
+        const current = await weatherService.getCurrentWeather(
+          location.latitude,
+          location.longitude
+        )
 
-        if (!location) {
-          if (isMounted) setLoading(false)
-          return
-        }
+        if (!isMounted) return
+        setCurrentWeather(current)
 
         try {
-          // Lấy thời tiết hiện tại
-          const current = await weatherService.getCurrentWeather(
+          // Lấy dự báo theo giờ
+          const hourlyForecast = await weatherService.getHourlyForecast(
             location.latitude,
             location.longitude
           )
 
           if (!isMounted) return
-          setCurrentWeather(current)
+
+          // Lọc dự báo để lấy 3 giờ tiếp theo (cách 1 giờ)
+          if (hourlyForecast && hourlyForecast.length > 0) {
+            // Lấy 3 giờ tiếp theo, cách nhau 1 giờ
+            const filteredForecast = []
+            let hourIndex = 0
+
+            // Lấy giờ đầu tiên
+            if (hourlyForecast[hourIndex]) {
+              filteredForecast.push(hourlyForecast[hourIndex])
+            }
+
+            // Lấy giờ thứ hai (cách 1 giờ)
+            hourIndex = Math.min(1, hourlyForecast.length - 1)
+            if (hourlyForecast[hourIndex]) {
+              filteredForecast.push(hourlyForecast[hourIndex])
+            }
+
+            // Lấy giờ thứ ba (cách 1 giờ nữa)
+            hourIndex = Math.min(2, hourlyForecast.length - 1)
+            if (hourlyForecast[hourIndex]) {
+              filteredForecast.push(hourlyForecast[hourIndex])
+            }
+
+            setForecast(filteredForecast)
+          } else {
+            setForecast([])
+          }
 
           try {
-            // Lấy dự báo theo giờ
-            const hourlyForecast = await weatherService.getHourlyForecast(
+            // Lấy cảnh báo thời tiết
+            const alerts = await weatherService.getWeatherAlerts(
               location.latitude,
               location.longitude
             )
 
             if (!isMounted) return
-
-            // Lọc dự báo để lấy 3 giờ tiếp theo (cách 1 giờ)
-            if (hourlyForecast && hourlyForecast.length > 0) {
-              // Lấy 3 giờ tiếp theo, cách nhau 1 giờ
-              const filteredForecast = []
-              let hourIndex = 0
-
-              // Lấy giờ đầu tiên
-              if (hourlyForecast[hourIndex]) {
-                filteredForecast.push(hourlyForecast[hourIndex])
-              }
-
-              // Lấy giờ thứ hai (cách 1 giờ)
-              hourIndex = Math.min(1, hourlyForecast.length - 1)
-              if (hourlyForecast[hourIndex]) {
-                filteredForecast.push(hourlyForecast[hourIndex])
-              }
-
-              // Lấy giờ thứ ba (cách 1 giờ nữa)
-              hourIndex = Math.min(2, hourlyForecast.length - 1)
-              if (hourlyForecast[hourIndex]) {
-                filteredForecast.push(hourlyForecast[hourIndex])
-              }
-
-              setForecast(filteredForecast)
-            } else {
-              setForecast([])
-            }
-
-            try {
-              // Lấy cảnh báo thời tiết
-              const alerts = await weatherService.getWeatherAlerts(
-                location.latitude,
-                location.longitude
-              )
-
-              if (!isMounted) return
-              setWeatherAlert(alerts && alerts.length > 0 ? alerts[0] : null)
-            } catch (alertError) {
-              console.error('Error fetching weather alerts:', alertError)
-              // Không làm gì nếu không lấy được cảnh báo
-            }
-          } catch (forecastError) {
-            console.error('Error fetching hourly forecast:', forecastError)
-            // Vẫn tiếp tục nếu không lấy được dự báo
+            setWeatherAlert(alerts && alerts.length > 0 ? alerts[0] : null)
+          } catch (alertError) {
+            console.error('Error fetching weather alerts:', alertError)
+            // Không làm gì nếu không lấy được cảnh báo
           }
-        } catch (currentWeatherError) {
-          console.error('Error fetching current weather:', currentWeatherError)
-          // Không thể lấy thời tiết hiện tại, hiển thị thông báo lỗi
+        } catch (forecastError) {
+          console.error('Error fetching hourly forecast:', forecastError)
+          // Vẫn tiếp tục nếu không lấy được dự báo
         }
-
-        if (isMounted) setLoading(false)
-      } catch (error) {
-        console.error('Error in weather data fetching process:', error)
-        if (isMounted) setLoading(false)
+      } catch (currentWeatherError) {
+        console.error('Error fetching current weather:', currentWeatherError)
+        // Không thể lấy thời tiết hiện tại, hiển thị thông báo lỗi
       }
+
+      setLoading(false)
+      setRefreshing(false)
+    } catch (error) {
+      console.error('Error in weather data fetching process:', error)
+      setLoading(false)
+      setRefreshing(false)
     }
+
+    return () => {
+      isMounted = false
+    }
+  }
+
+  // Hàm làm mới dữ liệu thời tiết
+  const refreshWeatherData = async () => {
+    setRefreshing(true)
+    await fetchWeatherData(true) // Truyền true để xóa cache
+  }
+
+  useEffect(() => {
+    let isMounted = true
 
     fetchWeatherData()
 
@@ -226,7 +245,7 @@ const WeatherWidget = ({ onPress }) => {
       }}
       onPress={onPress}
     >
-      {/* Dòng 1: Icon thời tiết hiện tại, Nhiệt độ hiện tại, Tên vị trí */}
+      {/* Dòng 1: Icon thời tiết hiện tại, Nhiệt độ hiện tại, Tên vị trí, Nút làm mới */}
       <View
         style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}
       >
@@ -243,6 +262,24 @@ const WeatherWidget = ({ onPress }) => {
             {locationName}
           </Text>
         </View>
+        <TouchableOpacity
+          style={{
+            padding: 8,
+            borderRadius: 20,
+            backgroundColor: darkMode
+              ? 'rgba(255,255,255,0.1)'
+              : 'rgba(0,0,0,0.05)',
+          }}
+          onPress={refreshWeatherData}
+          disabled={refreshing}
+        >
+          <Ionicons
+            name={refreshing ? 'refresh-circle' : 'refresh'}
+            size={24}
+            color={theme.textColor}
+            style={refreshing ? { opacity: 0.7 } : {}}
+          />
+        </TouchableOpacity>
       </View>
 
       {/* Dòng 2: Mô tả ngắn gọn */}

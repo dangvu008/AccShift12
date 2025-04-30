@@ -28,7 +28,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { WORK_STATUS } from '../components/WeeklyStatusGrid'
 
 const StatisticsScreen = ({ navigation }) => {
-  const { t, darkMode, shifts, attendanceLogs, language } =
+  const { t, darkMode, shifts, attendanceLogs, language, theme } =
     useContext(AppContext)
   const [timeRange, setTimeRange] = useState('month') // 'week', 'month', 'year', 'custom'
   const [isLoading, setIsLoading] = useState(true)
@@ -470,18 +470,16 @@ const StatisticsScreen = ({ navigation }) => {
   }
 
   return (
-    <ScrollView style={[styles.container, darkMode && styles.darkContainer]}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.backgroundColor }]}
+    >
       {/* Header with back button */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons
-            name="arrow-back"
-            size={24}
-            color={darkMode ? '#fff' : '#000'}
-          />
+          <Ionicons name="arrow-back" size={24} color={theme.textColor} />
         </TouchableOpacity>
       </View>
 
@@ -489,25 +487,22 @@ const StatisticsScreen = ({ navigation }) => {
       <View
         style={[
           styles.timeRangeSelector,
-          darkMode && styles.darkTimeRangeSelector,
+          { backgroundColor: theme.secondaryCardColor },
         ]}
       >
         <TouchableOpacity
           style={[
             styles.timeRangeButton,
-            timeRange === 'week' && styles.activeTimeRangeButton,
-            darkMode && styles.darkTimeRangeButton,
-            timeRange === 'week' &&
-              darkMode &&
-              styles.darkActiveTimeRangeButton,
+            { backgroundColor: theme.secondaryCardColor },
+            timeRange === 'week' && { backgroundColor: '#8a56ff' },
           ]}
           onPress={() => setTimeRange('week')}
         >
           <Text
             style={[
               styles.timeRangeButtonText,
+              { color: theme.subtextColor },
               timeRange === 'week' && styles.activeTimeRangeButtonText,
-              darkMode && styles.darkText,
             ]}
           >
             {t('Tuần này')}
@@ -517,19 +512,16 @@ const StatisticsScreen = ({ navigation }) => {
         <TouchableOpacity
           style={[
             styles.timeRangeButton,
-            timeRange === 'month' && styles.activeTimeRangeButton,
-            darkMode && styles.darkTimeRangeButton,
-            timeRange === 'month' &&
-              darkMode &&
-              styles.darkActiveTimeRangeButton,
+            { backgroundColor: theme.secondaryCardColor },
+            timeRange === 'month' && { backgroundColor: '#8a56ff' },
           ]}
           onPress={() => setTimeRange('month')}
         >
           <Text
             style={[
               styles.timeRangeButtonText,
+              { color: theme.subtextColor },
               timeRange === 'month' && styles.activeTimeRangeButtonText,
-              darkMode && styles.darkText,
             ]}
           >
             {t('Tháng này')}
@@ -539,19 +531,16 @@ const StatisticsScreen = ({ navigation }) => {
         <TouchableOpacity
           style={[
             styles.timeRangeButton,
-            timeRange === 'year' && styles.activeTimeRangeButton,
-            darkMode && styles.darkTimeRangeButton,
-            timeRange === 'year' &&
-              darkMode &&
-              styles.darkActiveTimeRangeButton,
+            { backgroundColor: theme.secondaryCardColor },
+            timeRange === 'year' && { backgroundColor: '#8a56ff' },
           ]}
           onPress={() => setTimeRange('year')}
         >
           <Text
             style={[
               styles.timeRangeButtonText,
+              { color: theme.subtextColor },
               timeRange === 'year' && styles.activeTimeRangeButtonText,
-              darkMode && styles.darkText,
             ]}
           >
             {t('Năm nay')}
@@ -561,7 +550,7 @@ const StatisticsScreen = ({ navigation }) => {
 
       {/* Date Range */}
       <View style={styles.dateRangeContainer}>
-        <Text style={[styles.dateRange, darkMode && styles.darkText]}>
+        <Text style={[styles.dateRange, { color: theme.subtextColor }]}>
           {formatDateRange()}
         </Text>
       </View>
@@ -569,45 +558,45 @@ const StatisticsScreen = ({ navigation }) => {
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#8a56ff" />
-          <Text style={[styles.loadingText, darkMode && styles.darkText]}>
+          <Text style={[styles.loadingText, { color: theme.textColor }]}>
             {t('Đang tải thống kê...')}
           </Text>
         </View>
       ) : (
         <>
           {/* Tổng giờ làm */}
-          <View style={[styles.statCard, darkMode && styles.darkCard]}>
-            <Text style={[styles.statTitle, darkMode && styles.darkText]}>
+          <View style={[styles.statCard, { backgroundColor: theme.cardColor }]}>
+            <Text style={[styles.statTitle, { color: theme.textColor }]}>
               {t('Tổng giờ làm')}
             </Text>
-            <Text style={[styles.statValue, styles.workTimeValue]}>
+            <Text style={[styles.statValue, { color: '#8a56ff' }]}>
               {formatDecimalHours(stats.totalWorkTime)}
             </Text>
           </View>
 
           {/* Tổng giờ OT */}
-          <View style={[styles.statCard, darkMode && styles.darkCard]}>
-            <Text style={[styles.statTitle, darkMode && styles.darkText]}>
+          <View style={[styles.statCard, { backgroundColor: theme.cardColor }]}>
+            <Text style={[styles.statTitle, { color: theme.textColor }]}>
               {t('Tổng giờ OT')}
             </Text>
-            <Text style={[styles.statValue, styles.otValue]}>
+            <Text style={[styles.statValue, { color: '#3498db' }]}>
               {formatDecimalHours(stats.overtime)}
             </Text>
           </View>
 
           {/* Ngày làm việc */}
-          <View style={[styles.statCard, darkMode && styles.darkCard]}>
-            <Text style={[styles.statTitle, darkMode && styles.darkText]}>
+          <View style={[styles.statCard, { backgroundColor: theme.cardColor }]}>
+            <Text style={[styles.statTitle, { color: theme.textColor }]}>
               {t('Ngày làm việc')}
             </Text>
-            <Text style={[styles.statValue, styles.workDaysValue]}>
+            <Text style={[styles.statValue, { color: '#27ae60' }]}>
               {Object.values(stats.statusCounts).reduce((a, b) => a + b, 0)}
             </Text>
           </View>
 
           {/* Phân bố trạng thái */}
-          <View style={[styles.statCard, darkMode && styles.darkCard]}>
-            <Text style={[styles.statTitle, darkMode && styles.darkText]}>
+          <View style={[styles.statCard, { backgroundColor: theme.cardColor }]}>
+            <Text style={[styles.statTitle, { color: theme.textColor }]}>
               {t('Phân bố trạng thái')}
             </Text>
 
@@ -619,7 +608,7 @@ const StatisticsScreen = ({ navigation }) => {
                     {stats.statusCounts.completed || 0}
                   </Text>
                 </View>
-                <Text style={[styles.statusLabel, darkMode && styles.darkText]}>
+                <Text style={[styles.statusLabel, { color: theme.textColor }]}>
                   {t('Hoàn thành')}
                 </Text>
               </View>
@@ -631,7 +620,7 @@ const StatisticsScreen = ({ navigation }) => {
                     {stats.statusCounts.late || 0}
                   </Text>
                 </View>
-                <Text style={[styles.statusLabel, darkMode && styles.darkText]}>
+                <Text style={[styles.statusLabel, { color: theme.textColor }]}>
                   {t('Đi muộn')}
                 </Text>
               </View>
@@ -643,7 +632,7 @@ const StatisticsScreen = ({ navigation }) => {
                     {stats.statusCounts.earlyLeave || 0}
                   </Text>
                 </View>
-                <Text style={[styles.statusLabel, darkMode && styles.darkText]}>
+                <Text style={[styles.statusLabel, { color: theme.textColor }]}>
                   {t('Về sớm')}
                 </Text>
               </View>
@@ -655,7 +644,7 @@ const StatisticsScreen = ({ navigation }) => {
                     {stats.statusCounts.lateAndEarly || 0}
                   </Text>
                 </View>
-                <Text style={[styles.statusLabel, darkMode && styles.darkText]}>
+                <Text style={[styles.statusLabel, { color: theme.textColor }]}>
                   {t('Muộn & sớm')}
                 </Text>
               </View>
@@ -667,7 +656,7 @@ const StatisticsScreen = ({ navigation }) => {
                     {stats.statusCounts.missingLog || 0}
                   </Text>
                 </View>
-                <Text style={[styles.statusLabel, darkMode && styles.darkText]}>
+                <Text style={[styles.statusLabel, { color: theme.textColor }]}>
                   {t('Thiếu log')}
                 </Text>
               </View>
@@ -679,7 +668,7 @@ const StatisticsScreen = ({ navigation }) => {
                     {stats.statusCounts.leave || 0}
                   </Text>
                 </View>
-                <Text style={[styles.statusLabel, darkMode && styles.darkText]}>
+                <Text style={[styles.statusLabel, { color: theme.textColor }]}>
                   {t('Nghỉ phép')}
                 </Text>
               </View>
@@ -687,13 +676,23 @@ const StatisticsScreen = ({ navigation }) => {
           </View>
 
           {/* Bảng chi tiết */}
-          <View style={[styles.tableContainer, darkMode && styles.darkCard]}>
-            <View style={styles.tableHeader}>
+          <View
+            style={[
+              styles.tableContainer,
+              { backgroundColor: theme.cardColor },
+            ]}
+          >
+            <View
+              style={[
+                styles.tableHeader,
+                { backgroundColor: theme.secondaryCardColor },
+              ]}
+            >
               <Text
                 style={[
                   styles.tableHeaderCell,
                   styles.dayCell,
-                  darkMode && styles.darkText,
+                  { color: theme.textColor },
                 ]}
               >
                 {t('Ngày')}
@@ -702,7 +701,7 @@ const StatisticsScreen = ({ navigation }) => {
                 style={[
                   styles.tableHeaderCell,
                   styles.weekdayCell,
-                  darkMode && styles.darkText,
+                  { color: theme.textColor },
                 ]}
               >
                 {t('Thứ')}
@@ -711,7 +710,7 @@ const StatisticsScreen = ({ navigation }) => {
                 style={[
                   styles.tableHeaderCell,
                   styles.timeCell,
-                  darkMode && styles.darkText,
+                  { color: theme.textColor },
                 ]}
               >
                 {t('Vào ca')}
@@ -720,7 +719,7 @@ const StatisticsScreen = ({ navigation }) => {
                 style={[
                   styles.tableHeaderCell,
                   styles.timeCell,
-                  darkMode && styles.darkText,
+                  { color: theme.textColor },
                 ]}
               >
                 {t('Tan ca')}
@@ -729,7 +728,7 @@ const StatisticsScreen = ({ navigation }) => {
                 style={[
                   styles.tableHeaderCell,
                   styles.hoursCell,
-                  darkMode && styles.darkText,
+                  { color: theme.textColor },
                 ]}
               >
                 {t('Giờ HC')}
@@ -738,7 +737,7 @@ const StatisticsScreen = ({ navigation }) => {
                 style={[
                   styles.tableHeaderCell,
                   styles.otCell,
-                  darkMode && styles.darkText,
+                  { color: theme.textColor },
                 ]}
               >
                 {t('OT')}
@@ -758,16 +757,17 @@ const StatisticsScreen = ({ navigation }) => {
                       key={index}
                       style={[
                         styles.tableRow,
-                        index % 2 === 0 && styles.evenRow,
-                        darkMode && styles.darkRow,
-                        darkMode && index % 2 === 0 && styles.darkEvenRow,
+                        { borderBottomColor: theme.borderColor },
+                        index % 2 === 0 && {
+                          backgroundColor: darkMode ? '#1a1a1a' : '#f5f5f5',
+                        },
                       ]}
                     >
                       <Text
                         style={[
                           styles.tableCell,
                           styles.dayCell,
-                          darkMode && styles.darkText,
+                          { color: theme.textColor },
                         ]}
                       >
                         {shortDate}
@@ -776,7 +776,7 @@ const StatisticsScreen = ({ navigation }) => {
                         style={[
                           styles.tableCell,
                           styles.weekdayCell,
-                          darkMode && styles.darkText,
+                          { color: theme.textColor },
                         ]}
                       >
                         {weekday}
@@ -785,7 +785,7 @@ const StatisticsScreen = ({ navigation }) => {
                         style={[
                           styles.tableCell,
                           styles.timeCell,
-                          darkMode && styles.darkText,
+                          { color: theme.textColor },
                         ]}
                       >
                         {day.checkIn ? formatTime(day.checkIn) : '--:--'}
@@ -794,7 +794,7 @@ const StatisticsScreen = ({ navigation }) => {
                         style={[
                           styles.tableCell,
                           styles.timeCell,
-                          darkMode && styles.darkText,
+                          { color: theme.textColor },
                         ]}
                       >
                         {day.checkOut ? formatTime(day.checkOut) : '--:--'}
@@ -803,7 +803,7 @@ const StatisticsScreen = ({ navigation }) => {
                         style={[
                           styles.tableCell,
                           styles.hoursCell,
-                          darkMode && styles.darkText,
+                          { color: theme.textColor },
                         ]}
                       >
                         {formatDecimalHours(day.workTime)}
@@ -812,7 +812,7 @@ const StatisticsScreen = ({ navigation }) => {
                         style={[
                           styles.tableCell,
                           styles.otCell,
-                          darkMode && styles.darkText,
+                          { color: theme.textColor },
                         ]}
                       >
                         {formatDecimalHours(day.overtime)}
@@ -821,7 +821,9 @@ const StatisticsScreen = ({ navigation }) => {
                   )
                 })
               ) : (
-                <Text style={[styles.noDataText, darkMode && styles.darkText]}>
+                <Text
+                  style={[styles.noDataText, { color: theme.subtextColor }]}
+                >
                   {t('Không có dữ liệu trong khoảng thời gian này')}
                 </Text>
               )}
@@ -839,29 +841,29 @@ const StatisticsScreen = ({ navigation }) => {
       >
         <View style={styles.modalContainer}>
           <View
-            style={[styles.modalContent, darkMode && styles.darkModalContent]}
+            style={[styles.modalContent, { backgroundColor: theme.cardColor }]}
           >
-            <Text style={[styles.modalTitle, darkMode && styles.darkText]}>
+            <Text style={[styles.modalTitle, { color: theme.textColor }]}>
               {t('Select Date Range')}
             </Text>
 
             <View style={styles.datePickerContainer}>
               <Text
-                style={[styles.datePickerLabel, darkMode && styles.darkText]}
+                style={[styles.datePickerLabel, { color: theme.textColor }]}
               >
                 {t('Start Date')}
               </Text>
               <TouchableOpacity
                 style={[
                   styles.datePickerButton,
-                  darkMode && styles.darkDatePickerButton,
+                  { backgroundColor: theme.secondaryCardColor },
                 ]}
                 onPress={() => setShowStartDatePicker(true)}
               >
                 <Text
                   style={[
                     styles.datePickerButtonText,
-                    darkMode && styles.darkText,
+                    { color: theme.textColor },
                   ]}
                 >
                   {formatDate(startDate)}
@@ -869,7 +871,7 @@ const StatisticsScreen = ({ navigation }) => {
                 <Ionicons
                   name="calendar-outline"
                   size={20}
-                  color={darkMode ? '#fff' : '#000'}
+                  color={theme.textColor}
                 />
               </TouchableOpacity>
 
@@ -885,21 +887,21 @@ const StatisticsScreen = ({ navigation }) => {
 
             <View style={styles.datePickerContainer}>
               <Text
-                style={[styles.datePickerLabel, darkMode && styles.darkText]}
+                style={[styles.datePickerLabel, { color: theme.textColor }]}
               >
                 {t('End Date')}
               </Text>
               <TouchableOpacity
                 style={[
                   styles.datePickerButton,
-                  darkMode && styles.darkDatePickerButton,
+                  { backgroundColor: theme.secondaryCardColor },
                 ]}
                 onPress={() => setShowEndDatePicker(true)}
               >
                 <Text
                   style={[
                     styles.datePickerButtonText,
-                    darkMode && styles.darkText,
+                    { color: theme.textColor },
                   ]}
                 >
                   {formatDate(endDate)}
@@ -907,7 +909,7 @@ const StatisticsScreen = ({ navigation }) => {
                 <Ionicons
                   name="calendar-outline"
                   size={20}
-                  color={darkMode ? '#fff' : '#000'}
+                  color={theme.textColor}
                 />
               </TouchableOpacity>
 
@@ -930,7 +932,7 @@ const StatisticsScreen = ({ navigation }) => {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.modalButton, styles.applyButton]}
+                style={[styles.modalButton, { backgroundColor: '#8a56ff' }]}
                 onPress={applyCustomDateRange}
               >
                 <Text style={styles.applyButtonText}>{t('Apply')}</Text>
@@ -949,9 +951,9 @@ const StatisticsScreen = ({ navigation }) => {
       >
         <View style={styles.modalContainer}>
           <View
-            style={[styles.modalContent, darkMode && styles.darkModalContent]}
+            style={[styles.modalContent, { backgroundColor: theme.cardColor }]}
           >
-            <Text style={[styles.modalTitle, darkMode && styles.darkText]}>
+            <Text style={[styles.modalTitle, { color: theme.textColor }]}>
               {t('Export Report')}
             </Text>
 
@@ -961,7 +963,7 @@ const StatisticsScreen = ({ navigation }) => {
                 <Text
                   style={[
                     styles.exportProgressText,
-                    darkMode && styles.darkText,
+                    { color: theme.textColor },
                   ]}
                 >
                   {t('Exporting')}... {exportProgress}%
@@ -970,10 +972,7 @@ const StatisticsScreen = ({ navigation }) => {
             ) : (
               <>
                 <Text
-                  style={[
-                    styles.exportFormatLabel,
-                    darkMode && styles.darkText,
-                  ]}
+                  style={[styles.exportFormatLabel, { color: theme.textColor }]}
                 >
                   {t('Select Format')}
                 </Text>
@@ -982,20 +981,18 @@ const StatisticsScreen = ({ navigation }) => {
                   <TouchableOpacity
                     style={[
                       styles.exportFormatOption,
-                      exportFormat === 'csv' && styles.selectedExportFormat,
-                      darkMode && styles.darkExportFormatOption,
-                      exportFormat === 'csv' &&
-                        darkMode &&
-                        styles.darkSelectedExportFormat,
+                      { backgroundColor: theme.secondaryCardColor },
+                      exportFormat === 'csv' && {
+                        backgroundColor: '#8a56ff',
+                      },
                     ]}
                     onPress={() => setExportFormat('csv')}
                   >
                     <Text
                       style={[
                         styles.exportFormatText,
-                        exportFormat === 'csv' &&
-                          styles.selectedExportFormatText,
-                        darkMode && styles.darkText,
+                        { color: theme.textColor },
+                        exportFormat === 'csv' && { color: '#fff' },
                       ]}
                     >
                       CSV
@@ -1005,20 +1002,18 @@ const StatisticsScreen = ({ navigation }) => {
                   <TouchableOpacity
                     style={[
                       styles.exportFormatOption,
-                      exportFormat === 'pdf' && styles.selectedExportFormat,
-                      darkMode && styles.darkExportFormatOption,
-                      exportFormat === 'pdf' &&
-                        darkMode &&
-                        styles.darkSelectedExportFormat,
+                      { backgroundColor: theme.secondaryCardColor },
+                      exportFormat === 'pdf' && {
+                        backgroundColor: '#8a56ff',
+                      },
                     ]}
                     onPress={() => setExportFormat('pdf')}
                   >
                     <Text
                       style={[
                         styles.exportFormatText,
-                        exportFormat === 'pdf' &&
-                          styles.selectedExportFormatText,
-                        darkMode && styles.darkText,
+                        { color: theme.textColor },
+                        exportFormat === 'pdf' && { color: '#fff' },
                       ]}
                     >
                       PDF
@@ -1028,20 +1023,18 @@ const StatisticsScreen = ({ navigation }) => {
                   <TouchableOpacity
                     style={[
                       styles.exportFormatOption,
-                      exportFormat === 'excel' && styles.selectedExportFormat,
-                      darkMode && styles.darkExportFormatOption,
-                      exportFormat === 'excel' &&
-                        darkMode &&
-                        styles.darkSelectedExportFormat,
+                      { backgroundColor: theme.secondaryCardColor },
+                      exportFormat === 'excel' && {
+                        backgroundColor: '#8a56ff',
+                      },
                     ]}
                     onPress={() => setExportFormat('excel')}
                   >
                     <Text
                       style={[
                         styles.exportFormatText,
-                        exportFormat === 'excel' &&
-                          styles.selectedExportFormatText,
-                        darkMode && styles.darkText,
+                        { color: theme.textColor },
+                        exportFormat === 'excel' && { color: '#fff' },
                       ]}
                     >
                       Excel
@@ -1058,10 +1051,10 @@ const StatisticsScreen = ({ navigation }) => {
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={[styles.modalButton, styles.exportActionButton]}
+                    style={[styles.modalButton, { backgroundColor: '#8a56ff' }]}
                     onPress={exportReport}
                   >
-                    <Text style={styles.exportActionButtonText}>
+                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>
                       {t('Export')}
                     </Text>
                   </TouchableOpacity>
@@ -1076,14 +1069,8 @@ const StatisticsScreen = ({ navigation }) => {
 }
 
 const styles = StyleSheet.create({
-  activeTimeRangeButton: {
-    backgroundColor: '#8a56ff',
-  },
   activeTimeRangeButtonText: {
     color: '#fff',
-  },
-  applyButton: {
-    backgroundColor: '#8a56ff',
   },
   applyButtonText: {
     color: '#fff',
@@ -1103,65 +1090,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#27ae60',
   },
   container: {
-    backgroundColor: '#121212',
     flex: 1,
     padding: 16,
   },
-  darkActiveTimeRangeButton: {
-    backgroundColor: '#8a56ff',
-  },
-  darkCard: {
-    backgroundColor: '#1e1e1e',
-  },
-  darkContainer: {
-    backgroundColor: '#121212',
-  },
-  darkDatePickerButton: {
-    backgroundColor: '#2a2a2a',
-  },
-  darkEvenRow: {
-    backgroundColor: '#1a1a1a',
-  },
-  darkExportFormatOption: {
-    backgroundColor: '#2a2a2a',
-  },
-  darkModalContent: {
-    backgroundColor: '#1e1e1e',
-  },
-  darkRow: {
-    borderBottomColor: '#333',
-  },
-  darkSelectedExportFormat: {
-    backgroundColor: '#8a56ff',
-  },
-  darkText: {
-    color: '#fff',
-  },
-  darkTimeRangeButton: {
-    backgroundColor: '#2a2a2a',
-  },
   datePickerButton: {
     alignItems: 'center',
-    backgroundColor: '#f0f0f0',
     borderRadius: 8,
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: 12,
   },
   datePickerButtonText: {
-    color: '#333',
     fontSize: 16,
   },
   datePickerContainer: {
     marginBottom: 16,
   },
   datePickerLabel: {
-    color: '#333',
     fontSize: 16,
     marginBottom: 8,
   },
   dateRange: {
-    color: '#aaa',
     fontSize: 16,
     textAlign: 'center',
   },
@@ -1175,9 +1124,6 @@ const styles = StyleSheet.create({
   },
   earlyBox: {
     backgroundColor: '#e67e22',
-  },
-  evenRow: {
-    backgroundColor: '#1a1a1a',
   },
   header: {
     flexDirection: 'row',
@@ -1203,7 +1149,6 @@ const styles = StyleSheet.create({
     padding: 40,
   },
   loadingText: {
-    color: '#fff',
     fontSize: 16,
     marginTop: 16,
   },
@@ -1228,19 +1173,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   modalContent: {
-    backgroundColor: '#1e1e1e',
     borderRadius: 12,
     padding: 20,
     width: '90%',
   },
   modalTitle: {
-    color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 16,
   },
   noDataText: {
-    color: '#999',
     fontStyle: 'italic',
     padding: 20,
     textAlign: 'center',
@@ -1249,32 +1191,18 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
   },
-  otValue: {
-    color: '#3498db',
-    fontSize: 28,
-    fontWeight: 'bold',
-  },
-  selectedExportFormat: {
-    backgroundColor: '#8a56ff',
-  },
-  selectedExportFormatText: {
-    color: '#fff',
-  },
   statCard: {
-    backgroundColor: '#1e1e1e',
     borderRadius: 12,
     marginBottom: 16,
     padding: 16,
   },
   statTitle: {
-    color: '#fff',
     fontSize: 16,
     marginBottom: 8,
   },
   statValue: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#8a56ff',
   },
   statusBox: {
     alignItems: 'center',
@@ -1299,7 +1227,6 @@ const styles = StyleSheet.create({
     width: '30%',
   },
   statusLabel: {
-    color: '#333',
     fontSize: 12,
     textAlign: 'center',
   },
@@ -1307,28 +1234,23 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   tableCell: {
-    color: '#fff',
     fontSize: 14,
   },
   tableContainer: {
-    backgroundColor: '#1e1e1e',
     borderRadius: 12,
     marginBottom: 16,
     overflow: 'hidden',
   },
   tableHeader: {
-    backgroundColor: '#2a2a2a',
     flexDirection: 'row',
     paddingHorizontal: 8,
     paddingVertical: 12,
   },
   tableHeaderCell: {
-    color: '#fff',
     fontSize: 14,
     fontWeight: 'bold',
   },
   tableRow: {
-    borderBottomColor: '#333',
     borderBottomWidth: 1,
     flexDirection: 'row',
     paddingVertical: 10,
@@ -1342,34 +1264,43 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     flex: 1,
     paddingVertical: 8,
-    backgroundColor: '#2a2a2a',
   },
   timeRangeButtonText: {
-    color: '#aaa',
     fontWeight: '500',
   },
   timeRangeSelector: {
-    backgroundColor: '#2a2a2a',
     borderRadius: 8,
     flexDirection: 'row',
     marginBottom: 16,
     padding: 4,
   },
-  darkTimeRangeSelector: {
-    backgroundColor: '#1a1a1a',
-  },
   weekdayCell: {
     flex: 1,
   },
-  workDaysValue: {
-    color: '#27ae60',
-    fontSize: 28,
-    fontWeight: 'bold',
+  exportFormatOption: {
+    alignItems: 'center',
+    borderRadius: 8,
+    flex: 1,
+    marginHorizontal: 4,
+    padding: 12,
   },
-  workTimeValue: {
-    color: '#8a56ff',
-    fontSize: 28,
-    fontWeight: 'bold',
+  exportFormatOptions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  exportFormatText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  exportProgressContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  exportProgressText: {
+    fontSize: 16,
+    marginTop: 12,
   },
 })
 
