@@ -21,6 +21,7 @@ import { AppContext } from '../context/AppContext'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { STORAGE_KEYS } from '../utils/constants'
 import { useFocusEffect } from '@react-navigation/native'
+import { COLORS } from '../utils/theme'
 
 const AddEditShiftScreen = ({ route, navigation }) => {
   const { t, darkMode } = useContext(AppContext)
@@ -797,7 +798,9 @@ const AddEditShiftScreen = ({ route, navigation }) => {
       )}
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.formContainer}>
+        <View
+          style={[styles.formContainer, darkMode && styles.darkFormContainer]}
+        >
           <View style={styles.formHeader}>
             <Text style={[styles.formTitle, darkMode && styles.darkText]}>
               {isEditing
@@ -1238,7 +1241,12 @@ const AddEditShiftScreen = ({ route, navigation }) => {
           </View>
 
           {/* Show Punch Switch */}
-          <View style={styles.switchContainer}>
+          <View
+            style={[
+              styles.switchContainer,
+              darkMode && styles.darkSwitchContainer,
+            ]}
+          >
             <Text style={[styles.switchLabel, darkMode && styles.darkLabel]}>
               {t('Yêu cầu ký công')}
             </Text>
@@ -1248,13 +1256,18 @@ const AddEditShiftScreen = ({ route, navigation }) => {
                 setShowPunch(value)
                 setIsFormDirty(true)
               }}
-              trackColor={{ false: '#767577', true: '#8a56ff' }}
+              trackColor={{ false: '#767577', true: COLORS.PRIMARY }}
               thumbColor={showPunch ? '#f4f3f4' : '#f4f3f4'}
             />
           </View>
 
           {/* Active Switch */}
-          <View style={styles.switchContainer}>
+          <View
+            style={[
+              styles.switchContainer,
+              darkMode && styles.darkSwitchContainer,
+            ]}
+          >
             <Text style={[styles.switchLabel, darkMode && styles.darkLabel]}>
               {t('Kích hoạt')}
             </Text>
@@ -1264,24 +1277,46 @@ const AddEditShiftScreen = ({ route, navigation }) => {
                 setIsActive(value)
                 setIsFormDirty(true)
               }}
-              trackColor={{ false: '#767577', true: '#8a56ff' }}
+              trackColor={{ false: '#767577', true: COLORS.PRIMARY }}
               thumbColor={isActive ? '#f4f3f4' : '#f4f3f4'}
             />
           </View>
 
           {/* Action Buttons */}
           <View style={styles.buttonRow}>
-            <TouchableOpacity style={styles.resetButton} onPress={resetForm}>
-              <Ionicons name="refresh-outline" size={22} color="#333" />
-              <Text style={styles.resetButtonText}>{t('Đặt lại')}</Text>
+            <TouchableOpacity
+              style={[styles.resetButton, darkMode && styles.darkResetButton]}
+              onPress={resetForm}
+            >
+              <Ionicons
+                name="refresh-outline"
+                size={22}
+                color={darkMode ? COLORS.TEXT_DARK : COLORS.TEXT_LIGHT}
+              />
+              <Text
+                style={[
+                  styles.resetButtonText,
+                  darkMode && styles.darkResetButtonText,
+                ]}
+              >
+                {t('Đặt lại')}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.saveButton, !isFormValid && styles.disabledButton]}
+              style={[
+                styles.saveButton,
+                !isFormValid && styles.disabledButton,
+                !isFormValid && darkMode && styles.darkDisabledButton,
+              ]}
               onPress={handleSaveShift}
               disabled={!isFormValid}
             >
-              <Ionicons name="save-outline" size={22} color="#fff" />
+              <Ionicons
+                name="save-outline"
+                size={22}
+                color={COLORS.TEXT_DARK}
+              />
               <Text
                 style={[
                   styles.saveButtonText,
@@ -1308,17 +1343,17 @@ const AddEditShiftScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: COLORS.BACKGROUND_LIGHT,
   },
   darkContainer: {
-    backgroundColor: '#121212',
+    backgroundColor: COLORS.BACKGROUND_DARK,
   },
   scrollContent: {
     flexGrow: 1,
     padding: 16,
   },
   formContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.CARD_LIGHT,
     borderRadius: 8,
     padding: 16,
     shadowColor: '#000',
@@ -1327,6 +1362,10 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     marginBottom: 20,
+  },
+  darkFormContainer: {
+    backgroundColor: COLORS.CARD_DARK,
+    borderColor: COLORS.BORDER_DARK,
   },
   formHeader: {
     marginBottom: 20,
@@ -1337,11 +1376,11 @@ const styles = StyleSheet.create({
   formTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: COLORS.TEXT_LIGHT,
     textAlign: 'center',
   },
   darkText: {
-    color: '#f0f0f0',
+    color: COLORS.TEXT_DARK,
   },
   formGroup: {
     marginBottom: 16,
@@ -1350,10 +1389,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     marginBottom: 8,
-    color: '#333',
+    color: COLORS.TEXT_LIGHT,
   },
   darkLabel: {
-    color: '#f0f0f0',
+    color: COLORS.TEXT_DARK,
   },
   requiredMark: {
     color: '#ff3b30',
@@ -1363,17 +1402,17 @@ const styles = StyleSheet.create({
   input: {
     height: 48,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: COLORS.BORDER_LIGHT,
     borderRadius: 8,
     paddingHorizontal: 12,
     fontSize: 16,
-    backgroundColor: '#fff',
-    color: '#333',
+    backgroundColor: COLORS.CARD_LIGHT,
+    color: COLORS.TEXT_LIGHT,
   },
   darkInput: {
-    borderColor: '#444',
-    backgroundColor: '#222',
-    color: '#fff',
+    borderColor: COLORS.BORDER_DARK,
+    backgroundColor: COLORS.SECONDARY_CARD_DARK,
+    color: COLORS.TEXT_DARK,
   },
   inputError: {
     borderColor: '#ff3b30',
@@ -1391,10 +1430,10 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: 16,
-    color: '#333',
+    color: COLORS.TEXT_LIGHT,
   },
   darkTimeText: {
-    color: '#fff',
+    color: COLORS.TEXT_DARK,
   },
   daysContainer: {
     flexDirection: 'row',
@@ -1405,19 +1444,19 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 20,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: COLORS.SECONDARY_CARD_LIGHT,
     marginRight: 8,
     marginBottom: 8,
   },
   dayButtonSelected: {
-    backgroundColor: '#8a56ff',
+    backgroundColor: COLORS.PRIMARY,
   },
   dayButtonText: {
     fontSize: 14,
-    color: '#333',
+    color: COLORS.TEXT_LIGHT,
   },
   dayButtonTextSelected: {
-    color: '#fff',
+    color: COLORS.TEXT_DARK,
   },
   switchContainer: {
     flexDirection: 'row',
@@ -1426,12 +1465,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: COLORS.BORDER_LIGHT,
+  },
+  darkSwitchContainer: {
+    borderBottomColor: COLORS.BORDER_DARK,
   },
   switchLabel: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
+    color: COLORS.TEXT_LIGHT,
   },
   buttonRow: {
     flexDirection: 'row',
@@ -1440,7 +1482,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   saveButton: {
-    backgroundColor: '#8a56ff',
+    backgroundColor: COLORS.PRIMARY,
     borderRadius: 8,
     height: 50,
     alignItems: 'center',
@@ -1455,7 +1497,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   resetButton: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: COLORS.SECONDARY_CARD_LIGHT,
     borderRadius: 8,
     height: 50,
     alignItems: 'center',
@@ -1463,26 +1505,36 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: COLORS.BORDER_LIGHT,
     flexDirection: 'row',
   },
+  darkResetButton: {
+    backgroundColor: COLORS.SECONDARY_CARD_DARK,
+    borderColor: COLORS.BORDER_DARK,
+  },
   disabledButton: {
-    backgroundColor: '#cccccc',
+    backgroundColor: COLORS.DISABLED_LIGHT,
     opacity: 0.7,
     shadowOpacity: 0,
     elevation: 0,
   },
+  darkDisabledButton: {
+    backgroundColor: COLORS.DISABLED_DARK,
+  },
   saveButtonText: {
-    color: '#fff',
+    color: COLORS.TEXT_DARK,
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 6,
   },
   resetButtonText: {
-    color: '#333',
+    color: COLORS.TEXT_LIGHT,
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 6,
+  },
+  darkResetButtonText: {
+    color: COLORS.TEXT_DARK,
   },
   formErrorText: {
     color: '#ff3b30',
@@ -1524,13 +1576,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   pickerContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.CARD_LIGHT,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
     padding: 16,
   },
   darkPickerContainer: {
-    backgroundColor: '#1e1e1e',
+    backgroundColor: COLORS.CARD_DARK,
   },
   pickerHeader: {
     flexDirection: 'row',
@@ -1542,7 +1594,7 @@ const styles = StyleSheet.create({
   },
   pickerButtonText: {
     fontSize: 16,
-    color: '#8a56ff',
+    color: COLORS.PRIMARY,
   },
   doneButton: {
     fontWeight: 'bold',
@@ -1555,10 +1607,10 @@ const styles = StyleSheet.create({
     top: 88,
     left: 0,
     right: 0,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.CARD_LIGHT,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: COLORS.BORDER_LIGHT,
     zIndex: 1000,
     elevation: 5,
     shadowColor: '#000',
@@ -1567,8 +1619,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   darkDropdownContainer: {
-    backgroundColor: '#222',
-    borderColor: '#444',
+    backgroundColor: COLORS.CARD_DARK,
+    borderColor: COLORS.BORDER_DARK,
   },
   dropdownItem: {
     flexDirection: 'row',
@@ -1577,10 +1629,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: COLORS.BORDER_LIGHT,
   },
   darkDropdownItem: {
-    borderBottomColor: '#333',
+    borderBottomColor: COLORS.BORDER_DARK,
   },
   dropdownItemSelected: {
     backgroundColor: '#f0f0ff',
@@ -1590,14 +1642,14 @@ const styles = StyleSheet.create({
   },
   dropdownItemText: {
     fontSize: 16,
-    color: '#333',
+    color: COLORS.TEXT_LIGHT,
   },
   dropdownItemTextSelected: {
-    color: '#8a56ff',
+    color: COLORS.PRIMARY,
     fontWeight: '500',
   },
   darkDropdownItemText: {
-    color: '#f0f0f0',
+    color: COLORS.TEXT_DARK,
   },
 })
 

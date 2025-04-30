@@ -10,6 +10,7 @@ import {
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { AppContext } from '../context/AppContext'
+import { COLORS } from '../utils/theme'
 
 const NoteFormModal = ({ visible, onClose, children, title }) => {
   const { t, darkMode } = useContext(AppContext)
@@ -32,7 +33,9 @@ const NoteFormModal = ({ visible, onClose, children, title }) => {
               darkMode && styles.darkModalContainer,
             ]}
           >
-            <View style={styles.modalHeader}>
+            <View
+              style={[styles.modalHeader, darkMode && styles.darkModalHeader]}
+            >
               <Text style={[styles.title, darkMode && styles.darkText]}>
                 {title || t('Thêm/Sửa ghi chú')}
               </Text>
@@ -40,7 +43,7 @@ const NoteFormModal = ({ visible, onClose, children, title }) => {
                 <Ionicons
                   name="close"
                   size={24}
-                  color={darkMode ? '#fff' : '#000'}
+                  color={darkMode ? COLORS.TEXT_DARK : COLORS.TEXT_LIGHT}
                 />
               </TouchableOpacity>
             </View>
@@ -67,7 +70,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     width: '100%',
     maxHeight: '90%',
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.CARD_LIGHT,
     borderRadius: 16,
     padding: 20,
     shadowColor: '#000',
@@ -77,7 +80,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   darkModalContainer: {
-    backgroundColor: '#1e1e1e',
+    backgroundColor: COLORS.CARD_DARK,
   },
   modalHeader: {
     width: '100%',
@@ -86,17 +89,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: COLORS.BORDER_LIGHT,
     paddingBottom: 16,
+  },
+  darkModalHeader: {
+    borderBottomColor: COLORS.BORDER_DARK,
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#000',
+    color: COLORS.TEXT_LIGHT,
     flex: 1,
   },
   darkText: {
-    color: '#fff',
+    color: COLORS.TEXT_DARK,
   },
   closeIcon: {
     padding: 4,

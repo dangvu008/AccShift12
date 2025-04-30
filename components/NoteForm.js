@@ -14,6 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { AppContext } from '../context/AppContext'
+import { COLORS } from '../utils/theme'
 import {
   getNotes,
   getShifts,
@@ -394,7 +395,7 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
   if (isLoading) {
     return (
       <View style={[styles.loadingContainer, darkMode && styles.darkContainer]}>
-        <ActivityIndicator size="large" color="#8a56ff" />
+        <ActivityIndicator size="large" color={COLORS.PRIMARY} />
         <Text style={[styles.loadingText, darkMode && styles.darkText]}>
           {t('Đang tải...')}
         </Text>
@@ -523,20 +524,23 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
               <TouchableOpacity
                 style={[
                   styles.dateTimeButton,
-                  darkMode && styles.darkInput,
+                  darkMode && styles.darkDateTimeButton,
                   errors.reminderDate && styles.inputError,
                 ]}
                 onPress={() => setShowDatePicker(true)}
               >
                 <Text
-                  style={[styles.dateTimeText, darkMode && styles.darkText]}
+                  style={[
+                    styles.dateTimeText,
+                    darkMode && styles.darkDateTimeText,
+                  ]}
                 >
                   {formatDate(reminderDate)}
                 </Text>
                 <Ionicons
                   name="calendar-outline"
                   size={24}
-                  color={darkMode ? '#fff' : '#333'}
+                  color={darkMode ? COLORS.TEXT_DARK : COLORS.TEXT_LIGHT}
                 />
               </TouchableOpacity>
 
@@ -544,20 +548,23 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
               <TouchableOpacity
                 style={[
                   styles.dateTimeButton,
-                  darkMode && styles.darkInput,
+                  darkMode && styles.darkDateTimeButton,
                   errors.reminderDate && styles.inputError,
                 ]}
                 onPress={() => setShowTimePicker(true)}
               >
                 <Text
-                  style={[styles.dateTimeText, darkMode && styles.darkText]}
+                  style={[
+                    styles.dateTimeText,
+                    darkMode && styles.darkDateTimeText,
+                  ]}
                 >
                   {formatTime(reminderDate)}
                 </Text>
                 <Ionicons
                   name="time-outline"
                   size={24}
-                  color={darkMode ? '#fff' : '#333'}
+                  color={darkMode ? COLORS.TEXT_DARK : COLORS.TEXT_LIGHT}
                 />
               </TouchableOpacity>
             </View>
@@ -570,7 +577,12 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
 
         {/* Shift-based Reminder */}
         {reminderType === 'shift' && (
-          <View style={styles.linkedItemsContainer}>
+          <View
+            style={[
+              styles.linkedItemsContainer,
+              darkMode && styles.darkLinkedItemsContainer,
+            ]}
+          >
             <Text style={[styles.subLabel, darkMode && styles.darkText]}>
               {t('Chọn ca làm việc')} <Text style={styles.requiredMark}>*</Text>
             </Text>
@@ -597,6 +609,7 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
                     <View
                       style={[
                         styles.checkbox,
+                        darkMode && styles.darkCheckbox,
                         linkedShifts.includes(shift.id) &&
                           styles.checkboxSelected,
                       ]}
@@ -608,7 +621,7 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
                     <Text
                       style={[
                         styles.checkboxLabel,
-                        darkMode && styles.darkText,
+                        darkMode && styles.darkCheckboxLabel,
                       ]}
                       numberOfLines={1}
                     >
@@ -618,7 +631,9 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
                 ))}
               </View>
             ) : (
-              <Text style={[styles.noDataText, darkMode && styles.darkSubText]}>
+              <Text
+                style={[styles.noDataText, darkMode && styles.darkNoDataText]}
+              >
                 {t('Không có ca làm việc nào')}
               </Text>
             )}
@@ -744,7 +759,11 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
       {/* Buttons */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity
-          style={[styles.iconButton, styles.resetButton]}
+          style={[
+            styles.iconButton,
+            styles.resetButton,
+            darkMode && styles.darkResetButton,
+          ]}
           onPress={() => {
             Alert.alert(
               t('Xác nhận đặt lại'),
@@ -778,7 +797,11 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
             )
           }}
         >
-          <Ionicons name="refresh-outline" size={24} color="#333" />
+          <Ionicons
+            name="refresh-outline"
+            size={24}
+            color={darkMode ? COLORS.TEXT_DARK : COLORS.TEXT_LIGHT}
+          />
         </TouchableOpacity>
 
         {noteId && (
@@ -795,11 +818,12 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
             styles.iconButton,
             styles.saveButton,
             !isFormValid && styles.disabledButton,
+            !isFormValid && darkMode && styles.darkDisabledButton,
           ]}
           onPress={handleSave}
           disabled={!isFormValid}
         >
-          <Ionicons name="save-outline" size={24} color="#fff" />
+          <Ionicons name="save-outline" size={24} color={COLORS.TEXT_DARK} />
         </TouchableOpacity>
       </View>
 
@@ -824,10 +848,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
+  darkContainer: {
+    backgroundColor: COLORS.CARD_DARK,
+  },
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: '#666',
+    color: COLORS.SUBTEXT_LIGHT,
   },
   formGroup: {
     marginBottom: 20,
@@ -836,19 +863,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 10,
-    color: '#333',
+    color: COLORS.TEXT_LIGHT,
   },
   subLabel: {
     fontSize: 14,
     fontWeight: '500',
     marginBottom: 8,
-    color: '#333',
+    color: COLORS.TEXT_LIGHT,
   },
   darkText: {
-    color: '#fff',
+    color: COLORS.TEXT_DARK,
   },
   darkSubText: {
-    color: '#aaa',
+    color: COLORS.SUBTEXT_DARK,
   },
   requiredMark: {
     color: '#ff5252',
@@ -858,17 +885,17 @@ const styles = StyleSheet.create({
   input: {
     height: 48,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: COLORS.BORDER_LIGHT,
     borderRadius: 8,
     paddingHorizontal: 12,
     fontSize: 16,
-    backgroundColor: '#fff',
-    color: '#333',
+    backgroundColor: COLORS.CARD_LIGHT,
+    color: COLORS.TEXT_LIGHT,
   },
   darkInput: {
-    borderColor: '#444',
-    backgroundColor: '#2a2a2a',
-    color: '#fff',
+    borderColor: COLORS.BORDER_DARK,
+    backgroundColor: COLORS.SECONDARY_CARD_DARK,
+    color: COLORS.TEXT_DARK,
   },
   inputError: {
     borderColor: '#ff5252',
@@ -893,13 +920,13 @@ const styles = StyleSheet.create({
   textArea: {
     height: 120,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: COLORS.BORDER_LIGHT,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
     fontSize: 16,
-    backgroundColor: '#fff',
-    color: '#333',
+    backgroundColor: COLORS.CARD_LIGHT,
+    color: COLORS.TEXT_LIGHT,
   },
   reminderTypeSelector: {
     flexDirection: 'row',
@@ -913,17 +940,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 8,
     marginRight: 16,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: COLORS.SECONDARY_CARD_LIGHT,
   },
   darkReminderTypeOption: {
-    backgroundColor: '#2a2a2a',
+    backgroundColor: COLORS.SECONDARY_CARD_DARK,
   },
   reminderTypeSelected: {
     backgroundColor: '#f0e6ff',
   },
+  darkReminderTypeSelected: {
+    backgroundColor: '#333355',
+  },
   reminderTypeText: {
     fontSize: 14,
-    color: '#333',
+    color: COLORS.TEXT_LIGHT,
     marginLeft: 8,
   },
   radioButton: {
@@ -931,7 +961,7 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#8a56ff',
+    borderColor: COLORS.PRIMARY,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -939,13 +969,16 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#8a56ff',
+    backgroundColor: COLORS.PRIMARY,
   },
   reminderContainer: {
     marginTop: 12,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: COLORS.SECONDARY_CARD_LIGHT,
     padding: 12,
     borderRadius: 8,
+  },
+  darkReminderContainer: {
+    backgroundColor: COLORS.SECONDARY_CARD_DARK,
   },
   dateTimeContainer: {
     flexDirection: 'row',
@@ -954,17 +987,23 @@ const styles = StyleSheet.create({
   },
   reminderDescription: {
     fontSize: 13,
-    color: '#666',
+    color: COLORS.SUBTEXT_LIGHT,
     marginTop: 4,
     marginBottom: 12,
     fontStyle: 'italic',
   },
+  darkReminderDescription: {
+    color: COLORS.SUBTEXT_DARK,
+  },
   linkedItemsContainer: {
     marginTop: 12,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: COLORS.SECONDARY_CARD_LIGHT,
     padding: 12,
     borderRadius: 8,
     marginBottom: 16,
+  },
+  darkLinkedItemsContainer: {
+    backgroundColor: COLORS.SECONDARY_CARD_DARK,
   },
   checkboxContainer: {
     marginTop: 12,
@@ -980,48 +1019,65 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: COLORS.BORDER_LIGHT,
     marginRight: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.CARD_LIGHT,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 1,
     elevation: 1,
   },
+  darkCheckbox: {
+    borderColor: COLORS.BORDER_DARK,
+    backgroundColor: COLORS.SECONDARY_CARD_DARK,
+  },
   checkboxSelected: {
-    backgroundColor: '#8a56ff',
-    borderColor: '#8a56ff',
+    backgroundColor: COLORS.PRIMARY,
+    borderColor: COLORS.PRIMARY,
   },
   checkboxLabel: {
     fontSize: 14,
-    color: '#333',
+    color: COLORS.TEXT_LIGHT,
     flex: 1,
+  },
+  darkCheckboxLabel: {
+    color: COLORS.TEXT_DARK,
   },
   noDataText: {
     fontSize: 14,
-    color: '#999',
+    color: COLORS.SUBTEXT_LIGHT,
     fontStyle: 'italic',
     marginTop: 8,
+  },
+  darkNoDataText: {
+    color: COLORS.SUBTEXT_DARK,
   },
   dateTimeButton: {
     flex: 1,
     height: 48,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: COLORS.BORDER_LIGHT,
     borderRadius: 8,
     paddingHorizontal: 12,
     marginHorizontal: 4,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.CARD_LIGHT,
+  },
+  darkDateTimeButton: {
+    borderColor: COLORS.BORDER_DARK,
+    backgroundColor: COLORS.SECONDARY_CARD_DARK,
   },
   dateTimeText: {
     fontSize: 16,
-    color: '#333',
+    color: COLORS.TEXT_LIGHT,
+  },
+  darkDateTimeText: {
+    color: COLORS.TEXT_DARK,
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -1029,15 +1085,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 12,
   },
-  button: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginLeft: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+
   iconButton: {
     width: 48,
     height: 48,
@@ -1052,7 +1100,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   saveButton: {
-    backgroundColor: '#8a56ff',
+    backgroundColor: COLORS.PRIMARY,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
@@ -1063,28 +1111,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#ff5252',
   },
   resetButton: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: COLORS.SECONDARY_CARD_LIGHT,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: COLORS.BORDER_LIGHT,
+  },
+  darkResetButton: {
+    backgroundColor: COLORS.SECONDARY_CARD_DARK,
+    borderColor: COLORS.BORDER_DARK,
   },
   disabledButton: {
-    backgroundColor: '#cccccc',
+    backgroundColor: COLORS.DISABLED_LIGHT,
     opacity: 0.7,
     shadowOpacity: 0,
     elevation: 0,
   },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
-    marginLeft: 6,
+  darkDisabledButton: {
+    backgroundColor: COLORS.DISABLED_DARK,
   },
-  resetButtonText: {
-    color: '#333',
-    fontWeight: 'bold',
-    fontSize: 16,
-    marginLeft: 6,
-  },
+
   formErrorText: {
     color: '#ff5252',
     fontSize: 14,
@@ -1098,13 +1142,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   pickerContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.CARD_LIGHT,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
     padding: 16,
   },
   darkPickerContainer: {
-    backgroundColor: '#1e1e1e',
+    backgroundColor: COLORS.CARD_DARK,
   },
   pickerHeader: {
     flexDirection: 'row',
@@ -1116,7 +1160,7 @@ const styles = StyleSheet.create({
   },
   pickerButtonText: {
     fontSize: 16,
-    color: '#8a56ff',
+    color: COLORS.PRIMARY,
   },
   doneButton: {
     fontWeight: 'bold',

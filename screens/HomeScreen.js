@@ -20,7 +20,6 @@ import WorkNotesSection from '../components/WorkNotesSection'
 const HomeScreen = ({ navigation }) => {
   const {
     t,
-    darkMode,
     theme,
     currentShift,
     isWorking,
@@ -260,14 +259,6 @@ const HomeScreen = ({ navigation }) => {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 16,
-  },
-  darkContainer: {
-    backgroundColor: '#121212',
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -277,107 +268,11 @@ const styles = StyleSheet.create({
   dateTimeContainer: {
     alignItems: 'flex-start',
   },
-  currentTime: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#000',
-  },
-  dateDisplay: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  darkText: {
-    color: '#fff',
-  },
-  darkSubtitle: {
-    color: '#aaa',
-  },
-
-  darkCard: {
-    backgroundColor: '#1e1e1e',
-  },
-  shiftContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  shiftText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 4,
-  },
-  shiftTimeText: {
-    fontSize: 14,
-    color: '#666',
-  },
   shiftEditIcon: {
     position: 'absolute',
     right: 10,
     top: '50%',
     marginTop: -10,
-  },
-  workStatusContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  checkMark: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#8a56ff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  workStatusTextContainer: {
-    flex: 1,
-  },
-  workStatusText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
-  },
-  workDurationText: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  weeklyStatusContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 12,
-  },
-
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  viewStatsButton: {
-    backgroundColor: '#3498db',
-    borderRadius: 8,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-  },
-  viewStatsButtonText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '500',
   },
 })
 

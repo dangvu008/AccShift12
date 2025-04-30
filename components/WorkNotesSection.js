@@ -47,10 +47,10 @@ const WorkNotesSection = ({ navigation }) => {
     }
 
     loadNotes()
-  }, [currentShift, shifts])
+  }, [currentShift, shifts, calculateNextReminderTimes])
 
   // Tính toán nextReminderTime cho tất cả các ghi chú
-  const calculateNextReminderTimes = (notes, allShifts) => {
+  const calculateNextReminderTimes = useCallback((notes, allShifts) => {
     const now = new Date()
     const dayMap = { CN: 0, T2: 1, T3: 2, T4: 3, T5: 4, T6: 5, T7: 6 }
     const reverseDayMap = {
@@ -127,6 +127,7 @@ const WorkNotesSection = ({ navigation }) => {
         reminderDescription,
       }
     })
+  }, [])
   }
 
   // Phân tích chuỗi thời gian nhắc nhở thành đối tượng Date
@@ -452,10 +453,7 @@ const styles = StyleSheet.create({
   addNoteButton: {
     padding: 6,
   },
-  viewAllText: {
-    color: '#8a56ff',
-    fontWeight: '500',
-  },
+
   loadingContainer: {
     padding: 16,
     alignItems: 'center',
