@@ -31,15 +31,19 @@ const WorkNotesSection = ({ navigation }) => {
       // Tính toán nextReminderTime cho mỗi ghi chú
       const notesWithReminders = calculateNextReminderTimes(allNotes, allShifts)
 
-      // Lọc các ghi chú có nextReminderTime trong tương lai
-      const validNotes = notesWithReminders.filter(
-        (note) => note.nextReminderTime
-      )
+      // Sắp xếp ghi chú: ưu tiên ghi chú có nextReminderTime, sau đó là theo thời gian cập nhật
+      const sortedNotes = notesWithReminders.sort((a, b) => {
+        // Nếu cả hai đều có nextReminderTime, sắp xếp theo thời gian nhắc nhở
+        if (a.nextReminderTime && b.nextReminderTime) {
+          return a.nextReminderTime - b.nextReminderTime
+        }
+        // Nếu chỉ một trong hai có nextReminderTime, ưu tiên ghi chú có nhắc nhở
+        if (a.nextReminderTime) return -1
+        if (b.nextReminderTime) return 1
 
-      // Sắp xếp theo nextReminderTime tăng dần
-      const sortedNotes = validNotes.sort(
-        (a, b) => a.nextReminderTime - b.nextReminderTime
-      )
+        // Nếu không có nextReminderTime, sắp xếp theo thời gian cập nhật mới nhất
+        return new Date(b.updatedAt) - new Date(a.updatedAt)
+      })
 
       // Giới hạn 3 ghi chú
       setFilteredNotes(sortedNotes.slice(0, 3))
@@ -132,22 +136,41 @@ const WorkNotesSection = ({ navigation }) => {
   // Phân tích chuỗi thời gian nhắc nhở thành đối tượng Date
   const parseReminderTime = (reminderTimeStr) => {
     try {
+      if (!reminderTimeStr) return null
+
       // Xử lý các định dạng thời gian khác nhau
       if (reminderTimeStr.includes('/')) {
         // Định dạng đầy đủ: DD/MM/YYYY HH:MM
         const [datePart, timePart] = reminderTimeStr.split(' ')
+        if (!datePart || !timePart) return null
+
         const [day, month, year] = datePart.split('/').map(Number)
         const [hours, minutes] = timePart.split(':').map(Number)
 
+        if (
+          isNaN(day) ||
+          isNaN(month) ||
+          isNaN(year) ||
+          isNaN(hours) ||
+          isNaN(minutes)
+        ) {
+          return null
+        }
+
         const date = new Date()
-        date.setFullYear(year || date.getFullYear())
-        date.setMonth(month - 1 || date.getMonth())
-        date.setDate(day || date.getDate())
+        date.setFullYear(year)
+        date.setMonth(month - 1)
+        date.setDate(day)
         date.setHours(hours, minutes, 0, 0)
         return date
       } else {
         // Định dạng chỉ có giờ: HH:MM
         const [hours, minutes] = reminderTimeStr.split(':').map(Number)
+
+        if (isNaN(hours) || isNaN(minutes)) {
+          return null
+        }
+
         const date = new Date()
         date.setHours(hours, minutes, 0, 0)
 
@@ -349,7 +372,7 @@ const WorkNotesSection = ({ navigation }) => {
                   </Text>
 
                   <View style={styles.noteFooter}>
-                    {note.reminderDescription && (
+                    {note.reminderDescription ? (
                       <View style={styles.reminderBadge}>
                         <Ionicons
                           name="alarm-outline"
@@ -361,7 +384,19 @@ const WorkNotesSection = ({ navigation }) => {
                           {note.reminderDescription}
                         </Text>
                       </View>
-                    )}
+                    ) : note.reminderTime ? (
+                      <View style={styles.reminderBadge}>
+                        <Ionicons
+                          name="alarm-outline"
+                          size={12}
+                          color="#fff"
+                          style={styles.reminderIcon}
+                        />
+                        <Text style={styles.reminderText}>
+                          {note.reminderTime}
+                        </Text>
+                      </View>
+                    ) : null}
                   </View>
                 </View>
 

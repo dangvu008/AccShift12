@@ -11,6 +11,7 @@ import * as Notifications from 'expo-notifications'
 // @ts-ignore
 import './types.js'
 import { AppProvider, AppContext } from './context/AppContext'
+import { createSampleNotes } from './utils/sampleNotes'
 
 // Import screens
 import HomeScreen from './screens/HomeScreen'
@@ -284,6 +285,17 @@ export default function App() {
           }
         }
       )
+
+    // Khởi tạo dữ liệu mẫu cho ghi chú
+    const initSampleData = async () => {
+      try {
+        await createSampleNotes()
+      } catch (error) {
+        console.error('Lỗi khi khởi tạo dữ liệu mẫu:', error)
+      }
+    }
+
+    initSampleData()
 
     return () => {
       subscription.remove()
