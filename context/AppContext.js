@@ -26,6 +26,8 @@ import weatherAlertService from '../services/weatherAlertService'
 import { STORAGE_KEYS } from '../utils/constants'
 // Import theme
 import { getTheme } from '../utils/theme'
+// Import storage manager
+import { storage } from '../utils/storage'
 
 export const AppContext = createContext()
 
@@ -71,6 +73,36 @@ export const AppProvider = ({ children }) => {
   const [onlyGoWorkMode, setOnlyGoWorkMode] = useState(false)
   const [showPunchButton, setShowPunchButton] = useState(false)
 
+  // OT Threshold settings
+  const [otThresholdEnabled, setOtThresholdEnabled] = useState(false)
+  const [otThresholdHours, setOtThresholdHours] = useState(2)
+  const [otRateWeekdayTier2, setOtRateWeekdayTier2] = useState(200)
+  const [otRateSaturdayTier2, setOtRateSaturdayTier2] = useState(250)
+  const [otRateSundayTier2, setOtRateSundayTier2] = useState(250)
+  const [otRateHolidayTier2, setOtRateHolidayTier2] = useState(350)
+
+  // Night Work settings
+  const [nightWorkEnabled, setNightWorkEnabled] = useState(true)
+  const [nightWorkStartTime, setNightWorkStartTime] = useState('22:00')
+  const [nightWorkEndTime, setNightWorkEndTime] = useState('05:00')
+  const [nightWorkRate, setNightWorkRate] = useState(30)
+
+  // OT Base Rate settings
+  const [otRateWeekday, setOtRateWeekday] = useState(150)
+  const [otRateSaturday, setOtRateSaturday] = useState(200)
+  const [otRateSunday, setOtRateSunday] = useState(200)
+  const [otRateHoliday, setOtRateHoliday] = useState(300)
+
+  // Night OT Calculation Rule
+  const [nightOtCalculationRule, setNightOtCalculationRule] = useState('sum')
+
+  // Fixed Rate settings
+  const [fixedRateStandardNight, setFixedRateStandardNight] = useState(130)
+  const [fixedRateOtWeekdayNight, setFixedRateOtWeekdayNight] = useState(210)
+  const [fixedRateOtSaturdayNight, setFixedRateOtSaturdayNight] = useState(270)
+  const [fixedRateOtSundayNight, setFixedRateOtSundayNight] = useState(270)
+  const [fixedRateOtHolidayNight, setFixedRateOtHolidayNight] = useState(390)
+
   useEffect(() => {
     let isMounted = true
 
@@ -78,30 +110,143 @@ export const AppProvider = ({ children }) => {
       try {
         if (!isMounted) return
 
-        const storedLanguage = await AsyncStorage.getItem('language')
-        if (storedLanguage && isMounted) setLanguage(storedLanguage)
+        // Tải cài đặt người dùng từ storage
+        const userSettings = await storage.getUserSettings()
+        if (userSettings && isMounted) {
+          // Cài đặt ngôn ngữ
+          if (userSettings.language) setLanguage(userSettings.language)
 
-        const storedDarkMode = await AsyncStorage.getItem('darkMode')
-        if (storedDarkMode && isMounted) setDarkMode(storedDarkMode === 'true')
+          // Cài đặt giao diện
+          if (userSettings.theme === 'dark' || userSettings.theme === 'light') {
+            setDarkMode(userSettings.theme === 'dark')
+          }
 
-        const storedNotificationSound = await AsyncStorage.getItem(
-          'notificationSound'
-        )
-        if (storedNotificationSound && isMounted)
-          setNotificationSound(storedNotificationSound === 'true')
+          // Cài đặt thông báo
+          if (userSettings.alarmSoundEnabled !== undefined) {
+            setNotificationSound(userSettings.alarmSoundEnabled)
+          }
 
-        const storedNotificationVibration = await AsyncStorage.getItem(
-          'notificationVibration'
-        )
-        if (storedNotificationVibration && isMounted)
-          setNotificationVibration(storedNotificationVibration === 'true')
+          if (userSettings.alarmVibrationEnabled !== undefined) {
+            setNotificationVibration(userSettings.alarmVibrationEnabled)
+          }
 
-        // Load Multi-Function Button settings
-        const storedOnlyGoWorkMode = await AsyncStorage.getItem(
-          'onlyGoWorkMode'
-        )
-        if (storedOnlyGoWorkMode && isMounted)
-          setOnlyGoWorkMode(storedOnlyGoWorkMode === 'true')
+          // Cài đặt chế độ nút đi làm
+          if (userSettings.multiButtonMode !== undefined) {
+            setOnlyGoWorkMode(userSettings.multiButtonMode === 'simple')
+          }
+
+          // Cài đặt ngưỡng OT
+          if (userSettings.otThresholdEnabled !== undefined) {
+            setOtThresholdEnabled(userSettings.otThresholdEnabled)
+          }
+
+          if (userSettings.otThresholdHours !== undefined) {
+            setOtThresholdHours(userSettings.otThresholdHours)
+          }
+
+          if (userSettings.otRateWeekdayTier2 !== undefined) {
+            setOtRateWeekdayTier2(userSettings.otRateWeekdayTier2)
+          }
+
+          if (userSettings.otRateSaturdayTier2 !== undefined) {
+            setOtRateSaturdayTier2(userSettings.otRateSaturdayTier2)
+          }
+
+          if (userSettings.otRateSundayTier2 !== undefined) {
+            setOtRateSundayTier2(userSettings.otRateSundayTier2)
+          }
+
+          if (userSettings.otRateHolidayTier2 !== undefined) {
+            setOtRateHolidayTier2(userSettings.otRateHolidayTier2)
+          }
+
+          // Cài đặt làm đêm
+          if (userSettings.nightWorkEnabled !== undefined) {
+            setNightWorkEnabled(userSettings.nightWorkEnabled)
+          }
+
+          if (userSettings.nightWorkStartTime) {
+            setNightWorkStartTime(userSettings.nightWorkStartTime)
+          }
+
+          if (userSettings.nightWorkEndTime) {
+            setNightWorkEndTime(userSettings.nightWorkEndTime)
+          }
+
+          if (userSettings.nightWorkRate !== undefined) {
+            setNightWorkRate(userSettings.nightWorkRate)
+          }
+
+          // Cài đặt tỷ lệ OT cơ bản
+          if (userSettings.otRateWeekday !== undefined) {
+            setOtRateWeekday(userSettings.otRateWeekday)
+          }
+
+          if (userSettings.otRateSaturday !== undefined) {
+            setOtRateSaturday(userSettings.otRateSaturday)
+          }
+
+          if (userSettings.otRateSunday !== undefined) {
+            setOtRateSunday(userSettings.otRateSunday)
+          }
+
+          if (userSettings.otRateHoliday !== undefined) {
+            setOtRateHoliday(userSettings.otRateHoliday)
+          }
+
+          // Cài đặt quy tắc tính lương đêm
+          if (userSettings.nightOtCalculationRule) {
+            setNightOtCalculationRule(userSettings.nightOtCalculationRule)
+          }
+
+          // Cài đặt tỷ lệ cố định
+          if (userSettings.fixedRateStandardNight !== undefined) {
+            setFixedRateStandardNight(userSettings.fixedRateStandardNight)
+          }
+
+          if (userSettings.fixedRateOtWeekdayNight !== undefined) {
+            setFixedRateOtWeekdayNight(userSettings.fixedRateOtWeekdayNight)
+          }
+
+          if (userSettings.fixedRateOtSaturdayNight !== undefined) {
+            setFixedRateOtSaturdayNight(userSettings.fixedRateOtSaturdayNight)
+          }
+
+          if (userSettings.fixedRateOtSundayNight !== undefined) {
+            setFixedRateOtSundayNight(userSettings.fixedRateOtSundayNight)
+          }
+
+          if (userSettings.fixedRateOtHolidayNight !== undefined) {
+            setFixedRateOtHolidayNight(userSettings.fixedRateOtHolidayNight)
+          }
+        } else {
+          // Tải từ AsyncStorage cũ nếu không có userSettings
+          const storedLanguage = await AsyncStorage.getItem('language')
+          if (storedLanguage && isMounted) setLanguage(storedLanguage)
+
+          const storedDarkMode = await AsyncStorage.getItem('darkMode')
+          if (storedDarkMode && isMounted)
+            setDarkMode(storedDarkMode === 'true')
+
+          const storedNotificationSound = await AsyncStorage.getItem(
+            'notificationSound'
+          )
+          if (storedNotificationSound && isMounted)
+            setNotificationSound(storedNotificationSound === 'true')
+
+          const storedNotificationVibration = await AsyncStorage.getItem(
+            'notificationVibration'
+          )
+          if (storedNotificationVibration && isMounted)
+            setNotificationVibration(storedNotificationVibration === 'true')
+
+          // Load Multi-Function Button settings
+          const storedOnlyGoWorkMode = await AsyncStorage.getItem(
+            'onlyGoWorkMode'
+          )
+          if (storedOnlyGoWorkMode && isMounted)
+            setOnlyGoWorkMode(storedOnlyGoWorkMode === 'true')
+        }
 
         // Load shifts
         const loadedShifts = await getShifts()
@@ -268,6 +413,169 @@ export const AppProvider = ({ children }) => {
   const toggleOnlyGoWorkMode = () => {
     setOnlyGoWorkMode(!onlyGoWorkMode)
     saveSettings('onlyGoWorkMode', !onlyGoWorkMode)
+
+    // Cập nhật cài đặt trong storage
+    storage.updateUserSettings({
+      multiButtonMode: !onlyGoWorkMode ? 'simple' : 'full',
+    })
+  }
+
+  // Hàm xử lý cài đặt ngưỡng OT
+  const toggleOtThresholdEnabled = () => {
+    const newValue = !otThresholdEnabled
+    setOtThresholdEnabled(newValue)
+    storage.updateUserSettings({ otThresholdEnabled: newValue })
+  }
+
+  const updateOtThresholdHours = (hours) => {
+    const numericHours = parseFloat(hours)
+    if (!isNaN(numericHours) && numericHours >= 0) {
+      setOtThresholdHours(numericHours)
+      storage.updateUserSettings({ otThresholdHours: numericHours })
+    }
+  }
+
+  const updateOtRateWeekdayTier2 = (rate) => {
+    const numericRate = parseInt(rate)
+    if (!isNaN(numericRate) && numericRate >= 100) {
+      setOtRateWeekdayTier2(numericRate)
+      storage.updateUserSettings({ otRateWeekdayTier2: numericRate })
+    }
+  }
+
+  const updateOtRateSaturdayTier2 = (rate) => {
+    const numericRate = parseInt(rate)
+    if (!isNaN(numericRate) && numericRate >= 100) {
+      setOtRateSaturdayTier2(numericRate)
+      storage.updateUserSettings({ otRateSaturdayTier2: numericRate })
+    }
+  }
+
+  const updateOtRateSundayTier2 = (rate) => {
+    const numericRate = parseInt(rate)
+    if (!isNaN(numericRate) && numericRate >= 100) {
+      setOtRateSundayTier2(numericRate)
+      storage.updateUserSettings({ otRateSundayTier2: numericRate })
+    }
+  }
+
+  const updateOtRateHolidayTier2 = (rate) => {
+    const numericRate = parseInt(rate)
+    if (!isNaN(numericRate) && numericRate >= 100) {
+      setOtRateHolidayTier2(numericRate)
+      storage.updateUserSettings({ otRateHolidayTier2: numericRate })
+    }
+  }
+
+  // Hàm xử lý cài đặt làm đêm
+  const toggleNightWorkEnabled = () => {
+    const newValue = !nightWorkEnabled
+    setNightWorkEnabled(newValue)
+    storage.updateUserSettings({ nightWorkEnabled: newValue })
+  }
+
+  const updateNightWorkStartTime = (time) => {
+    if (time && /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time)) {
+      setNightWorkStartTime(time)
+      storage.updateUserSettings({ nightWorkStartTime: time })
+    }
+  }
+
+  const updateNightWorkEndTime = (time) => {
+    if (time && /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time)) {
+      setNightWorkEndTime(time)
+      storage.updateUserSettings({ nightWorkEndTime: time })
+    }
+  }
+
+  const updateNightWorkRate = (rate) => {
+    const numericRate = parseInt(rate)
+    if (!isNaN(numericRate) && numericRate >= 0) {
+      setNightWorkRate(numericRate)
+      storage.updateUserSettings({ nightWorkRate: numericRate })
+    }
+  }
+
+  // Hàm xử lý cài đặt tỷ lệ OT cơ bản
+  const updateOtRateWeekday = (rate) => {
+    const numericRate = parseInt(rate)
+    if (!isNaN(numericRate) && numericRate >= 100) {
+      setOtRateWeekday(numericRate)
+      storage.updateUserSettings({ otRateWeekday: numericRate })
+    }
+  }
+
+  const updateOtRateSaturday = (rate) => {
+    const numericRate = parseInt(rate)
+    if (!isNaN(numericRate) && numericRate >= 100) {
+      setOtRateSaturday(numericRate)
+      storage.updateUserSettings({ otRateSaturday: numericRate })
+    }
+  }
+
+  const updateOtRateSunday = (rate) => {
+    const numericRate = parseInt(rate)
+    if (!isNaN(numericRate) && numericRate >= 100) {
+      setOtRateSunday(numericRate)
+      storage.updateUserSettings({ otRateSunday: numericRate })
+    }
+  }
+
+  const updateOtRateHoliday = (rate) => {
+    const numericRate = parseInt(rate)
+    if (!isNaN(numericRate) && numericRate >= 100) {
+      setOtRateHoliday(numericRate)
+      storage.updateUserSettings({ otRateHoliday: numericRate })
+    }
+  }
+
+  // Hàm xử lý cài đặt quy tắc tính lương đêm
+  const updateNightOtCalculationRule = (rule) => {
+    if (['sum', 'multiply', 'fixed', 'base'].includes(rule)) {
+      setNightOtCalculationRule(rule)
+      storage.updateUserSettings({ nightOtCalculationRule: rule })
+    }
+  }
+
+  // Hàm xử lý cài đặt tỷ lệ cố định
+  const updateFixedRateStandardNight = (rate) => {
+    const numericRate = parseInt(rate)
+    if (!isNaN(numericRate) && numericRate >= 100) {
+      setFixedRateStandardNight(numericRate)
+      storage.updateUserSettings({ fixedRateStandardNight: numericRate })
+    }
+  }
+
+  const updateFixedRateOtWeekdayNight = (rate) => {
+    const numericRate = parseInt(rate)
+    if (!isNaN(numericRate) && numericRate >= 100) {
+      setFixedRateOtWeekdayNight(numericRate)
+      storage.updateUserSettings({ fixedRateOtWeekdayNight: numericRate })
+    }
+  }
+
+  const updateFixedRateOtSaturdayNight = (rate) => {
+    const numericRate = parseInt(rate)
+    if (!isNaN(numericRate) && numericRate >= 100) {
+      setFixedRateOtSaturdayNight(numericRate)
+      storage.updateUserSettings({ fixedRateOtSaturdayNight: numericRate })
+    }
+  }
+
+  const updateFixedRateOtSundayNight = (rate) => {
+    const numericRate = parseInt(rate)
+    if (!isNaN(numericRate) && numericRate >= 100) {
+      setFixedRateOtSundayNight(numericRate)
+      storage.updateUserSettings({ fixedRateOtSundayNight: numericRate })
+    }
+  }
+
+  const updateFixedRateOtHolidayNight = (rate) => {
+    const numericRate = parseInt(rate)
+    if (!isNaN(numericRate) && numericRate >= 100) {
+      setFixedRateOtHolidayNight(numericRate)
+      storage.updateUserSettings({ fixedRateOtHolidayNight: numericRate })
+    }
   }
 
   const updateCurrentShift = async (shift) => {
@@ -1130,6 +1438,32 @@ export const AppProvider = ({ children }) => {
         attendanceLogs,
         onlyGoWorkMode,
         showPunchButton,
+        // OT Threshold settings
+        otThresholdEnabled,
+        otThresholdHours,
+        otRateWeekdayTier2,
+        otRateSaturdayTier2,
+        otRateSundayTier2,
+        otRateHolidayTier2,
+        // Night Work settings
+        nightWorkEnabled,
+        nightWorkStartTime,
+        nightWorkEndTime,
+        nightWorkRate,
+        // OT Base Rate settings
+        otRateWeekday,
+        otRateSaturday,
+        otRateSunday,
+        otRateHoliday,
+        // Night OT Calculation Rule
+        nightOtCalculationRule,
+        // Fixed Rate settings
+        fixedRateStandardNight,
+        fixedRateOtWeekdayNight,
+        fixedRateOtSaturdayNight,
+        fixedRateOtSundayNight,
+        fixedRateOtHolidayNight,
+        // Functions
         t,
         changeLanguage,
         toggleDarkMode,
@@ -1152,9 +1486,35 @@ export const AppProvider = ({ children }) => {
         handleMultiFunctionButton,
         handlePunchButton,
         resetAttendanceLogs,
+        // Note functions
         addNoteWithReminder,
         updateNoteWithReminder,
         deleteNoteWithReminder,
+        // OT Threshold functions
+        toggleOtThresholdEnabled,
+        updateOtThresholdHours,
+        updateOtRateWeekdayTier2,
+        updateOtRateSaturdayTier2,
+        updateOtRateSundayTier2,
+        updateOtRateHolidayTier2,
+        // Night Work functions
+        toggleNightWorkEnabled,
+        updateNightWorkStartTime,
+        updateNightWorkEndTime,
+        updateNightWorkRate,
+        // OT Base Rate functions
+        updateOtRateWeekday,
+        updateOtRateSaturday,
+        updateOtRateSunday,
+        updateOtRateHoliday,
+        // Night OT Calculation Rule functions
+        updateNightOtCalculationRule,
+        // Fixed Rate functions
+        updateFixedRateStandardNight,
+        updateFixedRateOtWeekdayNight,
+        updateFixedRateOtSaturdayNight,
+        updateFixedRateOtSundayNight,
+        updateFixedRateOtHolidayNight,
       }}
     >
       {children}

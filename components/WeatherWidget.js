@@ -6,12 +6,15 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  Dimensions,
 } from 'react-native'
-import { Ionicons } from '@expo/vector-icons'
-// import { useTranslation } from 'react-i18next'
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import { AppContext } from '../context/AppContext'
 import { getWeatherIcon } from '../utils/helpers'
 import weatherService from '../services/weatherService'
+
+// Lấy chiều rộng màn hình để tính toán kích thước
+const { width } = Dimensions.get('window')
 
 const WeatherWidget = ({ onPress }) => {
   const { darkMode, theme, homeLocation, workLocation, t } =
@@ -22,15 +25,23 @@ const WeatherWidget = ({ onPress }) => {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
+  // Thêm state để lưu thời tiết ở vị trí công ty (nếu có)
+  const [workWeather, setWorkWeather] = useState(null)
+  const [workForecast, setWorkForecast] = useState([])
+
+  // State để kiểm soát hiển thị cảnh báo thông minh
+  const [smartAlert, setSmartAlert] = useState(null)
+
   // Di chuyển hàm fetchWeatherData ra ngoài useEffect để có thể tái sử dụng
   const fetchWeatherData = async (forceRefresh = false) => {
     let isMounted = true
     try {
       setLoading(true)
-      // Sử dụng vị trí nhà làm vị trí chính
-      const location = homeLocation || workLocation
 
-      if (!location) {
+      // Sử dụng vị trí nhà làm vị trí chính, nếu không có thì dùng vị trí công ty
+      const primaryLocation = homeLocation || workLocation
+
+      if (!primaryLocation) {
         setLoading(false)
         return
       }
@@ -40,74 +51,117 @@ const WeatherWidget = ({ onPress }) => {
         await weatherService.clearWeatherCache()
       }
 
-      try {
-        // Lấy thời tiết hiện tại
-        const current = await weatherService.getCurrentWeather(
-          location.latitude,
-          location.longitude
-        )
+      // Biến để theo dõi dữ liệu thời tiết ở cả hai vị trí
+      let homeWeatherData = null
+      let homeHourlyForecast = []
+      let homeAlerts = []
 
-        if (!isMounted) return
-        setCurrentWeather(current)
+      let workWeatherData = null
+      let workHourlyForecast = []
+      let workAlerts = []
 
+      // 1. Lấy dữ liệu thời tiết cho vị trí nhà (nếu có)
+      if (homeLocation) {
         try {
-          // Lấy dự báo theo giờ
-          const hourlyForecast = await weatherService.getHourlyForecast(
-            location.latitude,
-            location.longitude
+          // Lấy thời tiết hiện tại
+          homeWeatherData = await weatherService.getCurrentWeather(
+            homeLocation.latitude,
+            homeLocation.longitude
           )
 
-          if (!isMounted) return
+          // Lấy dự báo theo giờ
+          const homeForecast = await weatherService.getHourlyForecast(
+            homeLocation.latitude,
+            homeLocation.longitude
+          )
 
-          // Lọc dự báo để lấy 3 giờ tiếp theo (cách 1 giờ)
-          if (hourlyForecast && hourlyForecast.length > 0) {
-            // Lấy 3 giờ tiếp theo, cách nhau 1 giờ
-            const filteredForecast = []
-            let hourIndex = 0
-
-            // Lấy giờ đầu tiên
-            if (hourlyForecast[hourIndex]) {
-              filteredForecast.push(hourlyForecast[hourIndex])
-            }
-
-            // Lấy giờ thứ hai (cách 1 giờ)
-            hourIndex = Math.min(1, hourlyForecast.length - 1)
-            if (hourlyForecast[hourIndex]) {
-              filteredForecast.push(hourlyForecast[hourIndex])
-            }
-
-            // Lấy giờ thứ ba (cách 1 giờ nữa)
-            hourIndex = Math.min(2, hourlyForecast.length - 1)
-            if (hourlyForecast[hourIndex]) {
-              filteredForecast.push(hourlyForecast[hourIndex])
-            }
-
-            setForecast(filteredForecast)
-          } else {
-            setForecast([])
+          if (homeForecast && homeForecast.length > 0) {
+            // Lọc dự báo để lấy 3 giờ tiếp theo
+            homeHourlyForecast = homeForecast.slice(0, 3)
           }
 
-          try {
-            // Lấy cảnh báo thời tiết
-            const alerts = await weatherService.getWeatherAlerts(
-              location.latitude,
-              location.longitude
-            )
+          // Lấy cảnh báo thời tiết
+          const alerts = await weatherService.getWeatherAlerts(
+            homeLocation.latitude,
+            homeLocation.longitude
+          )
 
-            if (!isMounted) return
-            setWeatherAlert(alerts && alerts.length > 0 ? alerts[0] : null)
-          } catch (alertError) {
-            console.error('Error fetching weather alerts:', alertError)
-            // Không làm gì nếu không lấy được cảnh báo
+          if (alerts && alerts.length > 0) {
+            homeAlerts = alerts
           }
-        } catch (forecastError) {
-          console.error('Error fetching hourly forecast:', forecastError)
-          // Vẫn tiếp tục nếu không lấy được dự báo
+        } catch (error) {
+          console.error('Error fetching home location weather:', error)
         }
-      } catch (currentWeatherError) {
-        console.error('Error fetching current weather:', currentWeatherError)
-        // Không thể lấy thời tiết hiện tại, hiển thị thông báo lỗi
       }
+
+      // 2. Lấy dữ liệu thời tiết cho vị trí công ty (nếu có và khác vị trí nhà)
+      if (
+        workLocation &&
+        homeLocation &&
+        (workLocation.latitude !== homeLocation.latitude ||
+          workLocation.longitude !== homeLocation.longitude)
+      ) {
+        try {
+          // Lấy thời tiết hiện tại
+          workWeatherData = await weatherService.getCurrentWeather(
+            workLocation.latitude,
+            workLocation.longitude
+          )
+
+          // Lấy dự báo theo giờ
+          const workForecast = await weatherService.getHourlyForecast(
+            workLocation.latitude,
+            workLocation.longitude
+          )
+
+          if (workForecast && workForecast.length > 0) {
+            // Lọc dự báo để lấy 3 giờ tiếp theo
+            workHourlyForecast = workForecast.slice(0, 3)
+          }
+
+          // Lấy cảnh báo thời tiết
+          const alerts = await weatherService.getWeatherAlerts(
+            workLocation.latitude,
+            workLocation.longitude
+          )
+
+          if (alerts && alerts.length > 0) {
+            workAlerts = alerts
+          }
+        } catch (error) {
+          console.error('Error fetching work location weather:', error)
+        }
+      }
+
+      if (!isMounted) return
+
+      // 3. Cập nhật state với dữ liệu đã lấy được
+      // Vị trí chính (nhà hoặc công ty)
+      setCurrentWeather(homeWeatherData || workWeatherData)
+      setForecast(
+        homeHourlyForecast.length > 0 ? homeHourlyForecast : workHourlyForecast
+      )
+
+      // Vị trí công ty (nếu khác vị trí nhà)
+      setWorkWeather(workWeatherData)
+      setWorkForecast(workHourlyForecast)
+
+      // Cảnh báo thời tiết
+      const primaryAlert =
+        homeAlerts.length > 0
+          ? homeAlerts[0]
+          : workAlerts.length > 0
+          ? workAlerts[0]
+          : null
+      setWeatherAlert(primaryAlert)
+
+      // 4. Tạo cảnh báo thông minh dựa trên dữ liệu thời tiết ở cả hai vị trí
+      generateSmartAlert(
+        homeWeatherData,
+        homeHourlyForecast,
+        workWeatherData,
+        workHourlyForecast
+      )
 
       setLoading(false)
       setRefreshing(false)
@@ -120,6 +174,106 @@ const WeatherWidget = ({ onPress }) => {
     return () => {
       isMounted = false
     }
+  }
+
+  // Hàm tạo cảnh báo thông minh dựa trên dữ liệu thời tiết ở cả hai vị trí
+  const generateSmartAlert = (
+    homeWeather,
+    homeForecast,
+    workWeather,
+    workForecast
+  ) => {
+    // Nếu không có dữ liệu thời tiết ở cả hai vị trí, không tạo cảnh báo
+    if (!homeWeather && !workWeather) {
+      setSmartAlert(null)
+      return
+    }
+
+    // Kiểm tra xem có mưa ở vị trí nhà không
+    const isRainingAtHome = checkForRain(homeWeather, homeForecast)
+
+    // Kiểm tra xem có mưa ở vị trí công ty không
+    const isRainingAtWork = checkForRain(workWeather, workForecast)
+
+    // Nếu có mưa ở cả hai vị trí
+    if (isRainingAtHome.willRain && isRainingAtWork.willRain) {
+      const message = `${t('Rain expected at home')} (~${
+        isRainingAtHome.time
+      }). ${t('Note: It will also rain at work')} (~${
+        isRainingAtWork.time
+      }), ${t('remember to bring an umbrella from home')}!`
+      setSmartAlert({
+        type: 'rain',
+        message,
+        severity: 'warning',
+      })
+    }
+    // Nếu chỉ có mưa ở vị trí nhà
+    else if (isRainingAtHome.willRain) {
+      const message = `${t('Rain expected at home')} (~${
+        isRainingAtHome.time
+      }).`
+      setSmartAlert({
+        type: 'rain',
+        message,
+        severity: 'info',
+      })
+    }
+    // Nếu chỉ có mưa ở vị trí công ty
+    else if (isRainingAtWork.willRain) {
+      const message = `${t('Rain expected at work')} (~${
+        isRainingAtWork.time
+      }). ${t('Consider bringing an umbrella')}!`
+      setSmartAlert({
+        type: 'rain',
+        message,
+        severity: 'warning',
+      })
+    }
+    // Nếu không có mưa ở cả hai vị trí
+    else {
+      setSmartAlert(null)
+    }
+  }
+
+  // Hàm kiểm tra xem có mưa không dựa trên dữ liệu thời tiết
+  const checkForRain = (currentWeather, forecast) => {
+    const result = { willRain: false, time: '' }
+
+    // Kiểm tra thời tiết hiện tại
+    if (currentWeather && currentWeather.weather && currentWeather.weather[0]) {
+      const weatherId = currentWeather.weather[0].id
+      // Mã thời tiết từ 200-599 là các loại mưa, bão, tuyết
+      if (weatherId >= 200 && weatherId < 600) {
+        result.willRain = true
+        result.time = t('now')
+        return result
+      }
+    }
+
+    // Kiểm tra dự báo
+    if (forecast && forecast.length > 0) {
+      for (let i = 0; i < forecast.length; i++) {
+        const item = forecast[i]
+        if (item.weather && item.weather[0]) {
+          const weatherId = item.weather[0].id
+          // Mã thời tiết từ 200-599 là các loại mưa, bão, tuyết
+          if (weatherId >= 200 && weatherId < 600) {
+            result.willRain = true
+            // Định dạng thời gian
+            const time = new Date(item.dt * 1000)
+            const hours = time.getHours()
+            const minutes = time.getMinutes()
+            result.time = `${hours.toString().padStart(2, '0')}:${minutes
+              .toString()
+              .padStart(2, '0')}`
+            return result
+          }
+        }
+      }
+    }
+
+    return result
   }
 
   // Hàm làm mới dữ liệu thời tiết
@@ -237,44 +391,40 @@ const WeatherWidget = ({ onPress }) => {
 
   return (
     <TouchableOpacity
-      style={{
-        backgroundColor: theme.cardColor,
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 16,
-      }}
+      style={[styles.container, { backgroundColor: theme.cardColor }]}
+      activeOpacity={0.7}
       onPress={onPress}
     >
-      {/* Dòng 1: Icon thời tiết hiện tại, Nhiệt độ hiện tại, Tên vị trí, Nút làm mới */}
-      <View
-        style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}
-      >
-        <View style={{ marginRight: 16 }}>
-          {getWeatherIcon(currentWeather.weather[0].icon, 40, theme.textColor)}
+      {/* Phần 1: Thông tin thời tiết hiện tại */}
+      <View style={styles.currentWeatherRow}>
+        <View style={styles.weatherIconContainer}>
+          {getWeatherIcon(currentWeather.weather[0].icon, 48, theme.textColor)}
         </View>
-        <View style={{ flex: 1 }}>
-          <Text
-            style={{ fontSize: 24, fontWeight: 'bold', color: theme.textColor }}
-          >
+        <View style={styles.weatherInfoContainer}>
+          <Text style={[styles.temperature, { color: theme.textColor }]}>
             {Math.round(currentWeather.main.temp)}°C
           </Text>
-          <Text style={{ fontSize: 14, color: theme.subtextColor }}>
+          <Text style={[styles.weatherDescription, { color: theme.textColor }]}>
+            {currentWeather.weather[0].description}
+          </Text>
+          <Text style={[styles.locationName, { color: theme.subtextColor }]}>
             {locationName}
           </Text>
         </View>
         <TouchableOpacity
-          style={{
-            padding: 8,
-            borderRadius: 20,
-            backgroundColor: darkMode
-              ? 'rgba(255,255,255,0.1)'
-              : 'rgba(0,0,0,0.05)',
-          }}
+          style={[
+            styles.refreshButton,
+            {
+              backgroundColor: darkMode
+                ? 'rgba(255,255,255,0.1)'
+                : 'rgba(0,0,0,0.05)',
+            },
+          ]}
           onPress={refreshWeatherData}
           disabled={refreshing}
         >
           <Ionicons
-            name={refreshing ? 'refresh-circle' : 'refresh'}
+            name={refreshing ? 'refresh-circle' : 'refresh-outline'}
             size={24}
             color={theme.textColor}
             style={refreshing ? { opacity: 0.7 } : {}}
@@ -282,25 +432,12 @@ const WeatherWidget = ({ onPress }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Dòng 2: Mô tả ngắn gọn */}
-      <Text
-        style={{
-          fontSize: 16,
-          color: theme.textColor,
-          marginBottom: 12,
-          textTransform: 'capitalize',
-        }}
-      >
-        {currentWeather.weather[0].description}
-      </Text>
-
-      {/* Dòng 3: Dự báo 3 giờ tiếp theo (cách 1 giờ) */}
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          marginBottom: 12,
-        }}
+      {/* Phần 2: Dự báo 3 giờ tiếp theo */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.forecastScrollView}
+        contentContainerStyle={styles.forecastContainer}
       >
         {forecast.map((item, index) => {
           const time = new Date(item.dt * 1000)
@@ -313,76 +450,79 @@ const WeatherWidget = ({ onPress }) => {
           return (
             <View
               key={index}
-              style={{
-                alignItems: 'center',
-                flex: 1,
-                backgroundColor: darkMode
-                  ? 'rgba(255,255,255,0.05)'
-                  : 'rgba(0,0,0,0.03)',
-                borderRadius: 8,
-                padding: 8,
-                marginHorizontal: 4,
-              }}
+              style={[
+                styles.forecastItem,
+                {
+                  backgroundColor: darkMode
+                    ? 'rgba(255,255,255,0.05)'
+                    : 'rgba(0,0,0,0.03)',
+                },
+              ]}
             >
               <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: 'bold',
-                  color: theme.subtextColor,
-                  marginBottom: 4,
-                }}
+                style={[styles.forecastTime, { color: theme.subtextColor }]}
               >
                 {formattedTime}
               </Text>
-              {getWeatherIcon(item.weather[0].icon, 28, theme.textColor)}
-              <Text
-                style={{
-                  fontSize: 16,
-                  fontWeight: 'bold',
-                  color: theme.textColor,
-                  marginTop: 4,
-                }}
-              >
+              {getWeatherIcon(item.weather[0].icon, 32, theme.textColor)}
+              <Text style={[styles.forecastTemp, { color: theme.textColor }]}>
                 {Math.round(item.main.temp)}°C
               </Text>
               <Text
-                style={{
-                  fontSize: 12,
-                  color: theme.subtextColor,
-                  marginTop: 2,
-                  textTransform: 'capitalize',
-                }}
+                style={[styles.forecastDesc, { color: theme.subtextColor }]}
               >
                 {item.weather[0].main}
               </Text>
             </View>
           )
         })}
-      </View>
+      </ScrollView>
 
-      {/* Dòng 4: Vùng Cảnh báo Thời tiết (nếu có) */}
-      {weatherAlert && (
+      {/* Phần 3: Cảnh báo thông minh (nếu có) */}
+      {smartAlert && (
         <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            padding: 12,
-            borderRadius: 8,
-            backgroundColor:
-              weatherAlert.severity === 'severe'
-                ? theme.errorColor
-                : theme.warningColor,
-          }}
+          style={[
+            styles.alertContainer,
+            {
+              backgroundColor:
+                smartAlert.severity === 'warning'
+                  ? theme.warningColor
+                  : theme.infoColor,
+            },
+          ]}
         >
-          <Ionicons
-            name="warning"
-            size={20}
-            color="#fff"
-            style={{ marginRight: 8 }}
-          />
-          <Text style={{ color: '#fff', fontSize: 14, flex: 1 }}>
-            {weatherAlert.message}
-          </Text>
+          <View style={styles.alertIconContainer}>
+            {smartAlert.type === 'rain' ? (
+              <MaterialCommunityIcons
+                name="weather-pouring"
+                size={24}
+                color="#fff"
+              />
+            ) : (
+              <Ionicons name="warning" size={24} color="#fff" />
+            )}
+          </View>
+          <Text style={styles.alertText}>{smartAlert.message}</Text>
+        </View>
+      )}
+
+      {/* Phần 4: Cảnh báo thời tiết từ API (nếu có và không có cảnh báo thông minh) */}
+      {!smartAlert && weatherAlert && (
+        <View
+          style={[
+            styles.alertContainer,
+            {
+              backgroundColor:
+                weatherAlert.severity === 'severe'
+                  ? theme.errorColor
+                  : theme.warningColor,
+            },
+          ]}
+        >
+          <View style={styles.alertIconContainer}>
+            <Ionicons name="warning" size={24} color="#fff" />
+          </View>
+          <Text style={styles.alertText}>{weatherAlert.message}</Text>
         </View>
       )}
     </TouchableOpacity>
@@ -390,7 +530,94 @@ const WeatherWidget = ({ onPress }) => {
 }
 
 const styles = StyleSheet.create({
-  // Styles removed to fix ESLint warnings
+  container: {
+    backgroundColor: '#fff', // Sẽ được ghi đè bởi theme.cardColor
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  currentWeatherRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  weatherIconContainer: {
+    marginRight: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  weatherInfoContainer: {
+    flex: 1,
+  },
+  temperature: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  weatherDescription: {
+    fontSize: 16,
+    textTransform: 'capitalize',
+    marginBottom: 2,
+  },
+  locationName: {
+    fontSize: 14,
+  },
+  refreshButton: {
+    padding: 10,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  forecastScrollView: {
+    marginBottom: 12,
+  },
+  forecastContainer: {
+    paddingVertical: 4,
+  },
+  forecastItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    padding: 12,
+    marginRight: 12,
+    minWidth: 80,
+  },
+  forecastTime: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  forecastTemp: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginTop: 8,
+  },
+  forecastDesc: {
+    fontSize: 12,
+    textTransform: 'capitalize',
+    marginTop: 4,
+  },
+  alertContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 12,
+    marginTop: 4,
+  },
+  alertIconContainer: {
+    marginRight: 12,
+  },
+  alertText: {
+    color: '#fff',
+    fontSize: 14,
+    flex: 1,
+    lineHeight: 20,
+  },
 })
 
 export default WeatherWidget

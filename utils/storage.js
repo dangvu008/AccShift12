@@ -40,6 +40,39 @@ class StorageManager {
           firstDayOfWeek: 'Mon', // 'Mon' hoặc 'Sun'
           showOnboarding: true,
           lastAppVersion: '1.0.0',
+          // Cài đặt tính toán OT
+          otThresholdEnabled: false, // Bật/tắt tính năng ngưỡng OT
+          otThresholdHours: 2, // Số giờ ngưỡng OT (mặc định: 2 giờ)
+          // Tỷ lệ OT sau ngưỡng cho các loại ngày
+          otRateWeekdayTier2: 200, // Tỷ lệ OT sau ngưỡng cho ngày thường (%)
+          otRateSaturdayTier2: 250, // Tỷ lệ OT sau ngưỡng cho thứ 7 (%)
+          otRateSundayTier2: 250, // Tỷ lệ OT sau ngưỡng cho chủ nhật (%)
+          otRateHolidayTier2: 350, // Tỷ lệ OT sau ngưỡng cho ngày lễ (%)
+          // Cài đặt tính toán OT đêm
+          nightWorkEnabled: true, // Bật/tắt tính năng tính giờ làm đêm
+          nightWorkStartTime: '22:00', // Thời gian bắt đầu ca đêm
+          nightWorkEndTime: '05:00', // Thời gian kết thúc ca đêm
+          nightWorkRate: 30, // Phụ cấp đêm (%)
+
+          // Cài đặt tỷ lệ OT cơ bản cho các loại ngày
+          otRateWeekday: 150, // Tỷ lệ OT cho ngày thường (%)
+          otRateSaturday: 200, // Tỷ lệ OT cho thứ 7 (%)
+          otRateSunday: 200, // Tỷ lệ OT cho chủ nhật (%)
+          otRateHoliday: 300, // Tỷ lệ OT cho ngày lễ (%)
+
+          // Quy tắc tính lương đêm/lễ/cuối tuần
+          nightOtCalculationRule: 'sum', // 'sum', 'multiply', 'fixed', 'base'
+          // 'sum': Tỷ lệ OT + Phụ cấp đêm (Ví dụ: 150% + 30% = 180%)
+          // 'multiply': Tỷ lệ OT * (1 + Phụ cấp đêm/100) (Ví dụ: 150% * 1.3 = 195%)
+          // 'fixed': Tỷ lệ cố định (sử dụng giá trị từ các trường dưới đây)
+          // 'base': Chỉ sử dụng tỷ lệ OT cơ bản (không tính phụ cấp đêm)
+
+          // Tỷ lệ cố định cho các loại giờ làm đêm (chỉ áp dụng khi nightOtCalculationRule = 'fixed')
+          fixedRateStandardNight: 130, // Tỷ lệ cố định cho giờ chuẩn làm đêm (%)
+          fixedRateOtWeekdayNight: 210, // Tỷ lệ cố định cho OT đêm ngày thường (%)
+          fixedRateOtSaturdayNight: 270, // Tỷ lệ cố định cho OT đêm thứ 7 (%)
+          fixedRateOtSundayNight: 270, // Tỷ lệ cố định cho OT đêm chủ nhật (%)
+          fixedRateOtHolidayNight: 390, // Tỷ lệ cố định cho OT đêm ngày lễ (%)
         })
       }
 

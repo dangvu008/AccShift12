@@ -804,15 +804,6 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
           />
         </TouchableOpacity>
 
-        {noteId && (
-          <TouchableOpacity
-            style={[styles.iconButton, styles.deleteButton]}
-            onPress={handleDelete}
-          >
-            <Ionicons name="trash-outline" size={24} color="#fff" />
-          </TouchableOpacity>
-        )}
-
         <TouchableOpacity
           style={[
             styles.iconButton,

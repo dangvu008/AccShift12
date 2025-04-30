@@ -240,6 +240,44 @@ export const translations = {
     'Enter title': 'Nhập tiêu đề',
     'Enter content': 'Nhập nội dung',
     'Select time': 'Chọn thời gian',
+    'Tiêu đề': 'Tiêu đề',
+    'Nội dung': 'Nội dung',
+    'Nhập tiêu đề': 'Nhập tiêu đề',
+    'Nhập nội dung ghi chú': 'Nhập nội dung ghi chú',
+    'Cài đặt nhắc nhở': 'Cài đặt nhắc nhở',
+    'Đặt lịch cụ thể': 'Đặt lịch cụ thể',
+    'Nhắc theo ca': 'Nhắc theo ca',
+    'Chọn thời gian nhắc nhở': 'Chọn thời gian nhắc nhở',
+    'Chọn ca làm việc': 'Chọn ca làm việc',
+    'Nhắc nhở sẽ được đặt trước 5 phút giờ xuất phát (departureTime) của (các) ca đã chọn.':
+      'Nhắc nhở sẽ được đặt trước 5 phút giờ xuất phát (departureTime) của (các) ca đã chọn.',
+    'Không có ca làm việc nào': 'Không có ca làm việc nào',
+    'Thời gian nhắc nhở phải là thời điểm trong tương lai':
+      'Thời gian nhắc nhở phải là thời điểm trong tương lai',
+    'Vui lòng chọn ít nhất một ca làm việc':
+      'Vui lòng chọn ít nhất một ca làm việc',
+    'Tiêu đề không được để trống': 'Tiêu đề không được để trống',
+    'Tiêu đề không được vượt quá 100 ký tự':
+      'Tiêu đề không được vượt quá 100 ký tự',
+    'Nội dung không được để trống': 'Nội dung không được để trống',
+    'Nội dung không được vượt quá 300 ký tự':
+      'Nội dung không được vượt quá 300 ký tự',
+    'Ghi chú trùng lặp': 'Ghi chú trùng lặp',
+    'Đã tồn tại ghi chú có cùng tiêu đề và nội dung. Bạn vẫn muốn lưu?':
+      'Đã tồn tại ghi chú có cùng tiêu đề và nội dung. Bạn vẫn muốn lưu?',
+    'Cập nhật ghi chú': 'Cập nhật ghi chú',
+    'Thêm ghi chú mới': 'Thêm ghi chú mới',
+    'Bạn có chắc chắn muốn cập nhật ghi chú này?':
+      'Bạn có chắc chắn muốn cập nhật ghi chú này?',
+    'Bạn có chắc chắn muốn thêm ghi chú mới này?':
+      'Bạn có chắc chắn muốn thêm ghi chú mới này?',
+    Hủy: 'Hủy',
+    Lưu: 'Lưu',
+    'Xóa ghi chú': 'Xóa ghi chú',
+    'Đang tải...': 'Đang tải...',
+    'Chỉnh Sửa Ghi Chú': 'Chỉnh Sửa Ghi Chú',
+    'Thêm Ghi Chú Mới': 'Thêm Ghi Chú Mới',
+    'Thêm/Sửa ghi chú': 'Thêm/Sửa ghi chú',
     'Use Custom Reminder Days': 'Sử dụng ngày nhắc nhở tùy chỉnh',
     'Select specific days for reminder': 'Chọn ngày cụ thể để nhắc nhở',
     'Link reminder to shifts': 'Liên kết nhắc nhở với ca làm việc',
@@ -343,6 +381,7 @@ export const translations = {
     'Vui lòng sửa các lỗi để tiếp tục': 'Vui lòng sửa các lỗi để tiếp tục',
     'Thêm mới': 'Thêm mới',
     'Cập nhật': 'Cập nhật',
+    Xong: 'Xong',
     'Nhắc nhở trước chấm công vào (phút)':
       'Nhắc nhở trước chấm công vào (phút)',
     'Nhắc nhở chấm công ra sau (phút)': 'Nhắc nhở chấm công ra sau (phút)',
@@ -613,6 +652,44 @@ export const translations = {
     'Enter title': 'Enter title',
     'Enter content': 'Enter content',
     'Select time': 'Select time',
+    'Tiêu đề': 'Title',
+    'Nội dung': 'Content',
+    'Nhập tiêu đề': 'Enter title',
+    'Nhập nội dung ghi chú': 'Enter note content',
+    'Cài đặt nhắc nhở': 'Reminder Settings',
+    'Đặt lịch cụ thể': 'Set Specific Time',
+    'Nhắc theo ca': 'Remind by Shift',
+    'Chọn thời gian nhắc nhở': 'Select reminder time',
+    'Chọn ca làm việc': 'Select work shifts',
+    'Nhắc nhở sẽ được đặt trước 5 phút giờ xuất phát (departureTime) của (các) ca đã chọn.':
+      'Reminders will be set 5 minutes before the departure time of selected shift(s).',
+    'Không có ca làm việc nào': 'No work shifts available',
+    'Thời gian nhắc nhở phải là thời điểm trong tương lai':
+      'Reminder time must be in the future',
+    'Vui lòng chọn ít nhất một ca làm việc':
+      'Please select at least one work shift',
+    'Tiêu đề không được để trống': 'Title cannot be empty',
+    'Tiêu đề không được vượt quá 100 ký tự':
+      'Title cannot exceed 100 characters',
+    'Nội dung không được để trống': 'Content cannot be empty',
+    'Nội dung không được vượt quá 300 ký tự':
+      'Content cannot exceed 300 characters',
+    'Ghi chú trùng lặp': 'Duplicate Note',
+    'Đã tồn tại ghi chú có cùng tiêu đề và nội dung. Bạn vẫn muốn lưu?':
+      'A note with the same title and content already exists. Do you still want to save?',
+    'Cập nhật ghi chú': 'Update Note',
+    'Thêm ghi chú mới': 'Add New Note',
+    'Bạn có chắc chắn muốn cập nhật ghi chú này?':
+      'Are you sure you want to update this note?',
+    'Bạn có chắc chắn muốn thêm ghi chú mới này?':
+      'Are you sure you want to add this new note?',
+    Hủy: 'Cancel',
+    Lưu: 'Save',
+    'Xóa ghi chú': 'Delete Note',
+    'Đang tải...': 'Loading...',
+    'Chỉnh Sửa Ghi Chú': 'Edit Note',
+    'Thêm Ghi Chú Mới': 'Add New Note',
+    'Thêm/Sửa ghi chú': 'Add/Edit Note',
     'Use Custom Reminder Days': 'Use Custom Reminder Days',
     'Select specific days for reminder': 'Select specific days for reminder',
     'Link reminder to shifts': 'Link reminder to shifts',
@@ -716,6 +793,7 @@ export const translations = {
     'Vui lòng sửa các lỗi để tiếp tục': 'Please fix the errors to continue',
     'Thêm mới': 'Add New',
     'Cập nhật': 'Update',
+    Xong: 'Done',
 
     // Navigation
     Home: 'Home',

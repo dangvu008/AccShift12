@@ -404,14 +404,20 @@ const WorkNotesSection = ({ navigation }) => {
         </Text>
         <View style={styles.headerActions}>
           <TouchableOpacity
-            style={styles.viewAllButton}
+            style={[styles.viewAllButton, darkMode && styles.darkViewAllButton]}
             onPress={() => navigation.navigate('Notes')}
+            activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Ionicons name="list" size={20} color="#8a56ff" />
+            <View style={styles.viewAllButtonContent}>
+              <Ionicons name="list" size={20} color="#8a56ff" />
+              <Text style={styles.viewAllButtonText}>{t('View All')}</Text>
+            </View>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.addNoteButton}
             onPress={handleAddNote}
+            activeOpacity={0.7}
           >
             <Ionicons name="add" size={24} color="#8a56ff" />
           </TouchableOpacity>
@@ -565,9 +571,25 @@ const styles = StyleSheet.create({
   viewAllButton: {
     padding: 8,
     marginRight: 8,
+    borderRadius: 20,
+    backgroundColor: '#f0e6ff',
+  },
+  darkViewAllButton: {
+    backgroundColor: '#3a2a5a',
+  },
+  viewAllButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  viewAllButtonText: {
+    color: '#8a56ff',
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 4,
   },
   addNoteButton: {
-    padding: 6,
+    padding: 8,
+    borderRadius: 20,
   },
   loadingContainer: {
     padding: 16,
