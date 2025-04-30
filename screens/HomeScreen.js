@@ -21,6 +21,7 @@ const HomeScreen = ({ navigation }) => {
   const {
     t,
     darkMode,
+    theme,
     currentShift,
     isWorking,
     workStartTime,
@@ -107,14 +108,20 @@ const HomeScreen = ({ navigation }) => {
   }
 
   return (
-    <ScrollView style={[styles.container, darkMode && styles.darkContainer]}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: theme.backgroundColor, padding: 16 }}
+    >
       {/* 1. Thanh trên cùng (Ngày/giờ, nút Cài đặt) */}
       <View style={styles.header}>
         <View style={styles.dateTimeContainer}>
-          <Text style={[styles.currentTime, darkMode && styles.darkText]}>
+          <Text
+            style={{ fontSize: 32, fontWeight: 'bold', color: theme.textColor }}
+          >
             {formatTimeDisplay(currentTime)}
           </Text>
-          <Text style={[styles.dateDisplay, darkMode && styles.darkSubtitle]}>
+          <Text
+            style={{ fontSize: 14, color: theme.subtextColor, marginTop: 4 }}
+          >
             {formatDateDisplay(currentTime)}
           </Text>
         </View>
@@ -128,13 +135,25 @@ const HomeScreen = ({ navigation }) => {
 
       {/* 3. Tên ca làm việc đang áp dụng */}
       <TouchableOpacity
-        style={[styles.shiftContainer, darkMode && styles.darkCard]}
+        style={{
+          backgroundColor: theme.cardColor,
+          borderRadius: 12,
+          padding: 16,
+          marginBottom: 16,
+        }}
         onPress={() => navigation.navigate('ShiftManagement')}
       >
-        <Text style={[styles.shiftText, darkMode && styles.darkText]}>
+        <Text
+          style={{
+            fontSize: 18,
+            fontWeight: 'bold',
+            color: theme.textColor,
+            marginBottom: 4,
+          }}
+        >
           {currentShift ? currentShift.name : t('No shift selected')}
         </Text>
-        <Text style={[styles.shiftTimeText, darkMode && styles.darkSubtitle]}>
+        <Text style={{ fontSize: 14, color: theme.subtextColor }}>
           {currentShift
             ? `${currentShift.startTime} - ${currentShift.endTime}`
             : ''}
@@ -143,23 +162,48 @@ const HomeScreen = ({ navigation }) => {
           <Ionicons
             name="chevron-forward"
             size={20}
-            color={darkMode ? '#aaa' : '#666'}
+            color={theme.subtextColor}
           />
         </View>
       </TouchableOpacity>
 
       {/* Hiển thị trạng thái làm việc nếu đang làm việc */}
       {isWorking && (
-        <View style={[styles.workStatusContainer, darkMode && styles.darkCard]}>
-          <View style={styles.checkMark}>
+        <View
+          style={{
+            backgroundColor: theme.cardColor,
+            borderRadius: 12,
+            padding: 16,
+            marginBottom: 16,
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}
+        >
+          <View
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: theme.primaryColor,
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginRight: 12,
+            }}
+          >
             <Ionicons name="checkmark" size={24} color="#fff" />
           </View>
-          <View style={styles.workStatusTextContainer}>
-            <Text style={[styles.workStatusText, darkMode && styles.darkText]}>
+          <View style={{ flex: 1 }}>
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: 'bold',
+                color: theme.textColor,
+              }}
+            >
               {t('Working')} {currentShift ? currentShift.name : ''}
             </Text>
             <Text
-              style={[styles.workDurationText, darkMode && styles.darkSubtitle]}
+              style={{ fontSize: 14, color: theme.subtextColor, marginTop: 4 }}
             >
               {t('Worked for')} {formatDuration(workDuration)}
             </Text>
@@ -173,20 +217,37 @@ const HomeScreen = ({ navigation }) => {
       {/* 6. Lịch sử bấm nút (được hiển thị trong MultiFunctionButton) */}
 
       {/* 7. Lưới trạng thái tuần */}
-      <View style={[styles.weeklyStatusContainer, darkMode && styles.darkCard]}>
-        <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, darkMode && styles.darkText]}>
+      <View
+        style={{
+          backgroundColor: theme.cardColor,
+          borderRadius: 12,
+          padding: 16,
+          marginBottom: 16,
+        }}
+      >
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 12,
+          }}
+        >
+          <Text
+            style={{ fontSize: 18, fontWeight: 'bold', color: theme.textColor }}
+          >
             {t('Weekly Status')}
           </Text>
           <TouchableOpacity
-            style={styles.viewStatsButton}
+            style={{
+              backgroundColor: theme.primaryColor,
+              borderRadius: 8,
+              paddingVertical: 4,
+              paddingHorizontal: 10,
+            }}
             onPress={() => navigation.navigate('AttendanceStats')}
           >
-            <Ionicons
-              name="chevron-forward"
-              size={24}
-              color={darkMode ? '#fff' : '#000'}
-            />
+            <Ionicons name="chevron-forward" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
         <WeeklyStatusGrid />

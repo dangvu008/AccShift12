@@ -14,7 +14,8 @@ import { getWeatherIcon } from '../utils/helpers'
 import weatherService from '../services/weatherService'
 
 const WeatherWidget = ({ onPress }) => {
-  const { darkMode, homeLocation, workLocation, t } = useContext(AppContext)
+  const { darkMode, theme, homeLocation, workLocation, t } =
+    useContext(AppContext)
   const [currentWeather, setCurrentWeather] = useState(null)
   const [forecast, setForecast] = useState([])
   const [weatherAlert, setWeatherAlert] = useState(null)
@@ -121,11 +122,15 @@ const WeatherWidget = ({ onPress }) => {
 
   if (loading) {
     return (
-      <View style={[styles.container, darkMode && styles.darkCard]}>
-        <ActivityIndicator
-          size="large"
-          color={darkMode ? '#8a56ff' : '#8a56ff'}
-        />
+      <View
+        style={{
+          backgroundColor: theme.cardColor,
+          borderRadius: 12,
+          padding: 16,
+          marginBottom: 16,
+        }}
+      >
+        <ActivityIndicator size="large" color={theme.primaryColor} />
       </View>
     )
   }
@@ -133,16 +138,24 @@ const WeatherWidget = ({ onPress }) => {
   if (!homeLocation && !workLocation) {
     return (
       <TouchableOpacity
-        style={[styles.container, darkMode && styles.darkCard]}
+        style={{
+          backgroundColor: theme.cardColor,
+          borderRadius: 12,
+          padding: 16,
+          marginBottom: 16,
+        }}
         onPress={onPress}
       >
-        <View style={styles.setupPrompt}>
-          <Ionicons
-            name="location-outline"
-            size={24}
-            color={darkMode ? '#fff' : '#000'}
-          />
-          <Text style={[styles.setupPromptText, darkMode && styles.darkText]}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+          }}
+        >
+          <Ionicons name="location-outline" size={24} color={theme.textColor} />
+          <Text style={{ fontSize: 16, color: theme.textColor, marginLeft: 8 }}>
             {t('Set up your location for weather information')}
           </Text>
         </View>
@@ -153,10 +166,22 @@ const WeatherWidget = ({ onPress }) => {
   if (!currentWeather) {
     return (
       <TouchableOpacity
-        style={[styles.container, darkMode && styles.darkCard]}
+        style={{
+          backgroundColor: theme.cardColor,
+          borderRadius: 12,
+          padding: 16,
+          marginBottom: 16,
+        }}
         onPress={onPress}
       >
-        <Text style={[styles.errorText, darkMode && styles.darkText]}>
+        <Text
+          style={{
+            fontSize: 16,
+            color: theme.textColor,
+            textAlign: 'center',
+            padding: 16,
+          }}
+        >
           {t('Unable to load weather data')}
         </Text>
       </TouchableOpacity>
@@ -193,36 +218,53 @@ const WeatherWidget = ({ onPress }) => {
 
   return (
     <TouchableOpacity
-      style={[styles.container, darkMode && styles.darkCard]}
+      style={{
+        backgroundColor: theme.cardColor,
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 16,
+      }}
       onPress={onPress}
     >
       {/* Dòng 1: Icon thời tiết hiện tại, Nhiệt độ hiện tại, Tên vị trí */}
-      <View style={styles.currentWeatherRow}>
-        <View style={styles.weatherIconContainer}>
-          {getWeatherIcon(
-            currentWeather.weather[0].icon,
-            40,
-            darkMode ? '#fff' : '#000'
-          )}
+      <View
+        style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}
+      >
+        <View style={{ marginRight: 16 }}>
+          {getWeatherIcon(currentWeather.weather[0].icon, 40, theme.textColor)}
         </View>
-        <View style={styles.weatherInfoContainer}>
-          <Text style={[styles.temperature, darkMode && styles.darkText]}>
+        <View style={{ flex: 1 }}>
+          <Text
+            style={{ fontSize: 24, fontWeight: 'bold', color: theme.textColor }}
+          >
             {Math.round(currentWeather.main.temp)}°C
           </Text>
-          <Text style={[styles.location, darkMode && styles.darkSubtitle]}>
+          <Text style={{ fontSize: 14, color: theme.subtextColor }}>
             {locationName}
           </Text>
         </View>
       </View>
 
       {/* Dòng 2: Mô tả ngắn gọn */}
-      <Text style={[styles.description, darkMode && styles.darkText]}>
+      <Text
+        style={{
+          fontSize: 16,
+          color: theme.textColor,
+          marginBottom: 12,
+          textTransform: 'capitalize',
+        }}
+      >
         {currentWeather.weather[0].description}
       </Text>
 
       {/* Dòng 3: Dự báo 3 giờ tiếp theo (cách 1 giờ) */}
-
-      <View style={styles.forecastContainer}>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          marginBottom: 12,
+        }}
+      >
         {forecast.map((item, index) => {
           const time = new Date(item.dt * 1000)
           const hours = time.getHours()
@@ -232,22 +274,47 @@ const WeatherWidget = ({ onPress }) => {
             .padStart(2, '0')}`
 
           return (
-            <View key={index} style={styles.forecastItem}>
+            <View
+              key={index}
+              style={{
+                alignItems: 'center',
+                flex: 1,
+                backgroundColor: darkMode
+                  ? 'rgba(255,255,255,0.05)'
+                  : 'rgba(0,0,0,0.03)',
+                borderRadius: 8,
+                padding: 8,
+                marginHorizontal: 4,
+              }}
+            >
               <Text
-                style={[styles.forecastTime, darkMode && styles.darkSubtitle]}
+                style={{
+                  fontSize: 14,
+                  fontWeight: 'bold',
+                  color: theme.subtextColor,
+                  marginBottom: 4,
+                }}
               >
                 {formattedTime}
               </Text>
-              {getWeatherIcon(
-                item.weather[0].icon,
-                28,
-                darkMode ? '#fff' : '#000'
-              )}
-              <Text style={[styles.forecastTemp, darkMode && styles.darkText]}>
+              {getWeatherIcon(item.weather[0].icon, 28, theme.textColor)}
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: 'bold',
+                  color: theme.textColor,
+                  marginTop: 4,
+                }}
+              >
                 {Math.round(item.main.temp)}°C
               </Text>
               <Text
-                style={[styles.forecastDesc, darkMode && styles.darkSubtitle]}
+                style={{
+                  fontSize: 12,
+                  color: theme.subtextColor,
+                  marginTop: 2,
+                  textTransform: 'capitalize',
+                }}
               >
                 {item.weather[0].main}
               </Text>
@@ -259,21 +326,26 @@ const WeatherWidget = ({ onPress }) => {
       {/* Dòng 4: Vùng Cảnh báo Thời tiết (nếu có) */}
       {weatherAlert && (
         <View
-          style={[
-            styles.alertContainer,
-            {
-              backgroundColor:
-                weatherAlert.severity === 'severe' ? '#e74c3c' : '#f39c12',
-            },
-          ]}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            padding: 12,
+            borderRadius: 8,
+            backgroundColor:
+              weatherAlert.severity === 'severe'
+                ? theme.errorColor
+                : theme.warningColor,
+          }}
         >
           <Ionicons
             name="warning"
             size={20}
             color="#fff"
-            style={styles.alertIcon}
+            style={{ marginRight: 8 }}
           />
-          <Text style={styles.alertText}>{weatherAlert.message}</Text>
+          <Text style={{ color: '#fff', fontSize: 14, flex: 1 }}>
+            {weatherAlert.message}
+          </Text>
         </View>
       )}
     </TouchableOpacity>

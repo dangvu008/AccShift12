@@ -47,16 +47,16 @@ const Stack = createStackNavigator()
 
 // Home stack navigator
 function HomeStack() {
-  // Import context to use t() function
-  const { t } = useContext(AppContext)
+  // Import context to use t() function and theme
+  const { t, theme } = useContext(AppContext)
 
   return (
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: '#8a56ff',
+          backgroundColor: theme.headerBackgroundColor,
         },
-        headerTintColor: '#fff',
+        headerTintColor: theme.headerTintColor,
         headerTitleStyle: {
           fontWeight: 'bold',
         },
@@ -117,16 +117,16 @@ function HomeStack() {
 
 // Shifts stack navigator
 function ShiftsStack() {
-  // Import context to use t() function
-  const { t } = useContext(AppContext)
+  // Import context to use t() function and theme
+  const { t, theme } = useContext(AppContext)
 
   return (
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: '#8a56ff',
+          backgroundColor: theme.headerBackgroundColor,
         },
-        headerTintColor: '#fff',
+        headerTintColor: theme.headerTintColor,
         headerTitleStyle: {
           fontWeight: 'bold',
         },
@@ -152,16 +152,16 @@ function ShiftsStack() {
 
 // Statistics stack navigator
 function StatisticsStack() {
-  // Import context to use t() function
-  const { t } = useContext(AppContext)
+  // Import context to use t() function and theme
+  const { t, theme } = useContext(AppContext)
 
   return (
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: '#8a56ff',
+          backgroundColor: theme.headerBackgroundColor,
         },
-        headerTintColor: '#fff',
+        headerTintColor: theme.headerTintColor,
         headerTitleStyle: {
           fontWeight: 'bold',
         },
@@ -203,16 +203,16 @@ function StatisticsStack() {
 
 // Settings stack navigator
 function SettingsStack() {
-  // Import context to use t() function
-  const { t } = useContext(AppContext)
+  // Import context to use t() function and theme
+  const { t, theme } = useContext(AppContext)
 
   return (
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: '#8a56ff',
+          backgroundColor: theme.headerBackgroundColor,
         },
-        headerTintColor: '#fff',
+        headerTintColor: theme.headerTintColor,
         headerTitleStyle: {
           fontWeight: 'bold',
         },
@@ -307,8 +307,8 @@ export default function App() {
 function AppContent(props) {
   // eslint-disable-next-line no-unused-vars
   const notification = props.notification
-  // Import context to use t() function and darkMode
-  const { t, darkMode } = useContext(AppContext)
+  // Import context to use t() function, darkMode and theme
+  const { t, darkMode, theme } = useContext(AppContext)
 
   return (
     <>
@@ -334,11 +334,11 @@ function AppContent(props) {
 
               return <Ionicons name={iconName} size={size} color={color} />
             },
-            tabBarActiveTintColor: '#8a56ff',
-            tabBarInactiveTintColor: 'gray',
+            tabBarActiveTintColor: theme.tabBarActiveColor,
+            tabBarInactiveTintColor: theme.tabBarInactiveColor,
             tabBarStyle: {
-              backgroundColor: darkMode ? '#121212' : '#fff',
-              borderTopColor: darkMode ? '#333' : '#ddd',
+              backgroundColor: theme.tabBarBackgroundColor,
+              borderTopColor: theme.tabBarBorderColor,
             },
           })
         }

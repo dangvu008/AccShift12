@@ -1,6 +1,13 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
-import { secureStore, secureRetrieve } from "./security"
-import { STORAGE_KEYS } from "../config/appConfig"
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { secureStore, secureRetrieve } from './security'
+import { STORAGE_KEYS } from '../config/appConfig'
+import { translations } from './translations'
+
+// Hàm dịch đơn giản, sử dụng ngôn ngữ mặc định là tiếng Việt
+const t = (key) => {
+  // Lấy ngôn ngữ từ AsyncStorage là bất đồng bộ, nên chúng ta sử dụng tiếng Việt làm mặc định
+  return translations['vi'][key] || key
+}
 
 /**
  * Lớp quản lý lưu trữ dữ liệu cho ứng dụng
@@ -16,23 +23,23 @@ class StorageManager {
       const userSettings = await this.getUserSettings()
       if (!userSettings) {
         await this.setUserSettings({
-          language: "vi",
-          theme: "dark",
-          multiButtonMode: "full", // 'full' hoặc 'simple'
+          language: 'vi',
+          theme: 'dark',
+          multiButtonMode: 'full', // 'full' hoặc 'simple'
           alarmSoundEnabled: true,
           alarmVibrationEnabled: true,
           weatherWarningEnabled: true,
           weatherLocation: {
             lat: 21.0278,
             lon: 105.8342,
-            name: "Hà Nội",
+            name: 'Hà Nội',
           },
           weatherCheckTimeOffset: 60, // phút
-          changeShiftReminderMode: "auto", // 'auto', 'manual', 'off'
-          timeFormat: "24h", // '12h' hoặc '24h'
-          firstDayOfWeek: "Mon", // 'Mon' hoặc 'Sun'
+          changeShiftReminderMode: 'auto', // 'auto', 'manual', 'off'
+          timeFormat: '24h', // '12h' hoặc '24h'
+          firstDayOfWeek: 'Mon', // 'Mon' hoặc 'Sun'
           showOnboarding: true,
-          lastAppVersion: "1.0.0",
+          lastAppVersion: '1.0.0',
         })
       }
 
@@ -41,13 +48,13 @@ class StorageManager {
       if (!shifts || shifts.length === 0) {
         await this.setShifts([
           {
-            id: "shift_1",
-            name: "Ca Hành Chính",
-            startTime: "08:00",
-            officeEndTime: "17:00",
-            endTime: "17:30",
-            departureTime: "07:30",
-            daysApplied: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+            id: 'shift_1',
+            name: 'Ca Hành Chính',
+            startTime: '08:00',
+            officeEndTime: '17:00',
+            endTime: '17:30',
+            departureTime: '07:30',
+            daysApplied: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
             remindBeforeStart: 15,
             remindAfterEnd: 15,
             showPunch: false,
@@ -57,13 +64,13 @@ class StorageManager {
             updatedAt: new Date().toISOString(),
           },
           {
-            id: "shift_2",
-            name: "Ca Sáng",
-            startTime: "06:00",
-            officeEndTime: "14:00",
-            endTime: "14:30",
-            departureTime: "05:30",
-            daysApplied: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+            id: 'shift_2',
+            name: 'Ca Sáng',
+            startTime: '06:00',
+            officeEndTime: '14:00',
+            endTime: '14:30',
+            departureTime: '05:30',
+            daysApplied: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
             remindBeforeStart: 15,
             remindAfterEnd: 15,
             showPunch: false,
@@ -73,13 +80,13 @@ class StorageManager {
             updatedAt: new Date().toISOString(),
           },
           {
-            id: "shift_3",
-            name: "Ca Chiều",
-            startTime: "14:00",
-            officeEndTime: "22:00",
-            endTime: "22:30",
-            departureTime: "13:30",
-            daysApplied: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+            id: 'shift_3',
+            name: 'Ca Chiều',
+            startTime: '14:00',
+            officeEndTime: '22:00',
+            endTime: '22:30',
+            departureTime: '13:30',
+            daysApplied: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
             remindBeforeStart: 15,
             remindAfterEnd: 15,
             showPunch: false,
@@ -99,7 +106,7 @@ class StorageManager {
 
       return true
     } catch (error) {
-      console.error("Lỗi khởi tạo lưu trữ:", error)
+      console.error(t('Error initializing storage'), error)
       return false
     }
   }
@@ -110,13 +117,15 @@ class StorageManager {
    */
   async getUserSettings() {
     try {
-      const settingsJson = await AsyncStorage.getItem(STORAGE_KEYS.USER_SETTINGS)
+      const settingsJson = await AsyncStorage.getItem(
+        STORAGE_KEYS.USER_SETTINGS
+      )
       if (!settingsJson) return null
 
       const settings = JSON.parse(settingsJson)
       return settings
     } catch (error) {
-      console.error("Lỗi khi lấy cài đặt người dùng:", error)
+      console.error(t('Error loading settings'), error)
       return null
     }
   }
@@ -128,10 +137,13 @@ class StorageManager {
    */
   async setUserSettings(settings) {
     try {
-      await AsyncStorage.setItem(STORAGE_KEYS.USER_SETTINGS, JSON.stringify(settings))
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.USER_SETTINGS,
+        JSON.stringify(settings)
+      )
       return true
     } catch (error) {
-      console.error("Lỗi khi lưu cài đặt người dùng:", error)
+      console.error(t('Error saving settings'), error)
       return false
     }
   }
@@ -147,7 +159,7 @@ class StorageManager {
       const updatedSettings = { ...currentSettings, ...partialSettings }
       return await this.setUserSettings(updatedSettings)
     } catch (error) {
-      console.error("Lỗi khi cập nhật cài đặt người dùng:", error)
+      console.error('Lỗi khi cập nhật cài đặt người dùng:', error)
       return false
     }
   }
@@ -164,7 +176,7 @@ class StorageManager {
       const shifts = JSON.parse(shiftsJson)
       return Array.isArray(shifts) ? shifts : []
     } catch (error) {
-      console.error("Lỗi khi lấy danh sách ca làm việc:", error)
+      console.error('Lỗi khi lấy danh sách ca làm việc:', error)
       return []
     }
   }
@@ -177,14 +189,17 @@ class StorageManager {
   async setShifts(shifts) {
     try {
       if (!Array.isArray(shifts)) {
-        console.error("Dữ liệu ca làm việc không hợp lệ")
+        console.error('Dữ liệu ca làm việc không hợp lệ')
         return false
       }
 
-      await AsyncStorage.setItem(STORAGE_KEYS.SHIFT_LIST, JSON.stringify(shifts))
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.SHIFT_LIST,
+        JSON.stringify(shifts)
+      )
       return true
     } catch (error) {
-      console.error("Lỗi khi lưu danh sách ca làm việc:", error)
+      console.error('Lỗi khi lưu danh sách ca làm việc:', error)
       return false
     }
   }
@@ -199,7 +214,7 @@ class StorageManager {
       const shifts = await this.getShifts()
       return shifts.find((shift) => shift.id === id) || null
     } catch (error) {
-      console.error("Lỗi khi lấy ca làm việc theo ID:", error)
+      console.error('Lỗi khi lấy ca làm việc theo ID:', error)
       return null
     }
   }
@@ -225,7 +240,7 @@ class StorageManager {
       await this.setShifts(shifts)
       return newShift
     } catch (error) {
-      console.error("Lỗi khi thêm ca làm việc:", error)
+      console.error('Lỗi khi thêm ca làm việc:', error)
       return null
     }
   }
@@ -241,7 +256,7 @@ class StorageManager {
       const index = shifts.findIndex((shift) => shift.id === updatedShift.id)
 
       if (index === -1) {
-        console.error("Không tìm thấy ca làm việc cần cập nhật")
+        console.error('Không tìm thấy ca làm việc cần cập nhật')
         return null
       }
 
@@ -252,7 +267,7 @@ class StorageManager {
       await this.setShifts(shifts)
       return updatedShift
     } catch (error) {
-      console.error("Lỗi khi cập nhật ca làm việc:", error)
+      console.error('Lỗi khi cập nhật ca làm việc:', error)
       return null
     }
   }
@@ -268,7 +283,7 @@ class StorageManager {
       const filteredShifts = shifts.filter((shift) => shift.id !== id)
 
       if (filteredShifts.length === shifts.length) {
-        console.error("Không tìm thấy ca làm việc cần xóa")
+        console.error('Không tìm thấy ca làm việc cần xóa')
         return false
       }
 
@@ -282,7 +297,7 @@ class StorageManager {
 
       return true
     } catch (error) {
-      console.error("Lỗi khi xóa ca làm việc:", error)
+      console.error('Lỗi khi xóa ca làm việc:', error)
       return false
     }
   }
@@ -295,7 +310,7 @@ class StorageManager {
     try {
       return await AsyncStorage.getItem(STORAGE_KEYS.ACTIVE_SHIFT_ID)
     } catch (error) {
-      console.error("Lỗi khi lấy ID ca làm việc đang áp dụng:", error)
+      console.error('Lỗi khi lấy ID ca làm việc đang áp dụng:', error)
       return null
     }
   }
@@ -314,7 +329,7 @@ class StorageManager {
       }
       return true
     } catch (error) {
-      console.error("Lỗi khi đặt ID ca làm việc đang áp dụng:", error)
+      console.error('Lỗi khi đặt ID ca làm việc đang áp dụng:', error)
       return false
     }
   }
@@ -330,7 +345,7 @@ class StorageManager {
 
       return await this.getShiftById(activeShiftId)
     } catch (error) {
-      console.error("Lỗi khi lấy ca làm việc đang áp dụng:", error)
+      console.error('Lỗi khi lấy ca làm việc đang áp dụng:', error)
       return null
     }
   }
@@ -364,7 +379,7 @@ class StorageManager {
   async setAttendanceLogs(date, logs) {
     try {
       if (!Array.isArray(logs)) {
-        console.error("Dữ liệu log chấm công không hợp lệ")
+        console.error('Dữ liệu log chấm công không hợp lệ')
         return false
       }
 
@@ -491,7 +506,7 @@ class StorageManager {
       const notes = JSON.parse(notesJson)
       return Array.isArray(notes) ? notes : []
     } catch (error) {
-      console.error("Lỗi khi lấy danh sách ghi chú:", error)
+      console.error('Lỗi khi lấy danh sách ghi chú:', error)
       return []
     }
   }
@@ -504,14 +519,14 @@ class StorageManager {
   async setNotes(notes) {
     try {
       if (!Array.isArray(notes)) {
-        console.error("Dữ liệu ghi chú không hợp lệ")
+        console.error('Dữ liệu ghi chú không hợp lệ')
         return false
       }
 
       await AsyncStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify(notes))
       return true
     } catch (error) {
-      console.error("Lỗi khi lưu danh sách ghi chú:", error)
+      console.error('Lỗi khi lưu danh sách ghi chú:', error)
       return false
     }
   }
@@ -526,7 +541,7 @@ class StorageManager {
       const notes = await this.getNotes()
       return notes.find((note) => note.id === id) || null
     } catch (error) {
-      console.error("Lỗi khi lấy ghi chú theo ID:", error)
+      console.error('Lỗi khi lấy ghi chú theo ID:', error)
       return null
     }
   }
@@ -554,7 +569,7 @@ class StorageManager {
       await this.setNotes(notes)
       return newNote
     } catch (error) {
-      console.error("Lỗi khi thêm ghi chú:", error)
+      console.error('Lỗi khi thêm ghi chú:', error)
       return null
     }
   }
@@ -570,7 +585,7 @@ class StorageManager {
       const index = notes.findIndex((note) => note.id === updatedNote.id)
 
       if (index === -1) {
-        console.error("Không tìm thấy ghi chú cần cập nhật")
+        console.error('Không tìm thấy ghi chú cần cập nhật')
         return null
       }
 
@@ -581,7 +596,7 @@ class StorageManager {
       await this.setNotes(notes)
       return updatedNote
     } catch (error) {
-      console.error("Lỗi khi cập nhật ghi chú:", error)
+      console.error('Lỗi khi cập nhật ghi chú:', error)
       return null
     }
   }
@@ -597,14 +612,14 @@ class StorageManager {
       const filteredNotes = notes.filter((note) => note.id !== id)
 
       if (filteredNotes.length === notes.length) {
-        console.error("Không tìm thấy ghi chú cần xóa")
+        console.error('Không tìm thấy ghi chú cần xóa')
         return false
       }
 
       await this.setNotes(filteredNotes)
       return true
     } catch (error) {
-      console.error("Lỗi khi xóa ghi chú:", error)
+      console.error(t('Error when deleting note'), error)
       return false
     }
   }
@@ -621,7 +636,7 @@ class StorageManager {
       const index = notes.findIndex((note) => note.id === id)
 
       if (index === -1) {
-        console.error("Không tìm thấy ghi chú cần cập nhật")
+        console.error('Không tìm thấy ghi chú cần cập nhật')
         return false
       }
 
@@ -629,7 +644,7 @@ class StorageManager {
       await this.setNotes(notes)
       return true
     } catch (error) {
-      console.error("Lỗi khi cập nhật thời gian nhắc nhở ghi chú:", error)
+      console.error('Lỗi khi cập nhật thời gian nhắc nhở ghi chú:', error)
       return false
     }
   }
@@ -642,7 +657,7 @@ class StorageManager {
     try {
       return await AsyncStorage.getItem(STORAGE_KEYS.LAST_AUTO_RESET_TIME)
     } catch (error) {
-      console.error("Lỗi khi lấy thời gian reset tự động cuối cùng:", error)
+      console.error('Lỗi khi lấy thời gian reset tự động cuối cùng:', error)
       return null
     }
   }
@@ -657,7 +672,7 @@ class StorageManager {
       await AsyncStorage.setItem(STORAGE_KEYS.LAST_AUTO_RESET_TIME, timestamp)
       return true
     } catch (error) {
-      console.error("Lỗi khi đặt thời gian reset tự động cuối cùng:", error)
+      console.error('Lỗi khi đặt thời gian reset tự động cuối cùng:', error)
       return false
     }
   }
@@ -671,7 +686,7 @@ class StorageManager {
       const stateJson = await secureRetrieve(STORAGE_KEYS.WEATHER_API_STATE)
       return stateJson || null
     } catch (error) {
-      console.error("Lỗi khi lấy trạng thái API key thời tiết:", error)
+      console.error('Lỗi khi lấy trạng thái API key thời tiết:', error)
       return null
     }
   }
@@ -686,7 +701,7 @@ class StorageManager {
       await secureStore(STORAGE_KEYS.WEATHER_API_STATE, state)
       return true
     } catch (error) {
-      console.error("Lỗi khi lưu trạng thái API key thời tiết:", error)
+      console.error('Lỗi khi lưu trạng thái API key thời tiết:', error)
       return false
     }
   }
@@ -714,7 +729,7 @@ class StorageManager {
 
       return cache.data
     } catch (error) {
-      console.error("Lỗi khi lấy cache dữ liệu thời tiết:", error)
+      console.error(t('Error in weather data fetching process'), error)
       return null
     }
   }
@@ -738,7 +753,7 @@ class StorageManager {
       await AsyncStorage.setItem(cacheKey, JSON.stringify(cache))
       return true
     } catch (error) {
-      console.error("Lỗi khi lưu cache dữ liệu thời tiết:", error)
+      console.error('Lỗi khi lưu cache dữ liệu thời tiết:', error)
       return false
     }
   }
@@ -750,7 +765,9 @@ class StorageManager {
   async clearWeatherCache() {
     try {
       const keys = await AsyncStorage.getAllKeys()
-      const weatherCacheKeys = keys.filter((key) => key.startsWith(STORAGE_KEYS.WEATHER_CACHE_PREFIX))
+      const weatherCacheKeys = keys.filter((key) =>
+        key.startsWith(STORAGE_KEYS.WEATHER_CACHE_PREFIX)
+      )
 
       if (weatherCacheKeys.length > 0) {
         await AsyncStorage.multiRemove(weatherCacheKeys)
@@ -758,7 +775,7 @@ class StorageManager {
 
       return true
     } catch (error) {
-      console.error("Lỗi khi xóa cache dữ liệu thời tiết:", error)
+      console.error('Lỗi khi xóa cache dữ liệu thời tiết:', error)
       return false
     }
   }
@@ -775,7 +792,7 @@ class StorageManager {
       }
       return true
     } catch (error) {
-      console.error("Lỗi khi khởi tạo cấu trúc ghi chú:", error)
+      console.error('Lỗi khi khởi tạo cấu trúc ghi chú:', error)
       return false
     }
   }
@@ -816,7 +833,7 @@ class StorageManager {
       await AsyncStorage.clear()
       return true
     } catch (error) {
-      console.error("Lỗi khi xóa tất cả dữ liệu:", error)
+      console.error('Lỗi khi xóa tất cả dữ liệu:', error)
       return false
     }
   }
@@ -836,7 +853,7 @@ class StorageManager {
       // Chuyển đổi thành đối tượng
       const backupData = {
         timestamp: new Date().toISOString(),
-        version: "1.0.0",
+        version: '1.0.0',
         data: {},
       }
 
@@ -859,12 +876,12 @@ class StorageManager {
           backupData.data[STORAGE_KEYS.WEATHER_API_STATE] = weatherApiState
         }
       } catch (error) {
-        console.warn("Không thể sao lưu dữ liệu bảo mật:", error)
+        console.warn('Không thể sao lưu dữ liệu bảo mật:', error)
       }
 
       return backupData
     } catch (error) {
-      console.error("Lỗi khi sao lưu dữ liệu:", error)
+      console.error('Lỗi khi sao lưu dữ liệu:', error)
       return null
     }
   }
@@ -877,7 +894,7 @@ class StorageManager {
   async restoreData(backupData) {
     try {
       if (!backupData || !backupData.data) {
-        console.error("Dữ liệu sao lưu không hợp lệ")
+        console.error('Dữ liệu sao lưu không hợp lệ')
         return false
       }
 
@@ -890,18 +907,23 @@ class StorageManager {
           // Bỏ qua dữ liệu bảo mật, sẽ xử lý riêng
           if (key === STORAGE_KEYS.WEATHER_API_STATE) continue
 
-          await AsyncStorage.setItem(key, typeof value === "string" ? value : JSON.stringify(value))
+          await AsyncStorage.setItem(
+            key,
+            typeof value === 'string' ? value : JSON.stringify(value)
+          )
         }
       }
 
       // Khôi phục dữ liệu bảo mật (nếu có)
       if (backupData.data[STORAGE_KEYS.WEATHER_API_STATE]) {
-        await this.setWeatherApiState(backupData.data[STORAGE_KEYS.WEATHER_API_STATE])
+        await this.setWeatherApiState(
+          backupData.data[STORAGE_KEYS.WEATHER_API_STATE]
+        )
       }
 
       return true
     } catch (error) {
-      console.error("Lỗi khi khôi phục dữ liệu:", error)
+      console.error('Lỗi khi khôi phục dữ liệu:', error)
       return false
     }
   }

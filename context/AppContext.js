@@ -24,6 +24,8 @@ import locationUtils from '../utils/location'
 import weatherAlertService from '../services/weatherAlertService'
 // Import STORAGE_KEYS
 import { STORAGE_KEYS } from '../utils/constants'
+// Import theme
+import { getTheme } from '../utils/theme'
 
 export const AppContext = createContext()
 
@@ -53,6 +55,9 @@ export const AppProvider = ({ children }) => {
   const [isWorking, setIsWorking] = useState(false)
   const [workStartTime, setWorkStartTime] = useState(null)
   const [alarmPermissionGranted, setAlarmPermissionGranted] = useState(false)
+
+  // Lấy theme dựa trên chế độ sáng/tối
+  const theme = getTheme(darkMode)
 
   // Location states
   const [homeLocation, setHomeLocation] = useState(null)
@@ -1114,6 +1119,8 @@ export const AppProvider = ({ children }) => {
         isWorking,
         workStartTime,
         alarmPermissionGranted,
+        // Theme
+        theme,
         // Location states
         homeLocation,
         workLocation,

@@ -49,7 +49,6 @@ const AddEditShiftScreen = ({ route, navigation }) => {
   const [remindBeforeStart, setRemindBeforeStart] = useState('15')
   const [remindAfterEnd, setRemindAfterEnd] = useState('15')
   const [isActive, setIsActive] = useState(true)
-  const [isDefault, setIsDefault] = useState(false)
   const [showPunch, setShowPunch] = useState(true)
   const [daysApplied, setDaysApplied] = useState(['T2', 'T3', 'T4', 'T5', 'T6'])
 
@@ -63,6 +62,14 @@ const AddEditShiftScreen = ({ route, navigation }) => {
   const [showOfficeEndTimePicker, setShowOfficeEndTimePicker] = useState(false)
   const [showEndTimePicker, setShowEndTimePicker] = useState(false)
   const [pickerMode, setPickerMode] = useState(null)
+
+  // Reminder dropdown state
+  const [showRemindBeforeDropdown, setShowRemindBeforeDropdown] =
+    useState(false)
+  const [showRemindAfterDropdown, setShowRemindAfterDropdown] = useState(false)
+
+  // Reminder options
+  const reminderOptions = ['10', '15', '30']
 
   // Validation state
   const [errors, setErrors] = useState({})
@@ -126,7 +133,6 @@ const AddEditShiftScreen = ({ route, navigation }) => {
           setRemindBeforeStart(shift.remindBeforeStart?.toString() || '15')
           setRemindAfterEnd(shift.remindAfterEnd?.toString() || '15')
           setIsActive(shift.isActive !== false)
-          setIsDefault(shift.isDefault === true)
           setShowPunch(shift.showPunch !== false)
           setDaysApplied(shift.daysApplied || ['T2', 'T3', 'T4', 'T5', 'T6'])
         }
@@ -617,7 +623,6 @@ const AddEditShiftScreen = ({ route, navigation }) => {
               setRemindBeforeStart('15')
               setRemindAfterEnd('15')
               setIsActive(true)
-              setIsDefault(false)
               setShowPunch(true)
               setDaysApplied(['T2', 'T3', 'T4', 'T5', 'T6'])
             }
@@ -671,14 +676,6 @@ const AddEditShiftScreen = ({ route, navigation }) => {
                 )
                 let shifts = shiftsData ? JSON.parse(shiftsData) : []
 
-                // If isDefault is true, set all other shifts to not default
-                if (isDefault) {
-                  shifts = shifts.map((shift) => ({
-                    ...shift,
-                    isDefault: false,
-                  }))
-                }
-
                 const newShift = {
                   id: isEditing ? shiftId : Date.now().toString(),
                   name: shiftName.trim(),
@@ -690,7 +687,6 @@ const AddEditShiftScreen = ({ route, navigation }) => {
                   remindBeforeStart: parseInt(remindBeforeStart, 10),
                   remindAfterEnd: parseInt(remindAfterEnd, 10),
                   isActive,
-                  isDefault,
                   showPunch,
                   daysApplied,
                   updatedAt: new Date().toISOString(),
@@ -1070,21 +1066,72 @@ const AddEditShiftScreen = ({ route, navigation }) => {
             <Text style={[styles.label, darkMode && styles.darkLabel]}>
               {t('Nhắc nhở trước chấm công vào (phút)')}
             </Text>
-            <TextInput
+            <TouchableOpacity
               style={[
                 styles.input,
+                styles.timeInput,
                 darkMode && styles.darkInput,
                 errors.remindBeforeStart && styles.inputError,
               ]}
-              value={remindBeforeStart}
-              onChangeText={(text) => {
-                setRemindBeforeStart(text)
-                setIsFormDirty(true)
-              }}
-              keyboardType="numeric"
-              placeholder="15"
-              placeholderTextColor={darkMode ? '#666' : '#999'}
-            />
+              onPress={() =>
+                setShowRemindBeforeDropdown(!showRemindBeforeDropdown)
+              }
+            >
+              <Text style={[styles.timeText, darkMode && styles.darkTimeText]}>
+                {remindBeforeStart}
+              </Text>
+              <Ionicons
+                name="chevron-down-outline"
+                size={24}
+                color={darkMode ? '#fff' : '#333'}
+              />
+            </TouchableOpacity>
+            {showRemindBeforeDropdown && (
+              <View
+                style={[
+                  styles.dropdownContainer,
+                  darkMode && styles.darkDropdownContainer,
+                ]}
+              >
+                {reminderOptions.map((option) => (
+                  <TouchableOpacity
+                    key={option}
+                    style={[
+                      styles.dropdownItem,
+                      remindBeforeStart === option &&
+                        styles.dropdownItemSelected,
+                      darkMode && styles.darkDropdownItem,
+                      remindBeforeStart === option &&
+                        darkMode &&
+                        styles.darkDropdownItemSelected,
+                    ]}
+                    onPress={() => {
+                      setRemindBeforeStart(option)
+                      setShowRemindBeforeDropdown(false)
+                      setIsFormDirty(true)
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.dropdownItemText,
+                        remindBeforeStart === option &&
+                          styles.dropdownItemTextSelected,
+                        darkMode && styles.darkDropdownItemText,
+                      ]}
+                    >
+                      {option}
+                    </Text>
+                    {remindBeforeStart === option && (
+                      <Ionicons
+                        name="checkmark"
+                        size={20}
+                        color={darkMode ? '#fff' : '#8a56ff'}
+                      />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
             {errors.remindBeforeStart && (
               <Text style={styles.errorText}>{errors.remindBeforeStart}</Text>
             )}
@@ -1095,21 +1142,71 @@ const AddEditShiftScreen = ({ route, navigation }) => {
             <Text style={[styles.label, darkMode && styles.darkLabel]}>
               {t('Nhắc nhở chấm công ra sau (phút)')}
             </Text>
-            <TextInput
+            <TouchableOpacity
               style={[
                 styles.input,
+                styles.timeInput,
                 darkMode && styles.darkInput,
                 errors.remindAfterEnd && styles.inputError,
               ]}
-              value={remindAfterEnd}
-              onChangeText={(text) => {
-                setRemindAfterEnd(text)
-                setIsFormDirty(true)
-              }}
-              keyboardType="numeric"
-              placeholder="15"
-              placeholderTextColor={darkMode ? '#666' : '#999'}
-            />
+              onPress={() =>
+                setShowRemindAfterDropdown(!showRemindAfterDropdown)
+              }
+            >
+              <Text style={[styles.timeText, darkMode && styles.darkTimeText]}>
+                {remindAfterEnd}
+              </Text>
+              <Ionicons
+                name="chevron-down-outline"
+                size={24}
+                color={darkMode ? '#fff' : '#333'}
+              />
+            </TouchableOpacity>
+            {showRemindAfterDropdown && (
+              <View
+                style={[
+                  styles.dropdownContainer,
+                  darkMode && styles.darkDropdownContainer,
+                ]}
+              >
+                {reminderOptions.map((option) => (
+                  <TouchableOpacity
+                    key={option}
+                    style={[
+                      styles.dropdownItem,
+                      remindAfterEnd === option && styles.dropdownItemSelected,
+                      darkMode && styles.darkDropdownItem,
+                      remindAfterEnd === option &&
+                        darkMode &&
+                        styles.darkDropdownItemSelected,
+                    ]}
+                    onPress={() => {
+                      setRemindAfterEnd(option)
+                      setShowRemindAfterDropdown(false)
+                      setIsFormDirty(true)
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.dropdownItemText,
+                        remindAfterEnd === option &&
+                          styles.dropdownItemTextSelected,
+                        darkMode && styles.darkDropdownItemText,
+                      ]}
+                    >
+                      {option}
+                    </Text>
+                    {remindAfterEnd === option && (
+                      <Ionicons
+                        name="checkmark"
+                        size={20}
+                        color={darkMode ? '#fff' : '#8a56ff'}
+                      />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
             {errors.remindAfterEnd && (
               <Text style={styles.errorText}>{errors.remindAfterEnd}</Text>
             )}
@@ -1169,22 +1266,6 @@ const AddEditShiftScreen = ({ route, navigation }) => {
               }}
               trackColor={{ false: '#767577', true: '#8a56ff' }}
               thumbColor={isActive ? '#f4f3f4' : '#f4f3f4'}
-            />
-          </View>
-
-          {/* Default Switch */}
-          <View style={styles.switchContainer}>
-            <Text style={[styles.switchLabel, darkMode && styles.darkLabel]}>
-              {t('Đặt làm mặc định')}
-            </Text>
-            <Switch
-              value={isDefault}
-              onValueChange={(value) => {
-                setIsDefault(value)
-                setIsFormDirty(true)
-              }}
-              trackColor={{ false: '#767577', true: '#8a56ff' }}
-              thumbColor={isDefault ? '#f4f3f4' : '#f4f3f4'}
             />
           </View>
 
@@ -1468,6 +1549,55 @@ const styles = StyleSheet.create({
   },
   iosPicker: {
     height: 200,
+  },
+  dropdownContainer: {
+    position: 'absolute',
+    top: 88,
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    zIndex: 1000,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  darkDropdownContainer: {
+    backgroundColor: '#222',
+    borderColor: '#444',
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  darkDropdownItem: {
+    borderBottomColor: '#333',
+  },
+  dropdownItemSelected: {
+    backgroundColor: '#f0f0ff',
+  },
+  darkDropdownItemSelected: {
+    backgroundColor: '#333355',
+  },
+  dropdownItemText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  dropdownItemTextSelected: {
+    color: '#8a56ff',
+    fontWeight: '500',
+  },
+  darkDropdownItemText: {
+    color: '#f0f0f0',
   },
 })
 

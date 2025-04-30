@@ -5,6 +5,11 @@ export const translations = {
     'Shift Name': 'Tên ca',
     'Start Time': 'Giờ bắt đầu',
     'End Time': 'Giờ kết thúc',
+
+    // Security messages
+    'Device is rooted/jailbroken, data may not be secure':
+      'Thiết bị đã bị root/jailbreak, dữ liệu có thể không an toàn',
+    'App may have been modified': 'Ứng dụng có thể đã bị sửa đổi',
     'Administrative End Time': 'Giờ kết thúc hành chính',
     'Days Applied': 'Các ngày áp dụng',
     'Reminder Before Work': 'Nhắc nhở trước ca',
@@ -112,6 +117,27 @@ export const translations = {
     'Weather Alert': 'Cảnh báo thời tiết',
     'Affected shifts': 'Ca làm việc bị ảnh hưởng',
     'No weather alerts at this time': 'Không có cảnh báo thời tiết vào lúc này',
+    'Error initializing Weather Service': 'Lỗi khi khởi tạo Weather Service',
+    'Abnormally high temperature': 'Nhiệt độ cao bất thường',
+    'Drink plenty of water and avoid outdoor activities':
+      'Hãy uống nhiều nước và tránh hoạt động ngoài trời',
+    'Abnormally low temperature': 'Nhiệt độ thấp bất thường',
+    'Dress warmly and limit time outdoors':
+      'Mặc ấm và hạn chế thời gian ở ngoài trời',
+    'Strong winds': 'Gió mạnh',
+    'Be cautious of flying debris and avoid open areas':
+      'Cẩn thận với các vật bay và tránh khu vực trống trải',
+    'Thunderstorm detected': 'Phát hiện giông bão',
+    'Seek shelter indoors and avoid electrical equipment':
+      'Tìm nơi trú ẩn trong nhà và tránh các thiết bị điện',
+    'Heavy rain': 'Mưa lớn',
+    'Be aware of flooding and poor visibility':
+      'Cẩn thận với ngập lụt và tầm nhìn kém',
+    Snowfall: 'Tuyết rơi',
+    'Roads may be slippery, drive carefully':
+      'Đường có thể trơn trượt, lái xe cẩn thận',
+    'Error getting weather alerts': 'Lỗi khi lấy danh sách cảnh báo',
+    'Error clearing all alerts': 'Lỗi khi xóa tất cả cảnh báo',
     'API Usage Information': 'Thông tin sử dụng API',
     'Free tier limits': 'Giới hạn gói miễn phí',
     'requests/minute': 'yêu cầu/phút',
@@ -294,6 +320,21 @@ export const translations = {
     'Failed to clean up old photos.': 'Không thể dọn dẹp ảnh cũ.',
     'An unexpected error occurred.': 'Đã xảy ra lỗi không mong muốn.',
 
+    // Storage and System
+    'Error loading settings': 'Lỗi khi tải cài đặt',
+    'Error saving settings': 'Lỗi khi lưu cài đặt',
+    'Error initializing storage': 'Lỗi khi khởi tạo lưu trữ',
+    'Use shared location': 'Dùng chung vị trí',
+    'Use separate location': 'Dùng riêng vị trí',
+    'Weather location confirmation': 'Xác nhận vị trí thời tiết',
+    'You are using simple button mode. Do you want to use a single location (home location) for all weather alerts?':
+      'Bạn đang sử dụng chế độ nút đơn giản. Bạn có muốn sử dụng chung một vị trí (vị trí nhà) cho tất cả cảnh báo thời tiết không?',
+    'Error when deleting note': 'Lỗi khi xóa ghi chú',
+    'Cannot delete note. Please try again.':
+      'Không thể xóa ghi chú. Vui lòng thử lại.',
+    'Error in weather data fetching process':
+      'Lỗi trong quá trình lấy dữ liệu thời tiết',
+
     // Các chuỗi mới thêm vào
     'Xác nhận đặt lại': 'Xác nhận đặt lại',
     'Bạn có chắc chắn muốn đặt lại tất cả các trường về giá trị ban đầu không?':
@@ -302,6 +343,10 @@ export const translations = {
     'Vui lòng sửa các lỗi để tiếp tục': 'Vui lòng sửa các lỗi để tiếp tục',
     'Thêm mới': 'Thêm mới',
     'Cập nhật': 'Cập nhật',
+    'Nhắc nhở trước chấm công vào (phút)':
+      'Nhắc nhở trước chấm công vào (phút)',
+    'Nhắc nhở chấm công ra sau (phút)': 'Nhắc nhở chấm công ra sau (phút)',
+    'Chọn thời gian nhắc nhở': 'Chọn thời gian nhắc nhở',
 
     // Navigation
     Home: 'Trang chủ',
@@ -338,10 +383,18 @@ export const translations = {
     'Shift Name': 'Shift Name',
     'Start Time': 'Start Time',
     'End Time': 'End Time',
+
+    // Security messages
+    'Device is rooted/jailbroken, data may not be secure':
+      'Device is rooted/jailbroken, data may not be secure',
+    'App may have been modified': 'App may have been modified',
     'Administrative End Time': 'Administrative End Time',
     'Days Applied': 'Days Applied',
     'Reminder Before Work': 'Reminder Before Work',
     'Reminder After Work': 'Reminder After Work',
+    'Nhắc nhở trước chấm công vào (phút)': 'Remind before check-in (minutes)',
+    'Nhắc nhở chấm công ra sau (phút)': 'Remind after check-out (minutes)',
+    'Chọn thời gian nhắc nhở': 'Select reminder time',
     'Break Time (minutes)': 'Break Time (minutes)',
     'Round Up Minutes': 'Round Up Minutes',
     'Show Check-in Button': 'Show Check-in Button',
@@ -435,6 +488,27 @@ export const translations = {
     'Weather Alert': 'Weather Alert',
     'Affected shifts': 'Affected shifts',
     'No weather alerts at this time': 'No weather alerts at this time',
+    'Error initializing Weather Service': 'Error initializing Weather Service',
+    'Abnormally high temperature': 'Abnormally high temperature',
+    'Drink plenty of water and avoid outdoor activities':
+      'Drink plenty of water and avoid outdoor activities',
+    'Abnormally low temperature': 'Abnormally low temperature',
+    'Dress warmly and limit time outdoors':
+      'Dress warmly and limit time outdoors',
+    'Strong winds': 'Strong winds',
+    'Be cautious of flying debris and avoid open areas':
+      'Be cautious of flying debris and avoid open areas',
+    'Thunderstorm detected': 'Thunderstorm detected',
+    'Seek shelter indoors and avoid electrical equipment':
+      'Seek shelter indoors and avoid electrical equipment',
+    'Heavy rain': 'Heavy rain',
+    'Be aware of flooding and poor visibility':
+      'Be aware of flooding and poor visibility',
+    Snowfall: 'Snowfall',
+    'Roads may be slippery, drive carefully':
+      'Roads may be slippery, drive carefully',
+    'Error getting weather alerts': 'Error getting weather alerts',
+    'Error clearing all alerts': 'Error clearing all alerts',
     'API Usage Information': 'API Usage Information',
     'Free tier limits': 'Free tier limits',
     'requests/minute': 'requests/minute',
@@ -618,6 +692,21 @@ export const translations = {
     'old attendance photos.': 'old attendance photos.',
     'Failed to clean up old photos.': 'Failed to clean up old photos.',
     'An unexpected error occurred.': 'An unexpected error occurred.',
+
+    // Storage and System
+    'Error loading settings': 'Error loading settings',
+    'Error saving settings': 'Error saving settings',
+    'Error initializing storage': 'Error initializing storage',
+    'Use shared location': 'Use shared location',
+    'Use separate location': 'Use separate location',
+    'Weather location confirmation': 'Weather location confirmation',
+    'You are using simple button mode. Do you want to use a single location (home location) for all weather alerts?':
+      'You are using simple button mode. Do you want to use a single location (home location) for all weather alerts?',
+    'Error when deleting note': 'Error when deleting note',
+    'Cannot delete note. Please try again.':
+      'Cannot delete note. Please try again.',
+    'Error in weather data fetching process':
+      'Error in weather data fetching process',
 
     // Các chuỗi mới thêm vào
     'Xác nhận đặt lại': 'Reset Confirmation',

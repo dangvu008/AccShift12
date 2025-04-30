@@ -5,6 +5,13 @@ import * as Notifications from 'expo-notifications'
 import { getCurrentWeather, getWeatherForecast } from './weatherService'
 import { STORAGE_KEYS } from '../config/appConfig'
 import locationUtils from '../utils/location'
+import { translations } from '../utils/translations'
+
+// Hàm dịch đơn giản, sử dụng ngôn ngữ mặc định là tiếng Việt
+const t = (key) => {
+  // Lấy ngôn ngữ từ AsyncStorage là bất đồng bộ, nên chúng ta sử dụng tiếng Việt làm mặc định
+  return translations['vi'][key] || key
+}
 
 // Ngưỡng cảnh báo thời tiết cực đoan
 const EXTREME_WEATHER_THRESHOLDS = {
@@ -46,8 +53,8 @@ const checkExtremeConditions = (weatherData) => {
     conditions.push({
       type: 'high_temp',
       severity: 'high',
-      message: `Nhiệt độ cao bất thường (${Math.round(temp)}°C)`,
-      suggestion: 'Hãy uống nhiều nước và tránh hoạt động ngoài trời.',
+      message: `${t('Abnormally high temperature')} (${Math.round(temp)}°C)`,
+      suggestion: t('Drink plenty of water and avoid outdoor activities'),
     })
   }
 
@@ -55,8 +62,8 @@ const checkExtremeConditions = (weatherData) => {
     conditions.push({
       type: 'low_temp',
       severity: 'high',
-      message: `Nhiệt độ thấp bất thường (${Math.round(temp)}°C)`,
-      suggestion: 'Hãy mặc ấm khi ra ngoài.',
+      message: `${t('Abnormally low temperature')} (${Math.round(temp)}°C)`,
+      suggestion: t('Dress warmly and limit time outdoors'),
     })
   }
 
@@ -64,8 +71,8 @@ const checkExtremeConditions = (weatherData) => {
     conditions.push({
       type: 'wind',
       severity: 'moderate',
-      message: `Gió mạnh (${Math.round(windSpeed)} m/s)`,
-      suggestion: 'Cẩn thận khi di chuyển ngoài trời.',
+      message: `${t('Strong winds')} (${Math.round(windSpeed)} m/s)`,
+      suggestion: t('Be cautious of flying debris and avoid open areas'),
     })
   }
 
@@ -73,8 +80,8 @@ const checkExtremeConditions = (weatherData) => {
     conditions.push({
       type: 'thunderstorm',
       severity: 'high',
-      message: 'Có dông',
-      suggestion: 'Tránh các khu vực trống trải và cao.',
+      message: t('Thunderstorm detected'),
+      suggestion: t('Seek shelter indoors and avoid electrical equipment'),
     })
   }
 
@@ -82,8 +89,8 @@ const checkExtremeConditions = (weatherData) => {
     conditions.push({
       type: 'rain',
       severity: 'high',
-      message: `Mưa lớn (${rain.toFixed(1)} mm/h)`,
-      suggestion: 'Cẩn thận ngập lụt và hạn chế di chuyển.',
+      message: `${t('Heavy rain')} (${rain.toFixed(1)} mm/h)`,
+      suggestion: t('Be aware of flooding and poor visibility'),
     })
   }
 
@@ -91,8 +98,8 @@ const checkExtremeConditions = (weatherData) => {
     conditions.push({
       type: 'snow',
       severity: 'moderate',
-      message: `Có tuyết (${snow.toFixed(1)} mm/h)`,
-      suggestion: 'Đường trơn trượt, hãy di chuyển cẩn thận.',
+      message: `${t('Snowfall')} (${snow.toFixed(1)} mm/h)`,
+      suggestion: t('Roads may be slippery, drive carefully'),
     })
   }
 
@@ -407,7 +414,7 @@ export const getWeatherAlerts = async (onlyUnread = false) => {
 
     return alerts
   } catch (error) {
-    console.error('Lỗi khi lấy danh sách cảnh báo:', error)
+    console.error(t('Error getting weather alerts'), error)
     return []
   }
 }
@@ -420,7 +427,7 @@ export const clearAllAlerts = async () => {
     await AsyncStorage.removeItem(STORAGE_KEYS.WEATHER_ALERTS)
     displayedAlerts = []
   } catch (error) {
-    console.error('Lỗi khi xóa tất cả cảnh báo:', error)
+    console.error(t('Error clearing all alerts'), error)
   }
 }
 

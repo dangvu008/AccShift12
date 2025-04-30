@@ -15,7 +15,12 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { Ionicons } from '@expo/vector-icons'
 import { AppContext } from '../context/AppContext'
-import { formatDate, formatDuration } from '../utils/helpers'
+import { formatDate } from '../utils/helpers'
+import {
+  formatShortWeekday,
+  formatShortDate,
+  formatDecimalHours,
+} from '../utils/formatters'
 import * as FileSystem from 'expo-file-system'
 import * as Sharing from 'expo-sharing'
 import { STORAGE_KEYS } from '../config/appConfig'
@@ -23,7 +28,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { WORK_STATUS } from '../components/WeeklyStatusGrid'
 
 const StatisticsScreen = ({ navigation }) => {
-  const { t, darkMode, shifts, attendanceLogs } = useContext(AppContext)
+  const { t, darkMode, shifts, attendanceLogs, language } =
+    useContext(AppContext)
   const [timeRange, setTimeRange] = useState('month') // 'week', 'month', 'year', 'custom'
   const [isLoading, setIsLoading] = useState(true)
   const [stats, setStats] = useState({
@@ -440,16 +446,8 @@ const StatisticsScreen = ({ navigation }) => {
   }
 
   const getWeekdayName = (day) => {
-    const weekdays = [
-      t('Sunday'),
-      t('Monday'),
-      t('Tuesday'),
-      t('Wednesday'),
-      t('Thursday'),
-      t('Friday'),
-      t('Saturday'),
-    ]
-    return weekdays[day]
+    // Sử dụng hàm formatShortWeekday để lấy tên viết tắt của thứ
+    return formatShortWeekday(day, language)
   }
 
   const getStatusTranslationKey = (status) => {
@@ -578,7 +576,7 @@ const StatisticsScreen = ({ navigation }) => {
               {t('Tổng giờ làm')}
             </Text>
             <Text style={[styles.statValue, styles.workTimeValue]}>
-              {formatDuration(stats.totalWorkTime)}
+              {formatDecimalHours(stats.totalWorkTime)}
             </Text>
           </View>
 
@@ -588,7 +586,7 @@ const StatisticsScreen = ({ navigation }) => {
               {t('Tổng giờ OT')}
             </Text>
             <Text style={[styles.statValue, styles.otValue]}>
-              {formatDuration(stats.overtime)}
+              {formatDecimalHours(stats.overtime)}
             </Text>
           </View>
 
@@ -747,6 +745,8 @@ const StatisticsScreen = ({ navigation }) => {
                 stats.dailyData.map((day, index) => {
                   const date = new Date(day.date.split('/').reverse().join('-'))
                   const weekday = getWeekdayName(date.getDay())
+                  // Định dạng ngày tháng ngắn gọn (dd/mm hoặc mm/dd)
+                  const shortDate = formatShortDate(date, language)
 
                   return (
                     <View
@@ -765,7 +765,7 @@ const StatisticsScreen = ({ navigation }) => {
                           darkMode && styles.darkText,
                         ]}
                       >
-                        {day.date}
+                        {shortDate}
                       </Text>
                       <Text
                         style={[
@@ -801,7 +801,7 @@ const StatisticsScreen = ({ navigation }) => {
                           darkMode && styles.darkText,
                         ]}
                       >
-                        {formatDuration(day.workTime)}
+                        {formatDecimalHours(day.workTime)}
                       </Text>
                       <Text
                         style={[
@@ -810,7 +810,7 @@ const StatisticsScreen = ({ navigation }) => {
                           darkMode && styles.darkText,
                         ]}
                       >
-                        {formatDuration(day.overtime)}
+                        {formatDecimalHours(day.overtime)}
                       </Text>
                     </View>
                   )
