@@ -948,9 +948,6 @@ const styles = StyleSheet.create({
   reminderTypeSelected: {
     backgroundColor: '#f0e6ff',
   },
-  darkReminderTypeSelected: {
-    backgroundColor: '#333355',
-  },
   reminderTypeText: {
     fontSize: 14,
     color: COLORS.TEXT_LIGHT,
@@ -977,9 +974,6 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
   },
-  darkReminderContainer: {
-    backgroundColor: COLORS.SECONDARY_CARD_DARK,
-  },
   dateTimeContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -991,9 +985,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 12,
     fontStyle: 'italic',
-  },
-  darkReminderDescription: {
-    color: COLORS.SUBTEXT_DARK,
   },
   linkedItemsContainer: {
     marginTop: 12,

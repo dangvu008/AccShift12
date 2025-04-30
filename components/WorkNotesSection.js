@@ -128,7 +128,6 @@ const WorkNotesSection = ({ navigation }) => {
       }
     })
   }, [])
-  }
 
   // Phân tích chuỗi thời gian nhắc nhở thành đối tượng Date
   const parseReminderTime = (reminderTimeStr) => {
