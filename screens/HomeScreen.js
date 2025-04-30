@@ -16,6 +16,7 @@ import MultiFunctionButton from '../components/MultiFunctionButton'
 import WeeklyStatusGrid from '../components/WeeklyStatusGrid'
 import WeatherWidget from '../components/WeatherWidget'
 import WorkNotesSection from '../components/WorkNotesSection'
+import DebugNotes from '../components/DebugNotes'
 
 const HomeScreen = ({ navigation }) => {
   const {
@@ -254,6 +255,9 @@ const HomeScreen = ({ navigation }) => {
 
       {/* 8. Khu vực Ghi Chú Công Việc */}
       <WorkNotesSection navigation={navigation} />
+
+      {/* Debug Notes */}
+      <DebugNotes />
     </ScrollView>
   )
 }
