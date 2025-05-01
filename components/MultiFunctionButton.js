@@ -180,7 +180,7 @@ const MultiFunctionButton = () => {
         }
       case 'punch':
         return {
-          text: t('Punch'),
+          text: t('Ký Công'),
           icon: 'finger-print',
           color: '#f39c12',
         }
@@ -238,8 +238,8 @@ const MultiFunctionButton = () => {
             style={styles.punchButton}
             onPress={handlePunchButton}
           >
-            <MaterialIcons name="touch-app" size={24} color="#fff" />
-            <Text style={styles.punchButtonText}>{t('Punch')}</Text>
+            <Ionicons name="finger-print" size={24} color="#fff" />
+            <Text style={styles.punchButtonText}>{t('Ký Công')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -253,53 +253,70 @@ const MultiFunctionButton = () => {
             {t("Today's Attendance")}
           </Text>
           <View style={styles.timelineContainer}>
-            {attendanceLogs.map((log, index) => {
-              const logInfo = getLogTypeInfo(log.type)
-              const isLast = index === attendanceLogs.length - 1
+            {/* Lọc log để mỗi loại chỉ hiển thị một lần (lấy log mới nhất của mỗi loại) */}
+            {(() => {
+              // Tạo một object để lưu log mới nhất cho mỗi loại
+              const latestLogsByType = {}
 
-              return (
-                <View key={log.id} style={styles.timelineItem}>
-                  {/* Timeline connector */}
-                  {!isLast && (
+              // Lặp qua tất cả log để tìm log mới nhất cho mỗi loại
+              attendanceLogs.forEach(log => {
+                if (!latestLogsByType[log.type] || log.timestamp > latestLogsByType[log.type].timestamp) {
+                  latestLogsByType[log.type] = log
+                }
+              })
+
+              // Chuyển đổi object thành mảng và sắp xếp theo thời gian
+              const uniqueLogs = Object.values(latestLogsByType).sort((a, b) => a.timestamp - b.timestamp)
+
+              // Hiển thị các log đã lọc
+              return uniqueLogs.map((log, index) => {
+                const logInfo = getLogTypeInfo(log.type)
+                const isLast = index === uniqueLogs.length - 1
+
+                return (
+                  <View key={log.id} style={styles.timelineItem}>
+                    {/* Timeline connector */}
+                    {!isLast && (
+                      <View
+                        style={[
+                          styles.timelineConnector,
+                          { backgroundColor: logInfo.color },
+                        ]}
+                      />
+                    )}
+
+                    {/* Timeline dot with icon */}
                     <View
                       style={[
-                        styles.timelineConnector,
+                        styles.timelineDot,
                         { backgroundColor: logInfo.color },
                       ]}
-                    />
-                  )}
+                    >
+                      <Ionicons name={logInfo.icon} size={16} color="#fff" />
+                    </View>
 
-                  {/* Timeline dot with icon */}
-                  <View
-                    style={[
-                      styles.timelineDot,
-                      { backgroundColor: logInfo.color },
-                    ]}
-                  >
-                    <Ionicons name={logInfo.icon} size={16} color="#fff" />
-                  </View>
-
-                  {/* Log content */}
-                  <View style={styles.logContent}>
-                    <View style={styles.logHeader}>
-                      <Text
-                        style={[styles.logType, darkMode && styles.darkText]}
-                      >
-                        {logInfo.text}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.logTime,
-                          darkMode && styles.darkSubtitle,
-                        ]}
-                      >
-                        {formatTimestamp(log.timestamp)}
-                      </Text>
+                    {/* Log content */}
+                    <View style={styles.logContent}>
+                      <View style={styles.logHeader}>
+                        <Text
+                          style={[styles.logType, darkMode && styles.darkText]}
+                        >
+                          {logInfo.text}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.logTime,
+                            darkMode && styles.darkSubtitle,
+                          ]}
+                        >
+                          {formatTimestamp(log.timestamp)}
+                        </Text>
+                      </View>
                     </View>
                   </View>
-                </View>
-              )
-            })}
+                )
+              })
+            })()
           </View>
         </View>
       )}

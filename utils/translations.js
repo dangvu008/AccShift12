@@ -303,7 +303,7 @@ export const translations = {
     'Task Completed': 'Đã hoàn thành',
     'Ký Công': 'Ký Công',
     'Đã Ký Công': 'Đã Ký Công',
-    Punch: 'Đánh dấu',
+    Punch: 'Ký Công',
     'Reset Attendance': 'Đặt lại chấm công',
     "Do you want to reset today's attendance status? All button press data for today will be deleted.":
       'Bạn có muốn đặt lại trạng thái chấm công hôm nay không? Tất cả dữ liệu nhấn nút cho hôm nay sẽ bị xóa.',
@@ -719,7 +719,7 @@ export const translations = {
     'Task Completed': 'Completed',
     'Ký Công': 'Sign Work',
     'Đã Ký Công': 'Work Signed',
-    Punch: 'Punch',
+    Punch: 'Sign Work',
     'Reset Attendance': 'Reset Attendance',
     "Do you want to reset today's attendance status? All button press data for today will be deleted.":
       "Do you want to reset today's attendance status? All button press data for today will be deleted.",

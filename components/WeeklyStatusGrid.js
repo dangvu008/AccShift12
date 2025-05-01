@@ -328,7 +328,7 @@ const WeeklyStatusGrid = () => {
       case WORK_STATUS.THIEU_LOG:
         return { name: 'alert-circle', color: '#e74c3c', type: 'ionicons' }
       case WORK_STATUS.DU_CONG:
-        return { name: 'checkmark-circle', color: '#27ae60', type: 'ionicons' }
+        return { name: 'finger-print', color: '#27ae60', type: 'ionicons' }
       case WORK_STATUS.NGHI_PHEP:
         return { name: 'calendar-outline', color: '#3498db', type: 'ionicons' }
       case WORK_STATUS.NGHI_BENH:

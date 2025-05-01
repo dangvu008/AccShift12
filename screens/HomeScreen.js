@@ -246,7 +246,7 @@ const HomeScreen = ({ navigation }) => {
             }}
             onPress={() => navigation.navigate('AttendanceStats')}
           >
-            <Ionicons name="chevron-forward" size={24} color="#fff" />
+            <Ionicons name="document-text-outline" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
         <WeeklyStatusGrid />
