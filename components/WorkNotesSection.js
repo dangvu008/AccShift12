@@ -356,7 +356,32 @@ const WorkNotesSection = ({ navigation }) => {
         <View style={styles.headerActions}>
           <TouchableOpacity
             style={[styles.viewAllButton, darkMode && styles.darkViewAllButton]}
-            onPress={() => navigation.navigate('Notes')}
+            onPress={() => {
+              console.log('View All button pressed')
+              try {
+                // Kiểm tra xem màn hình Notes có tồn tại không
+                if (navigation && navigation.navigate) {
+                  // Thử điều hướng đến màn hình Notes trong SettingsStack
+                  navigation.navigate('SettingsStack', { screen: 'Notes' })
+                  console.log('Đã điều hướng đến SettingsStack -> Notes')
+                } else {
+                  console.error('Navigation không khả dụng')
+                }
+              } catch (error) {
+                console.error('Lỗi khi điều hướng đến màn hình Notes:', error)
+                // Thử phương pháp khác nếu có lỗi
+                try {
+                  // Thử điều hướng trực tiếp
+                  navigation.navigate('Notes')
+                  console.log('Đã điều hướng trực tiếp đến Notes')
+                } catch (directError) {
+                  console.error(
+                    'Lỗi khi điều hướng trực tiếp đến Notes:',
+                    directError
+                  )
+                }
+              }
+            }}
             activeOpacity={0.7}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >

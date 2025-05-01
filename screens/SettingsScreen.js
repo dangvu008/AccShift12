@@ -267,6 +267,29 @@ const SettingsScreen = ({ navigation }) => {
             </Text>
           </View>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.menuItem, darkMode && styles.darkCard]}
+          onPress={() => navigation.navigate('NotesDebug')}
+        >
+          <View style={styles.menuIconContainer}>
+            <MaterialIcons
+              name="note"
+              size={24}
+              color={darkMode ? '#fff' : '#000'}
+            />
+          </View>
+          <View style={styles.menuTextContainer}>
+            <Text style={[styles.menuTitle, darkMode && styles.darkText]}>
+              {t('Notes Debug')}
+            </Text>
+            <Text
+              style={[styles.menuDescription, darkMode && styles.darkSubtitle]}
+            >
+              {t('Fix issues with notes loading')}
+            </Text>
+          </View>
+        </TouchableOpacity>
       </View>
       {/* Language Selection Modal */}
       <Modal

@@ -36,6 +36,7 @@ import ImageViewerScreen from './screens/ImageViewerScreen'
 import AlarmScreen from './screens/AlarmScreen'
 import MapPickerScreen from './screens/MapPickerScreen'
 import DebugScreen from './screens/DebugScreen'
+import NotesDebugScreen from './screens/NotesDebugScreen'
 
 // Set up notification handler
 Notifications.setNotificationHandler({
@@ -262,6 +263,11 @@ function SettingsStack() {
         name="Debug"
         component={DebugScreen}
         options={{ title: t('Debug') }}
+      />
+      <Stack.Screen
+        name="NotesDebug"
+        component={NotesDebugScreen}
+        options={{ title: t('Notes Debug') }}
       />
     </Stack.Navigator>
   )

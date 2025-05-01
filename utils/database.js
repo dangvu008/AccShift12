@@ -508,6 +508,15 @@ export const addCheckInRecord = async (record) => {
 export const getNotes = async () => {
   try {
     console.log('Đang lấy dữ liệu ghi chú...')
+    console.log('Platform:', require('react-native').Platform.OS)
+
+    // Debug AsyncStorage trước khi đọc
+    try {
+      const { debugAsyncStorage } = require('./sampleNotes')
+      await debugAsyncStorage()
+    } catch (debugError) {
+      console.error('Lỗi khi debug AsyncStorage:', debugError)
+    }
 
     let notesJson
     try {
@@ -516,6 +525,9 @@ export const getNotes = async () => {
         'Kết quả đọc dữ liệu ghi chú:',
         notesJson ? 'Thành công' : 'Không có dữ liệu'
       )
+      if (notesJson) {
+        console.log('Độ dài dữ liệu ghi chú:', notesJson.length)
+      }
     } catch (storageError) {
       console.error(
         'Lỗi khi đọc dữ liệu ghi chú từ AsyncStorage:',
@@ -528,32 +540,73 @@ export const getNotes = async () => {
       try {
         const notes = JSON.parse(notesJson)
         console.log(`Đã tìm thấy ${notes.length} ghi chú`)
-        return notes
+
+        // Kiểm tra xem notes có phải là mảng không
+        if (!Array.isArray(notes)) {
+          console.error('Dữ liệu ghi chú không phải là mảng')
+          // Xóa dữ liệu không hợp lệ
+          try {
+            await AsyncStorage.removeItem(STORAGE_KEYS.NOTES)
+            console.log('Đã xóa dữ liệu ghi chú không hợp lệ')
+          } catch (removeError) {
+            console.error(
+              'Lỗi khi xóa dữ liệu ghi chú không hợp lệ:',
+              removeError
+            )
+          }
+        } else {
+          return notes
+        }
       } catch (parseError) {
         console.error('Lỗi khi phân tích dữ liệu ghi chú:', parseError)
-        // Nếu có lỗi khi parse, trả về mảng rỗng
+        // Nếu có lỗi khi parse, xóa dữ liệu không hợp lệ
+        try {
+          await AsyncStorage.removeItem(STORAGE_KEYS.NOTES)
+          console.log('Đã xóa dữ liệu ghi chú không hợp lệ')
+        } catch (removeError) {
+          console.error(
+            'Lỗi khi xóa dữ liệu ghi chú không hợp lệ:',
+            removeError
+          )
+        }
       }
     }
 
     // Nếu không có dữ liệu hoặc có lỗi, khởi tạo mảng rỗng
-    console.log('Không tìm thấy dữ liệu ghi chú, trả về mảng rỗng')
+    console.log('Không tìm thấy dữ liệu ghi chú hợp lệ, tạo dữ liệu mẫu')
 
     // Thử khởi tạo dữ liệu ghi chú mẫu
     try {
-      const { createSampleNotes } = require('./sampleNotes')
-      await createSampleNotes()
+      const { createSampleNotes, createTestNote } = require('./sampleNotes')
+
+      // Thử tạo dữ liệu mẫu đầy đủ
+      let sampleResult = await createSampleNotes(true) // Force mode
+
+      if (!sampleResult) {
+        // Nếu không thành công, thử tạo một ghi chú đơn giản
+        console.log(
+          'Không thể tạo dữ liệu mẫu đầy đủ, thử tạo ghi chú đơn giản'
+        )
+        await createTestNote()
+      }
 
       // Thử đọc lại sau khi tạo dữ liệu mẫu
       const newNotesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
       if (newNotesJson) {
-        const notes = JSON.parse(newNotesJson)
-        console.log(`Đã tạo và đọc được ${notes.length} ghi chú mẫu`)
-        return notes
+        try {
+          const notes = JSON.parse(newNotesJson)
+          console.log(`Đã tạo và đọc được ${notes.length} ghi chú mẫu`)
+          return notes
+        } catch (parseError) {
+          console.error('Lỗi khi phân tích dữ liệu ghi chú mẫu:', parseError)
+        }
       }
     } catch (sampleError) {
       console.error('Lỗi khi tạo dữ liệu ghi chú mẫu:', sampleError)
     }
 
+    // Nếu tất cả đều thất bại, trả về mảng rỗng
+    console.log('Tất cả các phương pháp đều thất bại, trả về mảng rỗng')
     return []
   } catch (error) {
     console.error('Lỗi khi lấy dữ liệu ghi chú:', error)
@@ -564,8 +617,37 @@ export const getNotes = async () => {
 // Add note
 export const addNote = async (noteData) => {
   try {
-    const notesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
-    let notes = notesJson ? JSON.parse(notesJson) : []
+    console.log('Đang thêm ghi chú mới...')
+    console.log('Platform:', require('react-native').Platform.OS)
+
+    // Debug AsyncStorage trước khi thêm
+    try {
+      const { debugAsyncStorage } = require('./sampleNotes')
+      await debugAsyncStorage()
+    } catch (debugError) {
+      console.error('Lỗi khi debug AsyncStorage:', debugError)
+    }
+
+    // Đọc danh sách ghi chú hiện tại
+    let notes = []
+    try {
+      const notesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
+      if (notesJson) {
+        notes = JSON.parse(notesJson)
+        // Kiểm tra xem notes có phải là mảng không
+        if (!Array.isArray(notes)) {
+          console.error('Dữ liệu ghi chú không phải là mảng, khởi tạo lại')
+          notes = []
+        }
+      } else {
+        console.log('Không tìm thấy dữ liệu ghi chú, khởi tạo mảng rỗng')
+      }
+    } catch (readError) {
+      console.error('Lỗi khi đọc dữ liệu ghi chú:', readError)
+      // Tiếp tục với mảng rỗng
+    }
+
+    // Tạo ghi chú mới
     const newNote = {
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
@@ -575,12 +657,77 @@ export const addNote = async (noteData) => {
       reminderTime: noteData.reminderTime || null,
       linkedShifts: noteData.linkedShifts || [],
       reminderDays: noteData.reminderDays || [],
+      isAlarmEnabled: noteData.isAlarmEnabled !== false, // Mặc định là true
+      lastRemindedAt: null,
     }
-    notes = [...notes, newNote]
-    await AsyncStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify(notes))
-    return newNote
+
+    console.log('Đã tạo ghi chú mới:', newNote.id)
+
+    // Thêm ghi chú mới vào danh sách
+    notes.push(newNote)
+
+    // Lưu danh sách ghi chú
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify(notes))
+      console.log('Đã lưu ghi chú mới thành công')
+
+      // Debug AsyncStorage sau khi thêm
+      try {
+        const { debugAsyncStorage } = require('./sampleNotes')
+        await debugAsyncStorage()
+      } catch (debugError) {
+        console.error('Lỗi khi debug AsyncStorage:', debugError)
+      }
+
+      return newNote
+    } catch (saveError) {
+      console.error('Lỗi khi lưu ghi chú mới:', saveError)
+
+      // Thử phương pháp khác nếu lưu thất bại
+      try {
+        console.log('Thử phương pháp lưu từng ghi chú một...')
+
+        // Xóa danh sách hiện tại
+        await AsyncStorage.removeItem(STORAGE_KEYS.NOTES)
+
+        // Tạo mảng rỗng
+        await AsyncStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify([]))
+
+        // Lưu từng ghi chú một
+        for (let i = 0; i < notes.length; i++) {
+          const note = notes[i]
+          console.log(`Đang lưu ghi chú ${i + 1}/${notes.length}`)
+
+          // Đọc danh sách hiện tại
+          const currentNotesJson = await AsyncStorage.getItem(
+            STORAGE_KEYS.NOTES
+          )
+          const currentNotes = currentNotesJson
+            ? JSON.parse(currentNotesJson)
+            : []
+
+          // Thêm ghi chú
+          currentNotes.push(note)
+
+          // Lưu lại
+          await AsyncStorage.setItem(
+            STORAGE_KEYS.NOTES,
+            JSON.stringify(currentNotes)
+          )
+        }
+
+        console.log('Đã lưu tất cả ghi chú theo phương pháp từng ghi chú một')
+        return newNote
+      } catch (alternativeSaveError) {
+        console.error(
+          'Lỗi khi lưu theo phương pháp thay thế:',
+          alternativeSaveError
+        )
+        return null
+      }
+    }
   } catch (error) {
-    console.error('Error adding note:', error)
+    console.error('Lỗi khi thêm ghi chú:', error)
     return null
   }
 }

@@ -135,6 +135,18 @@ const NotesScreen = ({ navigation }) => {
         <Text style={[styles.title, darkMode && styles.darkText]}>
           {t('Ghi chú công việc')}
         </Text>
+        <TouchableOpacity
+          style={styles.debugButton}
+          onPress={() =>
+            navigation.navigate('SettingsStack', { screen: 'NotesDebug' })
+          }
+        >
+          <Ionicons
+            name="bug-outline"
+            size={24}
+            color={darkMode ? '#fff' : '#333'}
+          />
+        </TouchableOpacity>
       </View>
 
       {/* Thanh tìm kiếm */}
@@ -224,6 +236,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  debugButton: {
+    padding: 8,
+    borderRadius: 20,
   },
   title: {
     fontSize: 24,
