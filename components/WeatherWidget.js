@@ -282,16 +282,22 @@ const WeatherWidget = ({ onPress }) => {
     await fetchWeatherData(true) // Truyền true để xóa cache
   }
 
+  // Sử dụng useCallback để tránh tạo lại hàm fetchWeatherData mỗi khi render
+  const memoizedFetchWeatherData = useCallback(fetchWeatherData, [
+    homeLocation,
+    workLocation,
+  ])
+
   useEffect(() => {
     let isMounted = true
 
-    fetchWeatherData()
+    memoizedFetchWeatherData()
 
     // Cleanup function để tránh memory leak
     return () => {
       isMounted = false
     }
-  }, [homeLocation, workLocation, fetchWeatherData])
+  }, [memoizedFetchWeatherData])
 
   if (loading) {
     return (

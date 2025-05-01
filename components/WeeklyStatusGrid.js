@@ -59,7 +59,7 @@ const WeeklyStatusGrid = () => {
   useEffect(() => {
     generateWeekDays()
     loadDailyStatuses()
-  }, [])
+  }, [generateWeekDays, loadDailyStatuses])
 
   // Cập nhật trạng thái từ attendanceLogs
   const updateStatusFromAttendanceLogs = useCallback(async () => {
@@ -131,11 +131,11 @@ const WeeklyStatusGrid = () => {
     )
 
     // Cập nhật state
-    setDailyStatuses({
-      ...dailyStatuses,
+    setDailyStatuses((prevStatuses) => ({
+      ...prevStatuses,
       [dateKey]: updatedStatus,
-    })
-  }, [attendanceLogs, dailyStatuses, currentShift, formatDateKey])
+    }))
+  }, [attendanceLogs, currentShift, formatDateKey])
 
   // Cập nhật trạng thái khi người dùng bấm nút đi làm
   useEffect(() => {
@@ -145,7 +145,7 @@ const WeeklyStatusGrid = () => {
   }, [attendanceLogs, updateStatusFromAttendanceLogs])
 
   // Generate array of days for the current week (Monday to Sunday)
-  const generateWeekDays = () => {
+  const generateWeekDays = useCallback(() => {
     const today = new Date()
     const currentDay = today.getDay() // 0 = Sunday, 1 = Monday, ...
     const days = []
@@ -172,10 +172,10 @@ const WeeklyStatusGrid = () => {
     }
 
     setWeekDays(days)
-  }
+  }, [])
 
   // Load daily work statuses from AsyncStorage
-  const loadDailyStatuses = async () => {
+  const loadDailyStatuses = useCallback(async () => {
     try {
       const keys = await AsyncStorage.getAllKeys()
       const statusKeys = keys.filter((key) =>
@@ -193,7 +193,7 @@ const WeeklyStatusGrid = () => {
     } catch (error) {
       console.error('Error loading daily statuses:', error)
     }
-  }
+  }, [])
 
   // Hàm đã được khai báo ở trên
 

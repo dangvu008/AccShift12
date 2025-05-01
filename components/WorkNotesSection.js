@@ -1,6 +1,6 @@
 'use client'
 
-import { useContext, useState, useEffect } from 'react'
+import { useContext, useState, useEffect, useCallback } from 'react'
 import {
   View,
   Text,
@@ -149,7 +149,7 @@ const WorkNotesSection = ({ navigation }) => {
   }
 
   // Calculate nextReminderTime for all notes
-  const calculateNextReminderTimes = (notes, allShifts) => {
+  const calculateNextReminderTimes = useCallback((notes, allShifts) => {
     console.log('Calculating reminder times for notes:', notes?.length || 0)
     const now = new Date()
     const dayMap = { CN: 0, T2: 1, T3: 2, T4: 3, T5: 4, T6: 5, T7: 6 }
@@ -337,7 +337,7 @@ const WorkNotesSection = ({ navigation }) => {
     }
 
     loadNotes()
-  }, [currentShift, shifts, calculateNextReminderTimes])
+  }, [currentShift, shifts])
 
   // Handle adding a new note
   const handleAddNote = () => {

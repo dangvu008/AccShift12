@@ -34,15 +34,26 @@ const HomeScreen = ({ navigation }) => {
     !alarmPermissionGranted
   )
 
-  // Update current time every second
+  // Update current time every second - optimized to prevent flickering
   useEffect(() => {
+    // Create a reference object to store current state
+    const stateRef = {
+      isWorking,
+      workStartTime,
+    }
+
+    // Update reference when dependencies change
+    stateRef.isWorking = isWorking
+    stateRef.workStartTime = workStartTime
+
     const timer = setInterval(() => {
-      setCurrentTime(new Date())
+      const now = new Date()
+      setCurrentTime(now)
 
       // Calculate work duration if working
-      if (isWorking && workStartTime) {
-        const currentTimeMs = new Date().getTime()
-        const workStartTimeMs = workStartTime.getTime()
+      if (stateRef.isWorking && stateRef.workStartTime) {
+        const currentTimeMs = now.getTime()
+        const workStartTimeMs = stateRef.workStartTime.getTime()
         const duration = Math.floor(
           (currentTimeMs - workStartTimeMs) / (1000 * 60)
         )
