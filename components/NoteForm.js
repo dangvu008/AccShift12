@@ -32,6 +32,7 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
   const [reminderDate, setReminderDate] = useState(new Date())
   const [linkedShifts, setLinkedShifts] = useState([])
   const [reminderType, setReminderType] = useState('specific') // 'specific' hoặc 'shift'
+  const [isPriority, setIsPriority] = useState(false) // Thêm trạng thái ưu tiên
   const [isLoading, setIsLoading] = useState(true)
   const [shifts, setShifts] = useState([])
   const [errors, setErrors] = useState({})
@@ -54,6 +55,9 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
       if (note) {
         setTitle(note.title || '')
         setContent(note.content || '')
+
+        // Set priority status
+        setIsPriority(note.isPriority || false)
 
         // Set linked shifts
         setLinkedShifts(note.linkedShifts || [])
@@ -248,6 +252,7 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
         content: content.trim(),
         reminderTime: formattedReminderTime,
         linkedShifts: reminderType === 'shift' ? linkedShifts : [],
+        isPriority: isPriority, // Thêm trường ưu tiên
         updatedAt: new Date().toISOString(),
       }
 
@@ -462,6 +467,35 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
             </Text>
           )}
         </View>
+      </View>
+
+      {/* Priority Option */}
+      <View style={styles.formGroup}>
+        <TouchableOpacity
+          style={styles.priorityOption}
+          onPress={() => setIsPriority(!isPriority)}
+        >
+          <View
+            style={[
+              styles.checkbox,
+              darkMode && styles.darkCheckbox,
+              isPriority && styles.checkboxSelected,
+            ]}
+          >
+            {isPriority && <Ionicons name="checkmark" size={16} color="#fff" />}
+          </View>
+          <View style={styles.priorityTextContainer}>
+            <Text style={[styles.priorityText, darkMode && styles.darkText]}>
+              {t('Đánh dấu là ghi chú ưu tiên')}
+            </Text>
+            <Ionicons
+              name="star"
+              size={16}
+              color={isPriority ? '#FFD700' : darkMode ? '#555' : '#ccc'}
+              style={styles.priorityIcon}
+            />
+          </View>
+        </TouchableOpacity>
       </View>
 
       {/* Reminder Type Selection */}
@@ -1027,6 +1061,24 @@ const styles = StyleSheet.create({
   },
   darkCheckboxLabel: {
     color: COLORS.TEXT_DARK,
+  },
+  priorityOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    marginTop: 4,
+  },
+  priorityTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  priorityText: {
+    fontSize: 14,
+    color: COLORS.TEXT_LIGHT,
+    marginLeft: 8,
+  },
+  priorityIcon: {
+    marginLeft: 8,
   },
   noDataText: {
     fontSize: 14,

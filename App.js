@@ -346,75 +346,131 @@ export default function App() {
     const initSampleData = async () => {
       try {
         console.log('Bắt đầu khởi tạo dữ liệu mẫu...')
+        console.log('Platform:', require('react-native').Platform.OS)
+
+        // Kiểm tra xem đã thử tạo dữ liệu mẫu chưa
+        let hasAttempted = false
+        try {
+          const attemptedFlag = await AsyncStorage.getItem(
+            'sample_notes_attempted'
+          )
+          hasAttempted = attemptedFlag === 'true'
+          console.log(
+            'Đã thử tạo dữ liệu mẫu trước đó:',
+            hasAttempted ? 'Có' : 'Không'
+          )
+        } catch (flagError) {
+          console.error(
+            'Lỗi khi kiểm tra cờ đã thử tạo dữ liệu mẫu:',
+            flagError
+          )
+        }
 
         // Kiểm tra xem đã có dữ liệu nào chưa
+        let hasNotes = false
+        let hasShifts = false
         try {
           const shiftsJson = await AsyncStorage.getItem(STORAGE_KEYS.SHIFT_LIST)
           const notesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
+
+          hasShifts = !!shiftsJson
+          hasNotes = !!notesJson
+
           console.log('Kiểm tra dữ liệu hiện có:')
           console.log(
             '- Ca làm việc:',
-            shiftsJson ? 'Có dữ liệu' : 'Không có dữ liệu'
+            hasShifts ? 'Có dữ liệu' : 'Không có dữ liệu'
           )
           console.log(
             '- Ghi chú:',
-            notesJson ? 'Có dữ liệu' : 'Không có dữ liệu'
+            hasNotes ? 'Có dữ liệu' : 'Không có dữ liệu'
           )
+
+          // Kiểm tra số lượng ghi chú
+          if (notesJson) {
+            try {
+              const notes = JSON.parse(notesJson)
+              console.log(`Số lượng ghi chú hiện có: ${notes.length}`)
+
+              // Nếu có ghi chú nhưng số lượng là 0, coi như không có
+              if (notes.length === 0) {
+                hasNotes = false
+                console.log('Mảng ghi chú rỗng, cần tạo dữ liệu mẫu')
+              }
+            } catch (parseError) {
+              console.error('Lỗi khi parse dữ liệu ghi chú:', parseError)
+              hasNotes = false
+            }
+          }
         } catch (checkError) {
           console.error('Lỗi khi kiểm tra dữ liệu hiện có:', checkError)
         }
 
-        // Khởi tạo cơ sở dữ liệu và dữ liệu mẫu ca làm việc
-        console.log('Bắt đầu khởi tạo cơ sở dữ liệu...')
-        const { initializeDatabase } = require('./utils/database')
-        const dbResult = await initializeDatabase()
-        console.log(
-          'Kết quả khởi tạo cơ sở dữ liệu:',
-          dbResult ? 'Thành công' : 'Thất bại'
-        )
-
-        // Kiểm tra lại sau khi khởi tạo cơ sở dữ liệu
-        try {
-          const shiftsJson = await AsyncStorage.getItem(STORAGE_KEYS.SHIFT_LIST)
+        // Khởi tạo cơ sở dữ liệu và dữ liệu mẫu ca làm việc nếu cần
+        if (!hasShifts) {
+          console.log('Bắt đầu khởi tạo cơ sở dữ liệu...')
+          const { initializeDatabase } = require('./utils/database')
+          const dbResult = await initializeDatabase()
           console.log(
-            'Kiểm tra ca làm việc sau khi khởi tạo:',
-            shiftsJson ? 'Có dữ liệu' : 'Không có dữ liệu'
+            'Kết quả khởi tạo cơ sở dữ liệu:',
+            dbResult ? 'Thành công' : 'Thất bại'
           )
-          if (shiftsJson) {
-            const shifts = JSON.parse(shiftsJson)
-            console.log(`Số lượng ca làm việc: ${shifts.length}`)
+
+          // Kiểm tra lại sau khi khởi tạo cơ sở dữ liệu
+          try {
+            const shiftsJson = await AsyncStorage.getItem(
+              STORAGE_KEYS.SHIFT_LIST
+            )
+            console.log(
+              'Kiểm tra ca làm việc sau khi khởi tạo:',
+              shiftsJson ? 'Có dữ liệu' : 'Không có dữ liệu'
+            )
+            if (shiftsJson) {
+              const shifts = JSON.parse(shiftsJson)
+              console.log(`Số lượng ca làm việc: ${shifts.length}`)
+            }
+          } catch (checkError) {
+            console.error(
+              'Lỗi khi kiểm tra ca làm việc sau khi khởi tạo:',
+              checkError
+            )
           }
-        } catch (checkError) {
-          console.error(
-            'Lỗi khi kiểm tra ca làm việc sau khi khởi tạo:',
-            checkError
-          )
+        } else {
+          console.log('Đã có dữ liệu ca làm việc, không cần khởi tạo lại')
         }
 
-        // Khởi tạo dữ liệu mẫu cho ghi chú
-        console.log('Bắt đầu khởi tạo ghi chú mẫu...')
-        const notesResult = await createSampleNotes()
-        console.log(
-          'Kết quả khởi tạo ghi chú mẫu:',
-          notesResult ? 'Thành công' : 'Không cần thiết'
-        )
+        // Khởi tạo dữ liệu mẫu cho ghi chú nếu cần
+        if (!hasNotes || !hasAttempted) {
+          console.log('Bắt đầu khởi tạo ghi chú mẫu...')
+          // Sử dụng force=true nếu đã thử trước đó nhưng vẫn không có dữ liệu
+          const forceCreate = hasAttempted && !hasNotes
+          console.log('Force create:', forceCreate ? 'Bật' : 'Tắt')
 
-        // Kiểm tra lại sau khi khởi tạo ghi chú
-        try {
-          const notesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
+          const notesResult = await createSampleNotes(forceCreate)
           console.log(
-            'Kiểm tra ghi chú sau khi khởi tạo:',
-            notesJson ? 'Có dữ liệu' : 'Không có dữ liệu'
+            'Kết quả khởi tạo ghi chú mẫu:',
+            notesResult ? 'Thành công' : 'Không cần thiết'
           )
-          if (notesJson) {
-            const notes = JSON.parse(notesJson)
-            console.log(`Số lượng ghi chú: ${notes.length}`)
+
+          // Kiểm tra lại sau khi khởi tạo ghi chú
+          try {
+            const notesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
+            console.log(
+              'Kiểm tra ghi chú sau khi khởi tạo:',
+              notesJson ? 'Có dữ liệu' : 'Không có dữ liệu'
+            )
+            if (notesJson) {
+              const notes = JSON.parse(notesJson)
+              console.log(`Số lượng ghi chú: ${notes.length}`)
+            }
+          } catch (checkError) {
+            console.error(
+              'Lỗi khi kiểm tra ghi chú sau khi khởi tạo:',
+              checkError
+            )
           }
-        } catch (checkError) {
-          console.error(
-            'Lỗi khi kiểm tra ghi chú sau khi khởi tạo:',
-            checkError
-          )
+        } else {
+          console.log('Đã có dữ liệu ghi chú, không cần khởi tạo lại')
         }
 
         console.log('Hoàn thành khởi tạo dữ liệu mẫu')

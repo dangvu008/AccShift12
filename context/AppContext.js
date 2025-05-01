@@ -598,11 +598,103 @@ export const AppProvider = ({ children }) => {
   }
 
   const updateCurrentShift = async (shift) => {
+    // Lưu thông tin ca cũ trước khi cập nhật
+    const oldShift = currentShift
+
+    // Cập nhật state và AsyncStorage
     setCurrentShift(shift)
+
     if (shift) {
+      // Lưu ID ca mới vào AsyncStorage
       await AsyncStorage.setItem(STORAGE_KEYS.CURRENT_SHIFT, shift.id)
+
+      // Cập nhật activeShiftId trong userSettings
+      await storage.updateUserSettings({ activeShiftId: shift.id })
+
+      // Nếu đang ở chế độ xoay ca tự động, cập nhật ngày áp dụng
+      const userSettings = await storage.getUserSettings()
+      if (userSettings && userSettings.changeShiftReminderMode === 'rotate') {
+        await updateMultipleSettings({
+          rotationLastAppliedDate: new Date().toISOString().split('T')[0],
+        })
+      }
+
+      // Hủy tất cả thông báo liên quan đến ca cũ
+      if (oldShift) {
+        console.log(`Hủy thông báo của ca cũ: ${oldShift.id}`)
+        await alarmManager.cancelAlarmsByPrefix(`shift_${oldShift.id}`)
+        await alarmManager.cancelAlarmsByPrefix(`check_in_${oldShift.id}`)
+        await alarmManager.cancelAlarmsByPrefix(`check_out_${oldShift.id}`)
+      }
+
+      // Lên lịch thông báo mới cho ca mới
+      try {
+        console.log(`Lên lịch thông báo cho ca mới: ${shift.id}`)
+
+        // Lên lịch kiểm tra thời tiết cho ca mới
+        await weatherAlertService.scheduleWeatherCheck(shift)
+
+        // Cập nhật lịch nhắc nhở ghi chú theo ca mới
+        await updateNotesForNewShift(shift)
+      } catch (error) {
+        console.error('Lỗi khi lên lịch thông báo cho ca mới:', error)
+      }
     } else {
       await AsyncStorage.removeItem(STORAGE_KEYS.CURRENT_SHIFT)
+      await storage.updateUserSettings({ activeShiftId: null })
+    }
+  }
+
+  // Hàm cập nhật lịch nhắc nhở ghi chú khi thay đổi ca làm việc
+  const updateNotesForNewShift = async (newShift) => {
+    try {
+      // Lấy danh sách ghi chú
+      const allNotes = await getNotes()
+
+      // Lọc các ghi chú có liên kết với ca làm việc mới
+      const notesLinkedToNewShift = allNotes.filter(
+        (note) => note.linkedShifts && note.linkedShifts.includes(newShift.id)
+      )
+
+      console.log(
+        `Tìm thấy ${notesLinkedToNewShift.length} ghi chú liên kết với ca mới`
+      )
+
+      // Cập nhật lịch nhắc nhở cho từng ghi chú
+      for (const note of notesLinkedToNewShift) {
+        if (note.reminderTime) {
+          // Hủy tất cả báo thức cũ của ghi chú này
+          await alarmManager.cancelAlarmsByPrefix(`note_${note.id}`)
+
+          // Lên lịch lại báo thức mới
+          const [hours, minutes] = note.reminderTime.split(':').map(Number)
+
+          // Lên lịch nhắc nhở cho các ngày áp dụng của ca
+          for (const day of newShift.daysApplied) {
+            const dayOfWeek = getDayOfWeek(day)
+            if (dayOfWeek) {
+              const reminderTime = new Date()
+              reminderTime.setHours(hours, minutes, 0, 0)
+
+              await alarmManager.scheduleAlarm({
+                title: note.title || t('Note Reminder'),
+                body: note.content || '',
+                scheduledTime: reminderTime,
+                type: 'note',
+                id: `note_${note.id}_${day}`,
+                data: { noteId: note.id, shiftId: newShift.id },
+                repeats: true,
+                weekday: dayOfWeek,
+              })
+            }
+          }
+        }
+      }
+
+      return true
+    } catch (error) {
+      console.error('Lỗi khi cập nhật lịch nhắc nhở ghi chú:', error)
+      return false
     }
   }
 

@@ -57,6 +57,13 @@ export const createSampleNotes = async (force = false) => {
     console.log('Platform:', Platform.OS)
     console.log('Force mode:', force ? 'Bật' : 'Tắt')
 
+    // Đánh dấu đã thử tạo dữ liệu mẫu
+    try {
+      await AsyncStorage.setItem('sample_notes_attempted', 'true')
+    } catch (markError) {
+      console.error('Lỗi khi đánh dấu đã thử tạo dữ liệu mẫu:', markError)
+    }
+
     // Debug AsyncStorage trước khi bắt đầu
     await debugAsyncStorage()
 
@@ -96,14 +103,22 @@ export const createSampleNotes = async (force = false) => {
       return false
     }
 
-    // Nếu ở chế độ force, xóa dữ liệu cũ trước
-    if (force && existingNotes.length > 0) {
-      console.log('Chế độ force: Xóa dữ liệu ghi chú cũ trước khi tạo mới')
+    // Nếu ở chế độ force hoặc không có dữ liệu, xóa dữ liệu cũ trước (nếu có)
+    if (force || existingNotes.length > 0) {
+      console.log('Xóa dữ liệu ghi chú cũ trước khi tạo mới')
       try {
         await AsyncStorage.removeItem(STORAGE_KEYS.NOTES)
         console.log('Đã xóa dữ liệu ghi chú cũ')
       } catch (removeError) {
         console.error('Lỗi khi xóa dữ liệu ghi chú cũ:', removeError)
+      }
+
+      // Khởi tạo mảng rỗng
+      try {
+        await AsyncStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify([]))
+        console.log('Đã khởi tạo mảng ghi chú rỗng')
+      } catch (initError) {
+        console.error('Lỗi khi khởi tạo mảng ghi chú rỗng:', initError)
       }
     }
 
@@ -248,24 +263,40 @@ export const createSampleNotes = async (force = false) => {
         notesString.length
       )
 
-      // Thử lưu từng ghi chú một nếu có vấn đề với việc lưu tất cả cùng lúc
+      // Xác định phương pháp lưu trữ dựa trên nền tảng
       let saveSuccess = false
 
-      // Phương pháp 1: Lưu tất cả cùng lúc
-      try {
-        await AsyncStorage.setItem(STORAGE_KEYS.NOTES, notesString)
-        console.log('Đã lưu tất cả ghi chú mẫu cùng lúc thành công')
-        saveSuccess = true
-      } catch (bulkSaveError) {
-        console.error('Lỗi khi lưu tất cả ghi chú cùng lúc:', bulkSaveError)
-        console.log('Thử phương pháp lưu từng ghi chú một...')
+      // Trên thiết bị Android thật, luôn sử dụng phương pháp lưu từng ghi chú một
+      const useIndividualSave =
+        Platform.OS === 'android' && !Platform.constants?.isEmulator
 
-        // Phương pháp 2: Lưu từng ghi chú một
+      console.log(
+        `Phương pháp lưu trữ: ${
+          useIndividualSave ? 'Từng ghi chú một' : 'Tất cả cùng lúc'
+        }`
+      )
+
+      if (!useIndividualSave) {
+        // Phương pháp 1: Lưu tất cả cùng lúc (cho web và máy ảo)
         try {
-          // Tạo mảng rỗng trước
-          await AsyncStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify([]))
+          await AsyncStorage.setItem(STORAGE_KEYS.NOTES, notesString)
+          console.log('Đã lưu tất cả ghi chú mẫu cùng lúc thành công')
+          saveSuccess = true
+        } catch (bulkSaveError) {
+          console.error('Lỗi khi lưu tất cả ghi chú cùng lúc:', bulkSaveError)
+          console.log('Thử phương pháp lưu từng ghi chú một...')
+          useIndividualSave = true
+        }
+      }
 
-          // Lưu từng ghi chú một
+      // Phương pháp 2: Lưu từng ghi chú một (cho Android thật hoặc khi phương pháp 1 thất bại)
+      if (useIndividualSave && !saveSuccess) {
+        try {
+          // Đảm bảo mảng rỗng đã được khởi tạo
+          await AsyncStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify([]))
+          console.log('Đã khởi tạo mảng ghi chú rỗng')
+
+          // Lưu từng ghi chú một với độ trễ nhỏ giữa các lần lưu
           for (let i = 0; i < sampleNotes.length; i++) {
             const note = sampleNotes[i]
             console.log(
@@ -289,18 +320,65 @@ export const createSampleNotes = async (force = false) => {
               JSON.stringify(currentNotes)
             )
             console.log(`Đã lưu ghi chú ${i + 1}/${sampleNotes.length}`)
+
+            // Thêm độ trễ nhỏ giữa các lần lưu để tránh quá tải AsyncStorage
+            await new Promise((resolve) => setTimeout(resolve, 100))
           }
 
           console.log('Đã lưu tất cả ghi chú theo phương pháp từng ghi chú một')
           saveSuccess = true
         } catch (individualSaveError) {
           console.error('Lỗi khi lưu từng ghi chú một:', individualSaveError)
+
+          // Thử phương pháp cuối cùng: Lưu ít ghi chú hơn
+          try {
+            console.log('Thử lưu ít ghi chú hơn (chỉ 2 ghi chú đầu tiên)...')
+            await AsyncStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify([]))
+
+            // Chỉ lưu 2 ghi chú đầu tiên
+            const reducedNotes = sampleNotes.slice(0, 2)
+            await AsyncStorage.setItem(
+              STORAGE_KEYS.NOTES,
+              JSON.stringify(reducedNotes)
+            )
+            console.log('Đã lưu 2 ghi chú đầu tiên thành công')
+            saveSuccess = true
+          } catch (reducedSaveError) {
+            console.error('Lỗi khi lưu ít ghi chú hơn:', reducedSaveError)
+          }
         }
       }
 
       if (!saveSuccess) {
-        console.error('Không thể lưu ghi chú mẫu bằng cả hai phương pháp')
-        return false
+        console.error('Không thể lưu ghi chú mẫu bằng tất cả các phương pháp')
+
+        // Thử tạo một ghi chú đơn giản nhất
+        try {
+          const simpleNote = {
+            id: `simple_note_${Date.now()}`,
+            title: 'Ghi chú đơn giản',
+            content:
+              'Đây là ghi chú đơn giản được tạo lúc ' +
+              new Date().toLocaleString(),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            reminderTime: null,
+            linkedShifts: [],
+            reminderDays: [],
+            isAlarmEnabled: false,
+            lastRemindedAt: null,
+          }
+
+          await AsyncStorage.setItem(
+            STORAGE_KEYS.NOTES,
+            JSON.stringify([simpleNote])
+          )
+          console.log('Đã tạo một ghi chú đơn giản nhất')
+          saveSuccess = true
+        } catch (simpleNoteError) {
+          console.error('Lỗi khi tạo ghi chú đơn giản nhất:', simpleNoteError)
+          return false
+        }
       }
 
       // Kiểm tra lại xem dữ liệu đã được lưu chưa
@@ -324,7 +402,7 @@ export const createSampleNotes = async (force = false) => {
         console.error('Dữ liệu ghi chú không được lưu thành công')
       }
 
-      return false
+      return saveSuccess
     } catch (saveError) {
       console.error('Lỗi khi lưu dữ liệu mẫu cho phần ghi chú:', saveError)
       return false
@@ -380,6 +458,7 @@ export const clearAllNotes = async () => {
 export const createTestNote = async () => {
   try {
     console.log('Tạo ghi chú kiểm tra đơn giản...')
+    console.log('Platform:', Platform.OS)
 
     const testNote = {
       id: `test_note_${Date.now()}`,
@@ -395,26 +474,72 @@ export const createTestNote = async () => {
       lastRemindedAt: null,
     }
 
-    // Đọc danh sách hiện tại
-    let notes = []
+    // Kiểm tra xem đã có ghi chú nào chưa
+    let saveSuccess = false
+
+    // Phương pháp 1: Đọc danh sách hiện tại và thêm vào
     try {
+      // Đọc danh sách hiện tại
+      let notes = []
       const notesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
       if (notesJson) {
         notes = JSON.parse(notesJson)
+        console.log('Đã đọc được', notes.length, 'ghi chú hiện có')
+      } else {
+        console.log('Không tìm thấy ghi chú hiện có, tạo mảng mới')
       }
-    } catch (readError) {
-      console.error('Lỗi khi đọc danh sách ghi chú:', readError)
-      // Tiếp tục với mảng rỗng
+
+      // Thêm ghi chú mới
+      notes.push(testNote)
+
+      // Lưu lại
+      await AsyncStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify(notes))
+      console.log('Đã lưu ghi chú kiểm tra thành công (phương pháp 1)')
+      saveSuccess = true
+    } catch (method1Error) {
+      console.error(
+        'Lỗi khi lưu ghi chú kiểm tra (phương pháp 1):',
+        method1Error
+      )
+
+      // Phương pháp 2: Tạo mới hoàn toàn
+      try {
+        console.log('Thử phương pháp 2: Tạo mới hoàn toàn')
+        await AsyncStorage.setItem(
+          STORAGE_KEYS.NOTES,
+          JSON.stringify([testNote])
+        )
+        console.log('Đã lưu ghi chú kiểm tra thành công (phương pháp 2)')
+        saveSuccess = true
+      } catch (method2Error) {
+        console.error(
+          'Lỗi khi lưu ghi chú kiểm tra (phương pháp 2):',
+          method2Error
+        )
+      }
     }
 
-    // Thêm ghi chú mới
-    notes.push(testNote)
+    // Kiểm tra lại xem dữ liệu đã được lưu chưa
+    if (saveSuccess) {
+      try {
+        const checkNotesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
+        if (checkNotesJson) {
+          const parsedNotes = JSON.parse(checkNotesJson)
+          console.log(
+            'Kiểm tra lại: Đã lưu được',
+            parsedNotes.length,
+            'ghi chú'
+          )
+          return true
+        } else {
+          console.error('Kiểm tra lại: Không tìm thấy dữ liệu ghi chú')
+        }
+      } catch (checkError) {
+        console.error('Lỗi khi kiểm tra lại dữ liệu ghi chú:', checkError)
+      }
+    }
 
-    // Lưu lại
-    await AsyncStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify(notes))
-    console.log('Đã tạo ghi chú kiểm tra thành công')
-
-    return true
+    return saveSuccess
   } catch (error) {
     console.error('Lỗi khi tạo ghi chú kiểm tra:', error)
     return false

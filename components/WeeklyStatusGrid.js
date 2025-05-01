@@ -61,6 +61,11 @@ const WeeklyStatusGrid = () => {
     loadDailyStatuses()
   }, [])
 
+  // Thêm hàm refresh để làm mới dữ liệu
+  const refreshData = useCallback(() => {
+    loadDailyStatuses()
+  }, [loadDailyStatuses])
+
   // Cập nhật trạng thái từ attendanceLogs
   const updateStatusFromAttendanceLogs = useCallback(async () => {
     if (!attendanceLogs || attendanceLogs.length === 0) return
@@ -68,6 +73,11 @@ const WeeklyStatusGrid = () => {
     const today = new Date()
     const dateKey = formatDateKey(today)
     const existingStatus = dailyStatuses[dateKey] || {}
+
+    // Kiểm tra nếu trạng thái đã được cập nhật thủ công thì không cập nhật lại
+    if (existingStatus.isManuallyUpdated) {
+      return
+    }
 
     // Lấy thời gian chấm công từ attendanceLogs
     const goWorkLog = attendanceLogs.find((log) => log.type === 'go_work')
@@ -98,6 +108,7 @@ const WeeklyStatusGrid = () => {
       ...existingStatus,
       status,
       updatedAt: new Date().toISOString(),
+      isManuallyUpdated: false, // Đánh dấu là cập nhật tự động
     }
 
     // Lưu thời gian vào/ra
@@ -144,6 +155,21 @@ const WeeklyStatusGrid = () => {
     }
   }, [attendanceLogs, updateStatusFromAttendanceLogs])
 
+  // Thêm useEffect để làm mới dữ liệu khi có thay đổi
+  useEffect(() => {
+    // Đăng ký sự kiện lắng nghe thay đổi trong AsyncStorage
+    const refreshListener = () => {
+      refreshData()
+    }
+
+    // Giả lập sự kiện lắng nghe (trong thực tế, bạn có thể sử dụng EventEmitter)
+    const refreshInterval = setInterval(refreshListener, 5000) // Làm mới mỗi 5 giây
+
+    return () => {
+      clearInterval(refreshInterval) // Dọn dẹp khi component unmount
+    }
+  }, [refreshData])
+
   // Generate array of days for the current week (Monday to Sunday)
   const generateWeekDays = useCallback(() => {
     const today = new Date()
@@ -185,8 +211,16 @@ const WeeklyStatusGrid = () => {
 
       const statuses = {}
       statusPairs.forEach(([key, value]) => {
-        const dateStr = key.replace('dailyWorkStatus_', '')
-        statuses[dateStr] = JSON.parse(value)
+        try {
+          const dateStr = key.replace('dailyWorkStatus_', '')
+          const parsedValue = JSON.parse(value)
+          statuses[dateStr] = parsedValue
+
+          // Log để debug
+          console.log(`Loaded status for ${dateStr}:`, parsedValue)
+        } catch (parseError) {
+          console.error(`Error parsing status for key ${key}:`, parseError)
+        }
       })
 
       setDailyStatuses(statuses)
@@ -201,6 +235,11 @@ const WeeklyStatusGrid = () => {
   const getDayStatus = (day) => {
     const dateKey = formatDateKey(day.date)
     const status = dailyStatuses[dateKey]
+
+    // Log để debug
+    if (status) {
+      console.log(`Getting status for ${dateKey}:`, status)
+    }
 
     // Kiểm tra xem ngày có phải là ngày nghỉ thông thường không (thứ 7, chủ nhật)
     // dựa trên cài đặt của ca làm việc hiện tại
@@ -217,8 +256,13 @@ const WeeklyStatusGrid = () => {
       return !currentShift.daysApplied.includes(dayCode)
     }
 
-    // Ngày tương lai luôn hiển thị NGAY_TUONG_LAI
+    // Ngày tương lai luôn hiển thị NGAY_TUONG_LAI trừ khi đã được cập nhật thủ công
     if (day.isFuture) {
+      // Nếu đã có trạng thái được cập nhật thủ công, hiển thị trạng thái đó
+      if (status && status.isManuallyUpdated) {
+        return status.status
+      }
+
       // Nếu đã có trạng thái nghỉ phép, nghỉ bệnh, nghỉ lễ hoặc vắng mặt thì hiển thị trạng thái đó
       if (
         status &&
@@ -271,6 +315,7 @@ const WeeklyStatusGrid = () => {
         ...existingStatus,
         status: newStatus,
         updatedAt: now.toISOString(),
+        isManuallyUpdated: true, // Đánh dấu là đã cập nhật thủ công
         // Lưu thông tin ca làm việc nếu có
         shiftName: currentShift ? currentShift.name : existingStatus.shiftName,
       }
@@ -294,12 +339,6 @@ const WeeklyStatusGrid = () => {
         }
       }
 
-      // Cập nhật trạng thái local trước để UI phản hồi ngay lập tức
-      setDailyStatuses({
-        ...dailyStatuses,
-        [dateKey]: updatedStatus,
-      })
-
       // Đóng modal ngay lập tức để cải thiện UX
       setStatusModalVisible(false)
 
@@ -309,10 +348,18 @@ const WeeklyStatusGrid = () => {
         JSON.stringify(updatedStatus)
       )
 
+      // Cập nhật trạng thái local sau khi lưu thành công
+      setDailyStatuses((prevStatuses) => ({
+        ...prevStatuses,
+        [dateKey]: updatedStatus,
+      }))
+
       // Đánh dấu đã hoàn thành cập nhật
       setTimeout(() => {
         setUpdatingStatus(false)
         setUpdatingDay(null)
+        // Làm mới dữ liệu sau khi cập nhật
+        refreshData()
       }, 500) // Đợi 500ms để tránh nhấp nháy quá nhanh
     } catch (error) {
       console.error('Error updating day status:', error)

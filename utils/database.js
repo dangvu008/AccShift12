@@ -659,6 +659,8 @@ export const addNote = async (noteData) => {
       reminderDays: noteData.reminderDays || [],
       isAlarmEnabled: noteData.isAlarmEnabled !== false, // Mặc định là true
       lastRemindedAt: null,
+      isPriority: noteData.isPriority || false, // Thêm trường ưu tiên
+      isHiddenFromHome: noteData.isHiddenFromHome || false, // Thêm trường ẩn khỏi trang chủ
     }
 
     console.log('Đã tạo ghi chú mới:', newNote.id)

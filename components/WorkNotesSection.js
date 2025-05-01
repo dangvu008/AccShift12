@@ -20,6 +20,8 @@ const WorkNotesSection = ({ navigation }) => {
   const [filteredNotes, setFilteredNotes] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [expandedNoteId, setExpandedNoteId] = useState(null)
+  const [maxNotesDisplay, setMaxNotesDisplay] = useState(3) // Mặc định hiển thị 3 ghi chú
+  const [showMaxNotesOptions, setShowMaxNotesOptions] = useState(false)
 
   // Parse reminder time string to Date object
   const parseReminderTime = (reminderTimeStr) => {
@@ -235,60 +237,175 @@ const WorkNotesSection = ({ navigation }) => {
     })
   }, [])
 
-  // Load and filter notes
+  // Lấy số lượng ghi chú hiển thị từ AsyncStorage
   useEffect(() => {
-    let isMounted = true
-
-    const loadNotes = async () => {
-      if (!isMounted) return
-      setIsLoading(true)
+    const loadMaxNotesDisplay = async () => {
       try {
-        const allNotes = await getNotes()
-        const allShifts = await getShifts()
-
-        if (!isMounted) return
-
-        // Calculate nextReminderTime for each note
-        const notesWithReminders = calculateNextReminderTimes(
-          allNotes,
-          allShifts
+        const userSettings = await AsyncStorage.getItem(
+          STORAGE_KEYS.USER_SETTINGS
         )
-
-        // Sort notes: prioritize notes with nextReminderTime, then by update time
-        const sortedNotes = notesWithReminders.sort((a, b) => {
-          // If both have nextReminderTime, sort by reminder time
-          if (a.nextReminderTime && b.nextReminderTime) {
-            return a.nextReminderTime - b.nextReminderTime
+        if (userSettings) {
+          const settings = JSON.parse(userSettings)
+          if (settings.maxNotesDisplay) {
+            setMaxNotesDisplay(settings.maxNotesDisplay)
           }
-          // If only one has nextReminderTime, prioritize the note with a reminder
-          if (a.nextReminderTime) return -1
-          if (b.nextReminderTime) return 1
-
-          // If neither has nextReminderTime, sort by most recently updated
-          return (
-            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-          )
-        })
-
-        if (!isMounted) return
-
-        // Limit to 3 notes
-        setFilteredNotes(sortedNotes.slice(0, 3))
-      } catch (error) {
-        console.error('Error loading notes:', error)
-      } finally {
-        if (isMounted) {
-          setIsLoading(false)
         }
+      } catch (error) {
+        console.error('Lỗi khi tải cài đặt số lượng ghi chú:', error)
       }
     }
 
+    loadMaxNotesDisplay()
+  }, [])
+
+  // Lưu số lượng ghi chú hiển thị vào AsyncStorage
+  const saveMaxNotesDisplay = async (value) => {
+    try {
+      const userSettings = await AsyncStorage.getItem(
+        STORAGE_KEYS.USER_SETTINGS
+      )
+      let settings = userSettings ? JSON.parse(userSettings) : {}
+      settings.maxNotesDisplay = value
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.USER_SETTINGS,
+        JSON.stringify(settings)
+      )
+      return true
+    } catch (error) {
+      console.error('Lỗi khi lưu cài đặt số lượng ghi chú:', error)
+      return false
+    }
+  }
+
+  // Xử lý thay đổi số lượng ghi chú hiển thị
+  const handleMaxNotesChange = async (value) => {
+    setMaxNotesDisplay(value)
+    setShowMaxNotesOptions(false)
+    await saveMaxNotesDisplay(value)
+
+    // Tải lại danh sách ghi chú với số lượng mới
     loadNotes()
+  }
+
+  // Load and filter notes
+  const loadNotes = useCallback(async () => {
+    let isMounted = true
+    setIsLoading(true)
+
+    try {
+      const allNotes = await getNotes()
+      const allShifts = await getShifts()
+
+      if (!isMounted) return
+
+      // Calculate nextReminderTime for each note
+      const notesWithReminders = calculateNextReminderTimes(allNotes, allShifts)
+
+      // Lọc bỏ các ghi chú đã ẩn khỏi trang chủ
+      const visibleNotes = notesWithReminders.filter(
+        (note) => !note.isHiddenFromHome
+      )
+
+      // Áp dụng logic cốt lõi theo yêu cầu
+      let urgentNote = null
+      let candidateList = []
+
+      // Tìm ghi chú cấp thiết nhất (có nextReminderTime sớm nhất)
+      visibleNotes.forEach((note) => {
+        if (note.nextReminderTime) {
+          if (
+            !urgentNote ||
+            note.nextReminderTime < urgentNote.nextReminderTime
+          ) {
+            urgentNote = note
+          }
+        }
+      })
+
+      // Lọc ra các ghi chú còn lại có nextReminderTime trong tương lai
+      candidateList = visibleNotes.filter(
+        (note) =>
+          note.id !== (urgentNote ? urgentNote.id : null) &&
+          note.nextReminderTime
+      )
+
+      // Sắp xếp candidateList: Ưu tiên theo isPriority, sau đó theo nextReminderTime
+      candidateList.sort((a, b) => {
+        // First, prioritize notes marked as priority
+        if (a.isPriority && !b.isPriority) return -1
+        if (!a.isPriority && b.isPriority) return 1
+
+        // If both have same priority status, sort by nextReminderTime
+        return a.nextReminderTime - b.nextReminderTime
+      })
+
+      // Tạo danh sách hiển thị
+      let displayNotes = []
+
+      // Vị trí đầu tiên: Luôn là urgentNote nếu có
+      if (urgentNote) {
+        displayNotes.push(urgentNote)
+      }
+
+      // Các vị trí còn lại: Lấy từ đầu danh sách candidateList
+      const remainingSlots = maxNotesDisplay - displayNotes.length
+      if (remainingSlots > 0 && candidateList.length > 0) {
+        displayNotes = [
+          ...displayNotes,
+          ...candidateList.slice(0, remainingSlots),
+        ]
+      }
+
+      // Nếu vẫn chưa đủ số lượng, thêm các ghi chú không có nextReminderTime
+      const notesWithoutReminder = visibleNotes.filter(
+        (note) => !note.nextReminderTime
+      )
+
+      // Sắp xếp theo thời gian cập nhật
+      notesWithoutReminder.sort(
+        (a, b) =>
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      )
+
+      // Thêm vào danh sách hiển thị nếu còn chỗ
+      const slotsLeft = maxNotesDisplay - displayNotes.length
+      if (slotsLeft > 0 && notesWithoutReminder.length > 0) {
+        displayNotes = [
+          ...displayNotes,
+          ...notesWithoutReminder.slice(0, slotsLeft),
+        ]
+      }
+
+      // Sắp xếp lại theo thứ tự thời gian nextReminderTime tăng dần
+      displayNotes.sort((a, b) => {
+        if (a.nextReminderTime && b.nextReminderTime) {
+          return a.nextReminderTime - b.nextReminderTime
+        }
+        if (a.nextReminderTime) return -1
+        if (b.nextReminderTime) return 1
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      })
+
+      if (!isMounted) return
+
+      setFilteredNotes(displayNotes)
+    } catch (error) {
+      console.error('Error loading notes:', error)
+    } finally {
+      if (isMounted) {
+        setIsLoading(false)
+      }
+    }
 
     return () => {
       isMounted = false
     }
-  }, [calculateNextReminderTimes])
+  }, [calculateNextReminderTimes, maxNotesDisplay])
+
+  // Load notes when component mounts or dependencies change
+  useEffect(() => {
+    loadNotes()
+  }, [loadNotes])
 
   // Handle adding a new note
   const handleAddNote = () => {
@@ -300,40 +417,63 @@ const WorkNotesSection = ({ navigation }) => {
     navigation.navigate('NoteDetail', { noteId })
   }
 
-  // Handle deleting a note
-  const handleDeleteNote = (noteId) => {
-    // Show confirmation before deleting
+  // Handle hiding a note from home screen
+  const handleHideNote = (noteId) => {
+    // Show confirmation before hiding
     Alert.alert(
-      t('Xóa ghi chú'),
-      t('Bạn có chắc chắn muốn xóa ghi chú này không?'),
+      t('Ẩn ghi chú'),
+      t(
+        'Bạn có muốn ẩn ghi chú này khỏi trang chủ và tắt nhắc nhở tiếp theo không?'
+      ),
       [
         {
           text: t('Hủy'),
           style: 'cancel',
         },
         {
-          text: t('Xóa'),
-          style: 'destructive',
+          text: t('Ẩn'),
           onPress: async () => {
             try {
               // Get current notes
               const allNotes = await getNotes()
-              // Filter out the note to delete
-              const updatedNotes = allNotes.filter((note) => note.id !== noteId)
-              // Save the updated notes list
-              await AsyncStorage.setItem(
-                STORAGE_KEYS.NOTES,
-                JSON.stringify(updatedNotes)
-              )
-              // Update state to refresh the display
-              setFilteredNotes(
-                filteredNotes.filter((note) => note.id !== noteId)
-              )
+              // Find the note to hide
+              const noteIndex = allNotes.findIndex((note) => note.id === noteId)
+
+              if (noteIndex !== -1) {
+                // Update the note with isHiddenFromHome flag
+                allNotes[noteIndex] = {
+                  ...allNotes[noteIndex],
+                  isHiddenFromHome: true,
+                  updatedAt: new Date().toISOString(),
+                }
+
+                // Save the updated notes list
+                await AsyncStorage.setItem(
+                  STORAGE_KEYS.NOTES,
+                  JSON.stringify(allNotes)
+                )
+
+                // Update state to refresh the display
+                setFilteredNotes(
+                  filteredNotes.filter((note) => note.id !== noteId)
+                )
+
+                // Hủy thông báo nhắc nhở nếu có
+                try {
+                  const { AppContext } = require('../context/AppContext')
+                  const { alarmManager } = AppContext
+                  if (alarmManager) {
+                    await alarmManager.cancelAlarmsByPrefix(`note_${noteId}`)
+                  }
+                } catch (alarmError) {
+                  console.error('Error canceling note alarms:', alarmError)
+                }
+              }
             } catch (error) {
-              console.error('Error deleting note:', error)
+              console.error('Error hiding note:', error)
               Alert.alert(
                 t('Lỗi'),
-                t('Không thể xóa ghi chú. Vui lòng thử lại.')
+                t('Không thể ẩn ghi chú. Vui lòng thử lại.')
               )
             }
           },
@@ -350,9 +490,26 @@ const WorkNotesSection = ({ navigation }) => {
   return (
     <View style={[styles.container, darkMode && styles.darkCard]}>
       <View style={styles.header}>
-        <Text style={[styles.title, darkMode && styles.darkText]}>
-          {t('Work Notes')}
-        </Text>
+        <View style={styles.titleContainer}>
+          <Text style={[styles.title, darkMode && styles.darkText]}>
+            {t('Work Notes')}
+          </Text>
+          <TouchableOpacity
+            style={styles.maxNotesButton}
+            onPress={() => setShowMaxNotesOptions(!showMaxNotesOptions)}
+          >
+            <Text
+              style={[styles.maxNotesText, darkMode && styles.darkSubtitle]}
+            >
+              {t('Hiển thị')}: {maxNotesDisplay}
+            </Text>
+            <Ionicons
+              name={showMaxNotesOptions ? 'chevron-up' : 'chevron-down'}
+              size={16}
+              color={darkMode ? '#aaa' : '#666'}
+            />
+          </TouchableOpacity>
+        </View>
         <View style={styles.headerActions}>
           <TouchableOpacity
             style={[styles.viewAllButton, darkMode && styles.darkViewAllButton]}
@@ -387,6 +544,37 @@ const WorkNotesSection = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Tùy chọn số lượng ghi chú hiển thị */}
+      {showMaxNotesOptions && (
+        <View
+          style={[
+            styles.maxNotesOptionsContainer,
+            darkMode && styles.darkMaxNotesOptionsContainer,
+          ]}
+        >
+          {[2, 3, 5].map((num) => (
+            <TouchableOpacity
+              key={num}
+              style={[
+                styles.maxNotesOption,
+                maxNotesDisplay === num && styles.selectedMaxNotesOption,
+              ]}
+              onPress={() => handleMaxNotesChange(num)}
+            >
+              <Text
+                style={[
+                  styles.maxNotesOptionText,
+                  maxNotesDisplay === num && styles.selectedMaxNotesOptionText,
+                  darkMode && styles.darkText,
+                ]}
+              >
+                {num} {t('ghi chú')}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
 
       {isLoading ? (
         <View style={styles.loadingContainer}>
@@ -457,24 +645,11 @@ const WorkNotesSection = ({ navigation }) => {
                     style={styles.actionButton}
                     onPress={(e) => {
                       e.stopPropagation()
-                      handleEditNote(note.id)
+                      handleHideNote(note.id)
                     }}
                   >
                     <Ionicons
-                      name="pencil"
-                      size={18}
-                      color={darkMode ? '#aaa' : '#666'}
-                    />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={(e) => {
-                      e.stopPropagation()
-                      handleDeleteNote(note.id)
-                    }}
-                  >
-                    <Ionicons
-                      name="trash"
+                      name="eye-off-outline"
                       size={18}
                       color={darkMode ? '#aaa' : '#666'}
                     />
@@ -517,6 +692,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
+  titleContainer: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+  },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -525,12 +704,55 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#000',
+    marginBottom: 4,
   },
   darkText: {
     color: '#fff',
   },
   darkSubtitle: {
     color: '#aaa',
+  },
+  maxNotesButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  maxNotesText: {
+    fontSize: 12,
+    color: '#666',
+    marginRight: 4,
+  },
+  maxNotesOptionsContainer: {
+    backgroundColor: '#fff',
+    marginBottom: 12,
+    borderRadius: 8,
+    padding: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  darkMaxNotesOptionsContainer: {
+    backgroundColor: '#2a2a2a',
+  },
+  maxNotesOption: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+  },
+  selectedMaxNotesOption: {
+    backgroundColor: '#f0e6ff',
+  },
+  maxNotesOptionText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+  },
+  selectedMaxNotesOptionText: {
+    color: '#8a56ff',
+    fontWeight: '500',
   },
   viewAllButton: {
     padding: 8,

@@ -82,8 +82,13 @@ const WeatherWidget = ({ onPress }) => {
           )
 
           if (homeForecast && homeForecast.length > 0) {
-            // Lọc dự báo để lấy 3 giờ tiếp theo
-            homeHourlyForecast = homeForecast.slice(0, 3)
+            // Lọc dự báo để lấy 4 giờ tiếp theo cách 1 giờ
+            homeHourlyForecast = [
+              homeForecast[0],
+              homeForecast[1],
+              homeForecast[2],
+              homeForecast[3],
+            ].filter(Boolean) // Lọc bỏ các giá trị undefined nếu có
           }
 
           // Lấy cảnh báo thời tiết
@@ -121,8 +126,13 @@ const WeatherWidget = ({ onPress }) => {
           )
 
           if (workForecast && workForecast.length > 0) {
-            // Lọc dự báo để lấy 3 giờ tiếp theo
-            workHourlyForecast = workForecast.slice(0, 3)
+            // Lọc dự báo để lấy 4 giờ tiếp theo cách 1 giờ
+            workHourlyForecast = [
+              workForecast[0],
+              workForecast[1],
+              workForecast[2],
+              workForecast[3],
+            ].filter(Boolean) // Lọc bỏ các giá trị undefined nếu có
           }
 
           // Lấy cảnh báo thời tiết
@@ -449,7 +459,7 @@ const WeatherWidget = ({ onPress }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Phần 2: Dự báo 3 giờ tiếp theo */}
+      {/* Phần 2: Dự báo 4 giờ tiếp theo */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
