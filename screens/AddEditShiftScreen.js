@@ -24,9 +24,10 @@ import { useFocusEffect } from '@react-navigation/native'
 import { COLORS } from '../utils/theme'
 
 const AddEditShiftScreen = ({ route, navigation }) => {
-  const { t, darkMode } = useContext(AppContext)
+  const { t, darkMode, currentShift, setCurrentShift } = useContext(AppContext)
   const { shiftId } = route.params || {}
   const isEditing = !!shiftId
+  const isCurrentShift = currentShift && currentShift.id === shiftId
 
   // Form state
   const [shiftName, setShiftName] = useState('')
@@ -49,8 +50,8 @@ const AddEditShiftScreen = ({ route, navigation }) => {
   const [breakTime, setBreakTime] = useState('60')
   const [remindBeforeStart, setRemindBeforeStart] = useState('15')
   const [remindAfterEnd, setRemindAfterEnd] = useState('15')
-  const [isActive, setIsActive] = useState(isEditing ? true : false)
-  const [showPunch, setShowPunch] = useState(isEditing ? true : false)
+  const [isActive, setIsActive] = useState(false)
+  const [showPunch, setShowPunch] = useState(false)
   const [daysApplied, setDaysApplied] = useState(['T2', 'T3', 'T4', 'T5', 'T6'])
 
   // UI state
@@ -133,8 +134,8 @@ const AddEditShiftScreen = ({ route, navigation }) => {
           setBreakTime(shift.breakTime?.toString() || '60')
           setRemindBeforeStart(shift.remindBeforeStart?.toString() || '15')
           setRemindAfterEnd(shift.remindAfterEnd?.toString() || '15')
-          setIsActive(shift.isActive !== false)
-          setShowPunch(shift.showPunch !== false)
+          setIsActive(shift.isActive === true)
+          setShowPunch(shift.showPunch === true)
           setDaysApplied(shift.daysApplied || ['T2', 'T3', 'T4', 'T5', 'T6'])
         }
       }
@@ -710,6 +711,21 @@ const AddEditShiftScreen = ({ route, navigation }) => {
                   JSON.stringify(shifts)
                 )
 
+                // Nếu đang cập nhật ca hiện tại, cập nhật trong context
+                if (isCurrentShift) {
+                  // Nếu ca hiện tại bị tắt, hiển thị thông báo
+                  if (!isActive) {
+                    Alert.alert(
+                      t('Thông báo'),
+                      t('Ca làm việc đã bị tắt và không còn được áp dụng nữa.'),
+                      [{ text: t('OK') }]
+                    )
+                  }
+
+                  // Cập nhật ca hiện tại trong context
+                  await setCurrentShift(isActive ? newShift : null)
+                }
+
                 // Navigate back
                 navigation.goBack()
               } catch (error) {
@@ -1274,8 +1290,32 @@ const AddEditShiftScreen = ({ route, navigation }) => {
             <Switch
               value={isActive}
               onValueChange={(value) => {
-                setIsActive(value)
-                setIsFormDirty(true)
+                // Nếu đang tắt ca hiện tại, hiển thị xác nhận
+                if (isCurrentShift && !value) {
+                  Alert.alert(
+                    t('Xác nhận tắt ca đang áp dụng'),
+                    t(
+                      'Ca này đang được áp dụng. Nếu tắt, ca này sẽ không còn được áp dụng nữa. Bạn có chắc chắn muốn tắt ca này không?'
+                    ),
+                    [
+                      {
+                        text: t('Hủy'),
+                        style: 'cancel',
+                      },
+                      {
+                        text: t('Tắt ca'),
+                        style: 'destructive',
+                        onPress: () => {
+                          setIsActive(false)
+                          setIsFormDirty(true)
+                        },
+                      },
+                    ]
+                  )
+                } else {
+                  setIsActive(value)
+                  setIsFormDirty(true)
+                }
               }}
               trackColor={{ false: '#767577', true: COLORS.PRIMARY }}
               thumbColor={isActive ? '#f4f3f4' : '#f4f3f4'}
