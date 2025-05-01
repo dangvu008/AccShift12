@@ -265,21 +265,13 @@ const HomeScreen = ({ navigation }) => {
             {t('Weekly Status')}
           </Text>
           <TouchableOpacity
-            style={{
-              backgroundColor: theme.primaryColor,
-              borderRadius: 8,
-              paddingVertical: 4,
-              paddingHorizontal: 10,
-            }}
             onPress={() => navigation.navigate('AttendanceStats')}
           >
-            <View style={styles.shiftEditIcon}>
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={theme.subtextColor}
-              />
-            </View>
+            <Ionicons
+              name="chevron-forward"
+              size={24}
+              color={theme.subtextColor}
+            />
           </TouchableOpacity>
         </View>
         <WeeklyStatusGrid />
