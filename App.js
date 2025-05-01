@@ -424,7 +424,7 @@ function AppContent(props) {
     }
 
     checkShiftRotation()
-  }, [])
+  }, [checkAndApplyShiftRotation])
 
   return (
     <>

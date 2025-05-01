@@ -100,7 +100,6 @@ export const translations = {
     'Enable Dark Mode for better viewing in low light':
       'Bật chế độ tối để xem tốt hơn trong điều kiện ánh sáng yếu',
     Language: 'Ngôn ngữ',
-    'Select Language': 'Chọn ngôn ngữ',
     'Help & Feedback': 'Trợ giúp & Phản hồi',
     'Help & Guide': 'Trợ giúp & Hướng dẫn',
     'Learn how to use the app': 'Tìm hiểu cách sử dụng ứng dụng',

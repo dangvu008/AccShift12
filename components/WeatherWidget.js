@@ -293,7 +293,6 @@ const WeatherWidget = ({ onPress }) => {
     homeLocation,
     workLocation,
     generateSmartAlert,
-    t,
   ])
 
   // Sử dụng useRef để theo dõi lần mount đầu tiên
@@ -309,7 +308,7 @@ const WeatherWidget = ({ onPress }) => {
       // Chỉ fetch lại khi vị trí thay đổi
       memoizedFetchWeatherData()
     }
-  }, [homeLocation, workLocation])
+  }, [homeLocation, workLocation, memoizedFetchWeatherData])
 
   if (loading) {
     return (
