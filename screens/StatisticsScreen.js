@@ -20,6 +20,7 @@ import {
   formatShortWeekday,
   formatShortDate,
   formatDecimalHours,
+  formatDuration,
 } from '../utils/formatters'
 import * as FileSystem from 'expo-file-system'
 import * as Sharing from 'expo-sharing'

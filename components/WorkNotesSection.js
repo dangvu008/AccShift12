@@ -290,7 +290,7 @@ const WorkNotesSection = ({ navigation }) => {
       )
       return result
     })
-  }
+  }, [])
 
   // Load and filter notes
   useEffect(() => {

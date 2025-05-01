@@ -135,7 +135,7 @@ const WeeklyStatusGrid = () => {
       ...prevStatuses,
       [dateKey]: updatedStatus,
     }))
-  }, [attendanceLogs, currentShift, formatDateKey])
+  }, [attendanceLogs, currentShift, formatDateKey, dailyStatuses])
 
   // Cập nhật trạng thái khi người dùng bấm nút đi làm
   useEffect(() => {

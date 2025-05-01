@@ -513,7 +513,6 @@ export const translations = {
     'Enable Dark Mode for better viewing in low light':
       'Enable Dark Mode for better viewing in low light',
     Language: 'Language',
-    'Select Language': 'Select Language',
 
     'Help & Feedback': 'Help & Feedback',
     'Help & Guide': 'Help & Guide',

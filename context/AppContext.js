@@ -1482,14 +1482,16 @@ export const AppProvider = ({ children }) => {
   // Cập nhật hàm lưu cài đặt OT
   const handleSaveOtBaseRateSettings = async () => {
     const settings = {
-      otRateWeekday: parseNumericInput(baseWeekdayRate),
-      otRateSaturday: parseNumericInput(baseSaturdayRate),
-      otRateSunday: parseNumericInput(baseSundayRate),
-      otRateHoliday: parseNumericInput(baseHolidayRate),
+      otRateWeekday: otRateWeekday,
+      otRateSaturday: otRateSaturday,
+      otRateSunday: otRateSunday,
+      otRateHoliday: otRateHoliday,
     }
 
     // Validate all inputs
-    if (Object.values(settings).some((value) => value === null)) {
+    if (
+      Object.values(settings).some((value) => value === null || value < 100)
+    ) {
       Alert.alert(
         t('Invalid Input'),
         t('Please enter valid rates (minimum 100%)')
@@ -1499,11 +1501,11 @@ export const AppProvider = ({ children }) => {
 
     // Save all settings
     const success = await updateMultipleSettings(settings)
-    if (success) {
-      setShowOtBaseRateModal(false)
-    } else {
+    if (!success) {
       Alert.alert(t('Error'), t('Failed to save settings'))
     }
+
+    return success
   }
 
   return (

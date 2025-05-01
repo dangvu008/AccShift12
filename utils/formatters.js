@@ -45,7 +45,17 @@ export const formatDecimalHours = (minutes) => {
 
   // Chuyển đổi phút thành giờ dạng thập phân và làm tròn đến 1 chữ số thập phân
   const hours = (minutes / 60).toFixed(1)
-  
+
   // Nếu phần thập phân là .0 thì bỏ đi
   return hours.endsWith('.0') ? hours.slice(0, -2) : hours
+}
+
+// Định dạng thời gian từ phút sang giờ:phút
+export const formatDuration = (minutes) => {
+  if (!minutes) return '0:00'
+
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+
+  return `${hours}:${mins.toString().padStart(2, '0')}`
 }

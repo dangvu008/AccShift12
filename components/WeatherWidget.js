@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState, useCallback } from 'react'
 import {
   View,
   Text,
@@ -286,6 +286,8 @@ const WeatherWidget = ({ onPress }) => {
   const memoizedFetchWeatherData = useCallback(fetchWeatherData, [
     homeLocation,
     workLocation,
+    generateSmartAlert,
+    t,
   ])
 
   useEffect(() => {
