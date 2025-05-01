@@ -326,27 +326,31 @@ const WeeklyStatusGrid = () => {
   const getStatusIcon = (status) => {
     switch (status) {
       case WORK_STATUS.THIEU_LOG:
-        return { name: 'alert-circle', color: '#e74c3c', type: 'ionicons' }
+        return { name: 'warning-outline', color: '#e74c3c', type: 'ionicons' }
       case WORK_STATUS.DU_CONG:
-        return { name: 'finger-print', color: '#27ae60', type: 'ionicons' }
+        return { name: 'checkmark-circle', color: '#27ae60', type: 'ionicons' }
       case WORK_STATUS.NGHI_PHEP:
-        return { name: 'calendar-outline', color: '#3498db', type: 'ionicons' }
+        return {
+          name: 'document-text-outline',
+          color: '#3498db',
+          type: 'ionicons',
+        }
       case WORK_STATUS.NGHI_BENH:
-        return { name: 'medkit-outline', color: '#9b59b6', type: 'ionicons' }
+        return { name: 'fitness-outline', color: '#9b59b6', type: 'ionicons' }
       case WORK_STATUS.NGHI_LE:
-        return { name: 'ribbon-outline', color: '#f39c12', type: 'ionicons' }
+        return { name: 'flag-outline', color: '#f39c12', type: 'ionicons' }
       case WORK_STATUS.NGHI_THUONG:
-        return { name: 'home-outline', color: '#27ae60', type: 'ionicons' }
+        return { name: 'cafe-outline', color: '#27ae60', type: 'ionicons' }
       case WORK_STATUS.VANG_MAT:
         return { name: 'close-circle', color: '#e74c3c', type: 'ionicons' }
       case WORK_STATUS.DI_MUON:
-        return { name: 'time-outline', color: '#f39c12', type: 'ionicons' }
+        return { name: 'alarm-outline', color: '#f39c12', type: 'ionicons' }
       case WORK_STATUS.VE_SOM:
-        return { name: 'exit-outline', color: '#f39c12', type: 'ionicons' }
+        return { name: 'log-out-outline', color: '#f39c12', type: 'ionicons' }
       case WORK_STATUS.DI_MUON_VE_SOM:
-        return { name: 'hourglass-outline', color: '#f39c12', type: 'ionicons' }
+        return { name: 'timer-outline', color: '#f39c12', type: 'ionicons' }
       case WORK_STATUS.NGAY_TUONG_LAI:
-        return { name: 'calendar', color: '#95a5a6', type: 'ionicons' }
+        return { name: 'calendar-outline', color: '#95a5a6', type: 'ionicons' }
       default:
         return {
           name: 'help-circle-outline',
