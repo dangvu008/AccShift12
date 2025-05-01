@@ -16,6 +16,9 @@ import { AppContext } from '../context/AppContext'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 const SettingsScreen = ({ navigation }) => {
+  // Log để debug
+  console.log('SettingsScreen được render')
+
   const {
     t,
     darkMode,

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useContext } from 'react'
 import { StatusBar } from 'expo-status-bar'
+import { TouchableOpacity } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { createStackNavigator } from '@react-navigation/stack'
@@ -21,6 +22,7 @@ import ShiftListScreen from './screens/ShiftListScreen'
 import ShiftManagementScreen from './screens/ShiftManagementScreen'
 import AddEditShiftScreen from './screens/AddEditShiftScreen'
 import SettingsScreen from './screens/SettingsScreen'
+import SimpleSettingsScreen from './screens/SimpleSettingsScreen'
 import BackupRestoreScreen from './screens/BackupRestoreScreen'
 import WeatherAlertsScreen from './screens/WeatherAlertsScreen'
 import WeatherApiKeysScreen from './screens/WeatherApiKeysScreen' // Giữ lại import nhưng không hiển thị trong UI
@@ -248,6 +250,9 @@ function SettingsStack() {
   // Import context to use t() function and theme
   const { t, theme } = useContext(AppContext)
 
+  // Log để debug
+  console.log('SettingsStack được render')
+
   return (
     <Stack.Navigator
       screenOptions={{
@@ -466,55 +471,85 @@ function AppContent(props) {
   return (
     <>
       <Tab.Navigator
-        screenOptions={
-          /** @param {{route: Route}} param */ ({ route }) => ({
-            tabBarIcon: /** @param {TabBarIconProps} props */ ({
-              focused,
-              color,
-              size,
-            }) => {
-              let iconName
-
-              if (route.name === 'HomeStack') {
-                iconName = focused ? 'home' : 'home-outline'
-              } else if (route.name === 'ShiftsStack') {
-                iconName = focused ? 'calendar' : 'calendar-outline'
-              } else if (route.name === 'StatisticsStack') {
-                iconName = focused ? 'stats-chart' : 'stats-chart-outline'
-              } else if (route.name === 'SettingsStack') {
-                iconName = focused ? 'settings' : 'settings-outline'
-              }
-
-              return <Ionicons name={iconName} size={size} color={color} />
-            },
-            tabBarActiveTintColor: theme.tabBarActiveColor,
-            tabBarInactiveTintColor: theme.tabBarInactiveColor,
-            tabBarStyle: {
-              backgroundColor: theme.tabBarBackgroundColor,
-              borderTopColor: theme.tabBarBorderColor,
-            },
-          })
-        }
+        screenOptions={{
+          tabBarActiveTintColor: theme.tabBarActiveColor,
+          tabBarInactiveTintColor: theme.tabBarInactiveColor,
+          tabBarStyle: {
+            backgroundColor: theme.tabBarBackgroundColor,
+            borderTopColor: theme.tabBarBorderColor,
+          },
+        }}
       >
         <Tab.Screen
           name="HomeStack"
           component={HomeStack}
-          options={{ title: t('Home'), headerShown: false }}
+          options={{
+            title: t('Home'),
+            headerShown: false,
+            tabBarIcon: ({ focused, color, size }) => (
+              <Ionicons
+                name={focused ? 'home' : 'home-outline'}
+                size={size}
+                color={color}
+              />
+            ),
+          }}
         />
         <Tab.Screen
           name="ShiftsStack"
           component={ShiftsStack}
-          options={{ title: t('Shifts'), headerShown: false }}
+          options={{
+            title: t('Shifts'),
+            headerShown: false,
+            tabBarIcon: ({ focused, color, size }) => (
+              <Ionicons
+                name={focused ? 'calendar' : 'calendar-outline'}
+                size={size}
+                color={color}
+              />
+            ),
+          }}
         />
         <Tab.Screen
           name="StatisticsStack"
           component={StatisticsStack}
-          options={{ title: t('Statistics'), headerShown: false }}
+          options={{
+            title: t('Statistics'),
+            headerShown: false,
+            tabBarIcon: ({ focused, color, size }) => (
+              <Ionicons
+                name={focused ? 'stats-chart' : 'stats-chart-outline'}
+                size={size}
+                color={color}
+              />
+            ),
+          }}
         />
         <Tab.Screen
           name="SettingsStack"
           component={SettingsStack}
-          options={{ title: t('Settings'), headerShown: false }}
+          options={{
+            title: t('Settings'),
+            headerShown: false,
+            tabBarIcon: ({ focused, color, size }) => (
+              <Ionicons
+                name={focused ? 'settings' : 'settings-outline'}
+                size={size}
+                color={color}
+              />
+            ),
+          }}
+          listeners={({ navigation }) => ({
+            tabPress: (e) => {
+              // Ngăn chặn hành vi mặc định
+              e.preventDefault()
+
+              // Điều hướng đến SettingsStack/Settings
+              navigation.navigate('SettingsStack', {
+                screen: 'Settings',
+              })
+            },
+          })}
         />
       </Tab.Navigator>
       <StatusBar style="auto" />
