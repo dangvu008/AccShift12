@@ -359,27 +359,15 @@ const WorkNotesSection = ({ navigation }) => {
             onPress={() => {
               console.log('View All button pressed')
               try {
-                // Kiểm tra xem màn hình Notes có tồn tại không
-                if (navigation && navigation.navigate) {
-                  // Thử điều hướng đến màn hình Notes trong SettingsStack
-                  navigation.navigate('SettingsStack', { screen: 'Notes' })
-                  console.log('Đã điều hướng đến SettingsStack -> Notes')
-                } else {
-                  console.error('Navigation không khả dụng')
-                }
+                // Điều hướng trực tiếp đến màn hình Notes trong SettingsStack
+                // Sử dụng cách điều hướng rõ ràng hơn để tránh xung đột
+                navigation.navigate('SettingsStack', {
+                  screen: 'Notes',
+                  initial: false,
+                })
+                console.log('Đã điều hướng đến SettingsStack -> Notes')
               } catch (error) {
                 console.error('Lỗi khi điều hướng đến màn hình Notes:', error)
-                // Thử phương pháp khác nếu có lỗi
-                try {
-                  // Thử điều hướng trực tiếp
-                  navigation.navigate('Notes')
-                  console.log('Đã điều hướng trực tiếp đến Notes')
-                } catch (directError) {
-                  console.error(
-                    'Lỗi khi điều hướng trực tiếp đến Notes:',
-                    directError
-                  )
-                }
               }
             }}
             activeOpacity={0.7}

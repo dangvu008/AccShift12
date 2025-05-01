@@ -22,7 +22,6 @@ import ShiftListScreen from './screens/ShiftListScreen'
 import ShiftManagementScreen from './screens/ShiftManagementScreen'
 import AddEditShiftScreen from './screens/AddEditShiftScreen'
 import SettingsScreen from './screens/SettingsScreen'
-import SimpleSettingsScreen from './screens/SimpleSettingsScreen'
 import BackupRestoreScreen from './screens/BackupRestoreScreen'
 import WeatherAlertsScreen from './screens/WeatherAlertsScreen'
 import WeatherApiKeysScreen from './screens/WeatherApiKeysScreen' // Giữ lại import nhưng không hiển thị trong UI
@@ -264,6 +263,7 @@ function SettingsStack() {
           fontWeight: 'bold',
         },
       }}
+      initialRouteName="Settings"
     >
       <Stack.Screen
         name="Settings"
@@ -544,9 +544,18 @@ function AppContent(props) {
               // Ngăn chặn hành vi mặc định
               e.preventDefault()
 
-              // Điều hướng đến SettingsStack/Settings
-              navigation.navigate('SettingsStack', {
-                screen: 'Settings',
+              // Điều hướng đến SettingsStack/Settings và reset stack để đảm bảo hiển thị màn hình Settings
+              navigation.reset({
+                index: 0,
+                routes: [
+                  {
+                    name: 'SettingsStack',
+                    state: {
+                      routes: [{ name: 'Settings' }],
+                      index: 0,
+                    },
+                  },
+                ],
               })
             },
           })}
