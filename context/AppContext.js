@@ -1453,8 +1453,8 @@ export const AppProvider = ({ children }) => {
       : null
   }
 
-  // Cập nhật hàm xử lý input
-  const updateOtRateWeekday = (rate) => {
+  // Cập nhật hàm xử lý input cho modal
+  const handleOtRateWeekdayChange = (rate) => {
     const validRate = parseNumericInput(rate)
     if (validRate) {
       setOtRateWeekday(validRate)
@@ -1602,6 +1602,7 @@ export const AppProvider = ({ children }) => {
         updateOtRateSaturday,
         updateOtRateSunday,
         updateOtRateHoliday,
+        handleOtRateWeekdayChange,
         // Night OT Calculation Rule functions
         updateNightOtCalculationRule,
         // Fixed Rate functions

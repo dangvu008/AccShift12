@@ -112,7 +112,7 @@ export const translations = {
     'Set Work Location': 'Thiết lập vị trí nơi làm việc',
     'In a real app, this would show a map or address search.':
       'Trong ứng dụng thực tế, điều này sẽ hiển thị bản đồ hoặc tìm kiếm địa chỉ.',
-    Cancel: 'Hủy',
+
     Save: 'Lưu',
 
     // Weather
@@ -387,7 +387,8 @@ export const translations = {
     'Nhắc nhở trước chấm công vào (phút)':
       'Nhắc nhở trước chấm công vào (phút)',
     'Nhắc nhở chấm công ra sau (phút)': 'Nhắc nhở chấm công ra sau (phút)',
-    'Chọn thời gian nhắc nhở': 'Chọn thời gian nhắc nhở',
+
+    'Thời gian nhắc nhở': 'Thời gian nhắc nhở',
 
     // Navigation
     Home: 'Trang chủ',
@@ -512,7 +513,7 @@ export const translations = {
     'Enable Dark Mode for better viewing in low light':
       'Enable Dark Mode for better viewing in low light',
     Language: 'Language',
-    'Select Language': 'Select Language',
+
     'Help & Feedback': 'Help & Feedback',
     'Help & Guide': 'Help & Guide',
     'Learn how to use the app': 'Learn how to use the app',
@@ -524,7 +525,7 @@ export const translations = {
     'Set Work Location': 'Set Work Location',
     'In a real app, this would show a map or address search.':
       'In a real app, this would show a map or address search.',
-    Cancel: 'Cancel',
+
     Save: 'Save',
 
     // Weather
@@ -663,7 +664,8 @@ export const translations = {
     'Cài đặt nhắc nhở': 'Reminder Settings',
     'Đặt lịch cụ thể': 'Set Specific Time',
     'Nhắc theo ca': 'Remind by Shift',
-    'Chọn thời gian nhắc nhở': 'Select reminder time',
+
+    'Thời gian nhắc nhở': 'Reminder time',
     'Chọn ca làm việc': 'Select work shifts',
     'Nhắc nhở sẽ được đặt trước 5 phút giờ xuất phát (departureTime) của (các) ca đã chọn.':
       'Reminders will be set 5 minutes before the departure time of selected shift(s).',

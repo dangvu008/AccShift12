@@ -316,16 +316,6 @@ const styles = StyleSheet.create({
     color: '#000',
     marginLeft: 8,
   },
-  sectionSubtitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  inlineSwitch: {
-    marginLeft: 8,
-  },
   darkCard: {
     backgroundColor: '#1e1e1e',
   },
@@ -349,37 +339,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
   },
-  dropdown: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  darkDropdown: {
-    backgroundColor: '#2a2a2a',
-  },
-  dropdownText: {
-    fontSize: 14,
-    color: '#000',
-    marginRight: 8,
-  },
-  permissionButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 4,
-  },
-  permissionNeededButton: {
-    backgroundColor: '#f39c12',
-  },
-  permissionGrantedButton: {
-    backgroundColor: '#27ae60',
-  },
-  permissionButtonText: {
-    color: '#fff',
-    fontWeight: '500',
-  },
+
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -410,23 +370,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
-  disabledText: {
-    color: '#999',
-  },
-  appInfo: {
-    alignItems: 'center',
-    marginTop: 24,
-    marginBottom: 32,
-  },
-  appVersion: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
-  },
-  appCopyright: {
-    fontSize: 12,
-    color: '#999',
-  },
+
   modalOverlay: {
     position: 'absolute',
     top: 0,
@@ -450,9 +394,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     maxHeight: '80%',
   },
-  largeModalContent: {
-    width: '90%',
-  },
+
   darkModalContent: {
     backgroundColor: '#2a2a2a',
   },
@@ -490,34 +432,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#8a56ff',
   },
-  formGroup: {
-    marginBottom: 16,
-  },
-  formLabel: {
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 8,
-  },
-  formInput: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    color: '#333',
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  darkFormInput: {
-    backgroundColor: '#333',
-    borderColor: '#444',
-    color: '#fff',
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
-  },
+
   cancelButton: {
     flex: 1,
     marginRight: 8,
@@ -534,56 +449,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#8a56ff',
     fontWeight: 'bold',
-  },
-  saveButton: {
-    flex: 1,
-    marginLeft: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    backgroundColor: '#8a56ff',
-    alignItems: 'center',
-  },
-  saveButtonText: {
-    fontSize: 16,
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  ruleOption: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginBottom: 12,
-    backgroundColor: '#f0f0f0',
-  },
-  darkRuleOption: {
-    backgroundColor: '#3a3a3a',
-  },
-  selectedRuleOption: {
-    backgroundColor: '#e6e0ff',
-  },
-  darkSelectedRuleOption: {
-    backgroundColor: '#4a3b80',
-  },
-  ruleTextContainer: {
-    flex: 1,
-  },
-  ruleTitle: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  selectedRuleText: {
-    fontWeight: 'bold',
-    color: '#8a56ff',
-  },
-  ruleDescription: {
-    fontSize: 12,
-    color: '#666',
   },
 })
 
