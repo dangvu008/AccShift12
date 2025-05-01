@@ -263,11 +263,8 @@ export const AppProvider = ({ children }) => {
         // Get current shift if any
         const shift = await getCurrentShift()
         if (isMounted) {
-          // Chỉ cập nhật currentShift nếu nó khác với giá trị hiện tại
-          // Điều này giúp tránh vòng lặp vô hạn
-          if (JSON.stringify(shift) !== JSON.stringify(currentShift)) {
-            setCurrentShift(shift)
-          }
+          // Cập nhật currentShift mà không gây ra vòng lặp vô hạn
+          setCurrentShift(shift)
 
           // Set showPunchButton based on current shift
           if (shift && shift.showCheckInButtonWhileWorking) {
@@ -377,7 +374,7 @@ export const AppProvider = ({ children }) => {
     return () => {
       isMounted = false
     }
-  }, [currentShift])
+  }, [])
 
   const saveSettings = async (key, value) => {
     try {

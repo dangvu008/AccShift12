@@ -36,47 +36,32 @@ const HomeScreen = ({ navigation }) => {
 
   // Update current time every second - optimized to prevent flickering
   useEffect(() => {
-    // Create a reference object to store current state
-    const stateRef = {
-      isWorking,
-      workStartTime,
-    }
-
-    // Update reference when dependencies change
-    stateRef.isWorking = isWorking
-    stateRef.workStartTime = workStartTime
-
-    // Sử dụng requestAnimationFrame thay vì setInterval để tránh re-render quá nhiều
-    let animationFrameId
-    let lastUpdate = Date.now()
+    // Sử dụng setInterval thay vì requestAnimationFrame để giảm số lần render
+    let intervalId
 
     const updateTime = () => {
-      const now = Date.now()
-      // Chỉ cập nhật UI mỗi 1000ms
-      if (now - lastUpdate >= 1000) {
-        const currentDate = new Date()
-        setCurrentTime(currentDate)
+      const currentDate = new Date()
+      setCurrentTime(currentDate)
 
-        // Calculate work duration if working
-        if (stateRef.isWorking && stateRef.workStartTime) {
-          const currentTimeMs = currentDate.getTime()
-          const workStartTimeMs = stateRef.workStartTime.getTime()
-          const duration = Math.floor(
-            (currentTimeMs - workStartTimeMs) / (1000 * 60)
-          )
-          setWorkDuration(duration)
-        }
-
-        lastUpdate = now
+      // Calculate work duration if working
+      if (isWorking && workStartTime) {
+        const currentTimeMs = currentDate.getTime()
+        const workStartTimeMs = workStartTime.getTime()
+        const duration = Math.floor(
+          (currentTimeMs - workStartTimeMs) / (1000 * 60)
+        )
+        setWorkDuration(duration)
       }
-
-      animationFrameId = requestAnimationFrame(updateTime)
     }
 
-    animationFrameId = requestAnimationFrame(updateTime)
+    // Cập nhật thời gian ngay lập tức
+    updateTime()
+
+    // Sau đó cập nhật mỗi giây
+    intervalId = setInterval(updateTime, 1000)
 
     return () => {
-      cancelAnimationFrame(animationFrameId)
+      clearInterval(intervalId)
     }
   }, [isWorking, workStartTime])
 
