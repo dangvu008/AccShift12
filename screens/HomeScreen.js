@@ -167,7 +167,7 @@ const HomeScreen = ({ navigation }) => {
           padding: 16,
           marginBottom: 16,
         }}
-        onPress={() => navigation.navigate('ShiftManagement')}
+        onPress={() => navigation.navigate('ShiftsStack')}
       >
         <Text
           style={{
@@ -273,7 +273,13 @@ const HomeScreen = ({ navigation }) => {
             }}
             onPress={() => navigation.navigate('AttendanceStats')}
           >
-            <Ionicons name="document-text-outline" size={24} color="#fff" />
+            <View style={styles.shiftEditIcon}>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={theme.subtextColor}
+              />
+            </View>
           </TouchableOpacity>
         </View>
         <WeeklyStatusGrid />

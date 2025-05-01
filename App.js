@@ -7,11 +7,13 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { createStackNavigator } from '@react-navigation/stack'
 import { Ionicons } from '@expo/vector-icons'
 import * as Notifications from 'expo-notifications'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 // Import JSDoc types
 // @ts-ignore
 import './types.js'
 import { AppProvider, AppContext } from './context/AppContext'
 import { createSampleNotes } from './utils/sampleNotes'
+import { STORAGE_KEYS } from './utils/constants'
 
 // Import screens
 import HomeScreen from './screens/HomeScreen'
@@ -33,6 +35,7 @@ import LogHistoryDetailScreen from './screens/LogHistoryDetailScreen'
 import ImageViewerScreen from './screens/ImageViewerScreen'
 import AlarmScreen from './screens/AlarmScreen'
 import MapPickerScreen from './screens/MapPickerScreen'
+import DebugScreen from './screens/DebugScreen'
 
 // Set up notification handler
 Notifications.setNotificationHandler({
@@ -255,6 +258,11 @@ function SettingsStack() {
         component={WeatherApiKeysScreen}
         options={{ title: t('Weather API Keys') }}
       />
+      <Stack.Screen
+        name="Debug"
+        component={DebugScreen}
+        options={{ title: t('Debug') }}
+      />
     </Stack.Navigator>
   )
 }
@@ -291,17 +299,75 @@ export default function App() {
       try {
         console.log('Bắt đầu khởi tạo dữ liệu mẫu...')
 
+        // Kiểm tra xem đã có dữ liệu nào chưa
+        try {
+          const shiftsJson = await AsyncStorage.getItem(STORAGE_KEYS.SHIFT_LIST)
+          const notesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
+          console.log('Kiểm tra dữ liệu hiện có:')
+          console.log(
+            '- Ca làm việc:',
+            shiftsJson ? 'Có dữ liệu' : 'Không có dữ liệu'
+          )
+          console.log(
+            '- Ghi chú:',
+            notesJson ? 'Có dữ liệu' : 'Không có dữ liệu'
+          )
+        } catch (checkError) {
+          console.error('Lỗi khi kiểm tra dữ liệu hiện có:', checkError)
+        }
+
         // Khởi tạo cơ sở dữ liệu và dữ liệu mẫu ca làm việc
+        console.log('Bắt đầu khởi tạo cơ sở dữ liệu...')
         const { initializeDatabase } = require('./utils/database')
-        await initializeDatabase()
-        console.log('Đã khởi tạo cơ sở dữ liệu và ca làm việc mẫu')
+        const dbResult = await initializeDatabase()
+        console.log(
+          'Kết quả khởi tạo cơ sở dữ liệu:',
+          dbResult ? 'Thành công' : 'Thất bại'
+        )
+
+        // Kiểm tra lại sau khi khởi tạo cơ sở dữ liệu
+        try {
+          const shiftsJson = await AsyncStorage.getItem(STORAGE_KEYS.SHIFT_LIST)
+          console.log(
+            'Kiểm tra ca làm việc sau khi khởi tạo:',
+            shiftsJson ? 'Có dữ liệu' : 'Không có dữ liệu'
+          )
+          if (shiftsJson) {
+            const shifts = JSON.parse(shiftsJson)
+            console.log(`Số lượng ca làm việc: ${shifts.length}`)
+          }
+        } catch (checkError) {
+          console.error(
+            'Lỗi khi kiểm tra ca làm việc sau khi khởi tạo:',
+            checkError
+          )
+        }
 
         // Khởi tạo dữ liệu mẫu cho ghi chú
+        console.log('Bắt đầu khởi tạo ghi chú mẫu...')
         const notesResult = await createSampleNotes()
         console.log(
           'Kết quả khởi tạo ghi chú mẫu:',
           notesResult ? 'Thành công' : 'Không cần thiết'
         )
+
+        // Kiểm tra lại sau khi khởi tạo ghi chú
+        try {
+          const notesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
+          console.log(
+            'Kiểm tra ghi chú sau khi khởi tạo:',
+            notesJson ? 'Có dữ liệu' : 'Không có dữ liệu'
+          )
+          if (notesJson) {
+            const notes = JSON.parse(notesJson)
+            console.log(`Số lượng ghi chú: ${notes.length}`)
+          }
+        } catch (checkError) {
+          console.error(
+            'Lỗi khi kiểm tra ghi chú sau khi khởi tạo:',
+            checkError
+          )
+        }
 
         console.log('Hoàn thành khởi tạo dữ liệu mẫu')
       } catch (error) {

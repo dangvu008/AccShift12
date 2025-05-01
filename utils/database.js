@@ -5,6 +5,7 @@ import { STORAGE_KEYS } from './constants'
 export const initializeDatabase = async () => {
   try {
     console.log('Bắt đầu khởi tạo cơ sở dữ liệu...')
+    console.log('Platform:', require('react-native').Platform.OS)
 
     // Check if shifts are already initialized
     let shiftsJson
@@ -87,10 +88,14 @@ export const initializeDatabase = async () => {
       ]
 
       try {
-        await AsyncStorage.setItem(
-          STORAGE_KEYS.SHIFT_LIST,
-          JSON.stringify(sampleShifts)
+        console.log('Bắt đầu lưu dữ liệu mẫu ca làm việc...')
+        const shiftsString = JSON.stringify(sampleShifts)
+        console.log(
+          'Dữ liệu ca làm việc đã được chuyển thành chuỗi JSON, độ dài:',
+          shiftsString.length
         )
+
+        await AsyncStorage.setItem(STORAGE_KEYS.SHIFT_LIST, shiftsString)
         console.log('Đã lưu dữ liệu mẫu ca làm việc thành công')
 
         // Kiểm tra lại xem dữ liệu đã được lưu chưa
@@ -99,6 +104,17 @@ export const initializeDatabase = async () => {
         )
         if (checkShiftsJson) {
           console.log('Xác nhận dữ liệu ca làm việc đã được lưu thành công')
+          console.log('Độ dài dữ liệu đã lưu:', checkShiftsJson.length)
+
+          try {
+            const parsedShifts = JSON.parse(checkShiftsJson)
+            console.log('Số lượng ca làm việc đã lưu:', parsedShifts.length)
+          } catch (parseError) {
+            console.error(
+              'Lỗi khi parse dữ liệu ca làm việc đã lưu:',
+              parseError
+            )
+          }
         } else {
           console.error('Dữ liệu ca làm việc không được lưu thành công')
         }
@@ -134,6 +150,16 @@ export const initializeDatabase = async () => {
           JSON.stringify([])
         )
         console.log('Đã khởi tạo dữ liệu điểm danh thành công')
+
+        // Kiểm tra lại
+        const checkAttendanceJson = await AsyncStorage.getItem(
+          STORAGE_KEYS.ATTENDANCE_RECORDS
+        )
+        if (checkAttendanceJson) {
+          console.log('Xác nhận dữ liệu điểm danh đã được lưu thành công')
+        } else {
+          console.error('Dữ liệu điểm danh không được lưu thành công')
+        }
       } catch (saveError) {
         console.error('Lỗi khi khởi tạo dữ liệu điểm danh:', saveError)
       }
@@ -161,9 +187,25 @@ export const initializeDatabase = async () => {
       try {
         await AsyncStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify([]))
         console.log('Đã khởi tạo dữ liệu ghi chú thành công')
+
+        // Kiểm tra lại
+        const checkNotesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
+        if (checkNotesJson) {
+          console.log('Xác nhận dữ liệu ghi chú đã được lưu thành công')
+        } else {
+          console.error('Dữ liệu ghi chú không được lưu thành công')
+        }
       } catch (saveError) {
         console.error('Lỗi khi khởi tạo dữ liệu ghi chú:', saveError)
       }
+    }
+
+    // Kiểm tra tất cả các key đã được khởi tạo
+    try {
+      const allKeys = await AsyncStorage.getAllKeys()
+      console.log('Tất cả các key trong AsyncStorage:', allKeys)
+    } catch (keysError) {
+      console.error('Lỗi khi lấy tất cả các key:', keysError)
     }
 
     console.log('Hoàn thành khởi tạo cơ sở dữ liệu')

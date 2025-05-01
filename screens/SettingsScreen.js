@@ -231,6 +231,43 @@ const SettingsScreen = ({ navigation }) => {
           />
         </View>
       </View>
+
+      {/* 5. Debug Section */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <MaterialIcons
+            name="bug-report"
+            size={24}
+            color={darkMode ? '#fff' : '#000'}
+          />
+          <Text style={[styles.sectionTitle, darkMode && styles.darkText]}>
+            {t('Debug')}
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.menuItem, darkMode && styles.darkCard]}
+          onPress={() => navigation.navigate('Debug')}
+        >
+          <View style={styles.menuIconContainer}>
+            <MaterialIcons
+              name="code"
+              size={24}
+              color={darkMode ? '#fff' : '#000'}
+            />
+          </View>
+          <View style={styles.menuTextContainer}>
+            <Text style={[styles.menuTitle, darkMode && styles.darkText]}>
+              {t('Debug Tools')}
+            </Text>
+            <Text
+              style={[styles.menuDescription, darkMode && styles.darkSubtitle]}
+            >
+              {t('Troubleshoot data loading issues')}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </View>
       {/* Language Selection Modal */}
       <Modal
         visible={showLanguageModal}
