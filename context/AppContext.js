@@ -822,6 +822,65 @@ export const AppProvider = ({ children }) => {
       return diffInMinutes >= minTimeInMinutes
     }
 
+    // Hủy nhắc nhở tương ứng với hành động
+    const cancelRelatedNotifications = async (actionType) => {
+      try {
+        if (!currentShift) return
+
+        switch (actionType) {
+          case 'go_work':
+            // Hủy nhắc nhở "Departure Notification"
+            await alarmManager.cancelAlarmsByPrefix(
+              `departure_${currentShift.id}`
+            )
+
+            // Nếu ở chế độ Simple, hủy tất cả nhắc nhở liên quan đến ca làm việc
+            if (onlyGoWorkMode) {
+              await alarmManager.cancelAlarmsByPrefix(
+                `check_in_${currentShift.id}`
+              )
+              await alarmManager.cancelAlarmsByPrefix(
+                `check_out_${currentShift.id}`
+              )
+            }
+            break
+          case 'check_in':
+            // Hủy nhắc nhở "Check-In Notification"
+            await alarmManager.cancelAlarmsByPrefix(
+              `check_in_${currentShift.id}`
+            )
+            break
+          case 'check_out':
+            // Hủy nhắc nhở "Check-Out Notification"
+            await alarmManager.cancelAlarmsByPrefix(
+              `check_out_${currentShift.id}`
+            )
+            break
+          case 'complete':
+            // Không cần hủy thêm nhắc nhở
+            break
+        }
+      } catch (error) {
+        console.error(
+          `Lỗi khi hủy nhắc nhở cho hành động ${actionType}:`,
+          error
+        )
+      }
+    }
+
+    // Kích hoạt tính toán trạng thái làm việc
+    const calculateWorkStatus = async () => {
+      try {
+        // Import động workStatusCalculator để tránh circular dependency
+        const {
+          calculateTodayWorkStatus,
+        } = require('../utils/workStatusCalculator')
+        await calculateTodayWorkStatus()
+      } catch (error) {
+        console.error('Lỗi khi tính toán trạng thái làm việc:', error)
+      }
+    }
+
     // Xử lý hành động nút sau khi đã kiểm tra thời gian
     const processButtonAction = async (actionType) => {
       let newLog = null
@@ -1018,6 +1077,9 @@ export const AppProvider = ({ children }) => {
       }
 
       if (newLog) {
+        // Hủy nhắc nhở tương ứng
+        await cancelRelatedNotifications(actionType)
+
         // Add to attendance logs
         let updatedLogs
 
@@ -1039,6 +1101,9 @@ export const AppProvider = ({ children }) => {
 
         // Update button state
         setButtonState(newState)
+
+        // Kích hoạt tính toán trạng thái làm việc
+        await calculateWorkStatus()
       }
     }
 
@@ -1130,6 +1195,20 @@ export const AppProvider = ({ children }) => {
       `attendanceLogs_${today}`,
       JSON.stringify(updatedLogs)
     )
+
+    // Kích hoạt tính toán trạng thái làm việc
+    try {
+      // Import động workStatusCalculator để tránh circular dependency
+      const {
+        calculateTodayWorkStatus,
+      } = require('../utils/workStatusCalculator')
+      await calculateTodayWorkStatus()
+    } catch (error) {
+      console.error(
+        'Lỗi khi tính toán trạng thái làm việc sau khi ký công:',
+        error
+      )
+    }
   }
 
   const resetAttendanceLogs = async () => {
