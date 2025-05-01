@@ -36,7 +36,7 @@ import ImageViewerScreen from './screens/ImageViewerScreen'
 import AlarmScreen from './screens/AlarmScreen'
 import MapPickerScreen from './screens/MapPickerScreen'
 import DebugScreen from './screens/DebugScreen'
-import NotesDebugScreen from './screens/NotesDebugScreen.js'
+import NotesDebugScreen from './screens/NotesDebugScreen'
 
 // Set up notification handler
 Notifications.setNotificationHandler({
