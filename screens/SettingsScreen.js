@@ -231,6 +231,58 @@ const SettingsScreen = ({ navigation }) => {
           />
         </View>
       </View>
+      {/* Language Selection Modal */}
+      <Modal
+        visible={showLanguageModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowLanguageModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View
+            style={[styles.modalContent, darkMode && styles.darkModalContent]}
+          >
+            <Text style={[styles.modalTitle, darkMode && styles.darkText]}>
+              {t('Select Language')}
+            </Text>
+
+            {languages.map((lang) => (
+              <TouchableOpacity
+                key={lang.id}
+                style={[
+                  styles.languageOption,
+                  darkMode && styles.darkLanguageOption,
+                  language === lang.id && styles.selectedLanguageOption,
+                  language === lang.id &&
+                    darkMode &&
+                    styles.darkSelectedLanguageOption,
+                ]}
+                onPress={() => handleLanguageChange(lang.id)}
+              >
+                <Text
+                  style={[
+                    styles.languageText,
+                    darkMode && styles.darkText,
+                    language === lang.id && styles.selectedLanguageText,
+                  ]}
+                >
+                  {lang.name}
+                </Text>
+                {language === lang.id && (
+                  <MaterialIcons name="check" size={24} color="#8a56ff" />
+                )}
+              </TouchableOpacity>
+            ))}
+
+            <TouchableOpacity
+              style={[styles.cancelButton, darkMode && styles.darkCancelButton]}
+              onPress={() => setShowLanguageModal(false)}
+            >
+              <Text style={styles.cancelButtonText}>{t('Cancel')}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   )
 }

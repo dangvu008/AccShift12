@@ -7,8 +7,24 @@ import { STORAGE_KEYS } from './constants'
  */
 export const createSampleNotes = async () => {
   try {
+    console.log('Bắt đầu tạo dữ liệu mẫu cho ghi chú...')
+
     // Kiểm tra xem đã có ghi chú nào chưa
-    const notesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
+    let notesJson
+    try {
+      notesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
+      console.log(
+        'Đã đọc dữ liệu ghi chú từ AsyncStorage:',
+        notesJson ? 'Có dữ liệu' : 'Không có dữ liệu'
+      )
+    } catch (storageError) {
+      console.error(
+        'Lỗi khi đọc dữ liệu ghi chú từ AsyncStorage:',
+        storageError
+      )
+      notesJson = null
+    }
+
     const existingNotes = notesJson ? JSON.parse(notesJson) : []
 
     // Nếu đã có ghi chú, không tạo dữ liệu mẫu
@@ -18,7 +34,21 @@ export const createSampleNotes = async () => {
     }
 
     // Lấy danh sách ca làm việc để liên kết
-    const shiftsJson = await AsyncStorage.getItem(STORAGE_KEYS.SHIFT_LIST)
+    let shiftsJson
+    try {
+      shiftsJson = await AsyncStorage.getItem(STORAGE_KEYS.SHIFT_LIST)
+      console.log(
+        'Đã đọc dữ liệu ca làm việc từ AsyncStorage:',
+        shiftsJson ? 'Có dữ liệu' : 'Không có dữ liệu'
+      )
+    } catch (storageError) {
+      console.error(
+        'Lỗi khi đọc dữ liệu ca làm việc từ AsyncStorage:',
+        storageError
+      )
+      shiftsJson = null
+    }
+
     const shifts = shiftsJson ? JSON.parse(shiftsJson) : []
 
     // Tạo ngày nhắc nhở trong tương lai
@@ -110,9 +140,26 @@ export const createSampleNotes = async () => {
     ]
 
     // Lưu danh sách ghi chú mẫu vào AsyncStorage
-    await AsyncStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify(sampleNotes))
-    console.log('Đã tạo dữ liệu mẫu cho phần ghi chú')
-    return true
+    try {
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.NOTES,
+        JSON.stringify(sampleNotes)
+      )
+      console.log('Đã lưu dữ liệu mẫu cho phần ghi chú thành công')
+
+      // Kiểm tra lại xem dữ liệu đã được lưu chưa
+      const checkNotesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
+      if (checkNotesJson) {
+        console.log('Xác nhận dữ liệu ghi chú đã được lưu thành công')
+        return true
+      } else {
+        console.error('Dữ liệu ghi chú không được lưu thành công')
+        return false
+      }
+    } catch (saveError) {
+      console.error('Lỗi khi lưu dữ liệu mẫu cho phần ghi chú:', saveError)
+      return false
+    }
   } catch (error) {
     console.error('Lỗi khi tạo dữ liệu mẫu cho phần ghi chú:', error)
     return false

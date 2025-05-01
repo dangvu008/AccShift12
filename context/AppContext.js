@@ -390,9 +390,15 @@ export const AppProvider = ({ children }) => {
     }
   }
 
-  const changeLanguage = (lang) => {
+  const changeLanguage = async (lang) => {
     setLanguage(lang)
-    saveSettings('language', lang)
+    // Lưu vào AsyncStorage
+    await saveSettings('language', lang)
+    // Cập nhật cài đặt trong storage
+    await storage.updateUserSettings({ language: lang })
+
+    // Log để debug
+    console.log('Language changed to:', lang)
   }
 
   const toggleDarkMode = () => {
@@ -498,34 +504,50 @@ export const AppProvider = ({ children }) => {
 
   // Hàm xử lý cài đặt tỷ lệ OT cơ bản
   const updateOtRateWeekday = (rate) => {
-    const numericRate = parseInt(rate)
-    if (!isNaN(numericRate) && numericRate >= 100) {
-      setOtRateWeekday(numericRate)
-      storage.updateUserSettings({ otRateWeekday: numericRate })
+    const validRate = parseNumericInput(rate)
+    if (validRate) {
+      setOtRateWeekday(validRate)
+      storage
+        .updateUserSettings({
+          otRateWeekday: validRate,
+        })
+        .catch((err) => console.error('Failed to save OT weekday rate:', err))
     }
   }
 
   const updateOtRateSaturday = (rate) => {
-    const numericRate = parseInt(rate)
-    if (!isNaN(numericRate) && numericRate >= 100) {
-      setOtRateSaturday(numericRate)
-      storage.updateUserSettings({ otRateSaturday: numericRate })
+    const validRate = parseNumericInput(rate)
+    if (validRate) {
+      setOtRateSaturday(validRate)
+      storage
+        .updateUserSettings({
+          otRateSaturday: validRate,
+        })
+        .catch((err) => console.error('Failed to save OT Saturday rate:', err))
     }
   }
 
   const updateOtRateSunday = (rate) => {
-    const numericRate = parseInt(rate)
-    if (!isNaN(numericRate) && numericRate >= 100) {
-      setOtRateSunday(numericRate)
-      storage.updateUserSettings({ otRateSunday: numericRate })
+    const validRate = parseNumericInput(rate)
+    if (validRate) {
+      setOtRateSunday(validRate)
+      storage
+        .updateUserSettings({
+          otRateSunday: validRate,
+        })
+        .catch((err) => console.error('Failed to save OT Sunday rate:', err))
     }
   }
 
   const updateOtRateHoliday = (rate) => {
-    const numericRate = parseInt(rate)
-    if (!isNaN(numericRate) && numericRate >= 100) {
-      setOtRateHoliday(numericRate)
-      storage.updateUserSettings({ otRateHoliday: numericRate })
+    const validRate = parseNumericInput(rate)
+    if (validRate) {
+      setOtRateHoliday(validRate)
+      storage
+        .updateUserSettings({
+          otRateHoliday: validRate,
+        })
+        .catch((err) => console.error('Failed to save OT Holiday rate:', err))
     }
   }
 
@@ -1231,7 +1253,19 @@ export const AppProvider = ({ children }) => {
   }
 
   const t = (key) => {
-    return translations[language][key] || key
+    // Kiểm tra xem ngôn ngữ và khóa có tồn tại không
+    if (translations[language] && translations[language][key]) {
+      return translations[language][key]
+    }
+
+    // Nếu không tìm thấy trong ngôn ngữ hiện tại, thử tìm trong tiếng Việt
+    if (translations['vi'] && translations['vi'][key]) {
+      return translations['vi'][key]
+    }
+
+    // Trả về khóa gốc nếu không tìm thấy bản dịch
+    console.log(`Missing translation for key: ${key} in language: ${language}`)
+    return key
   }
 
   const addNoteWithReminder = async (noteData) => {
@@ -1409,6 +1443,67 @@ export const AppProvider = ({ children }) => {
   function getDayOfWeek(day) {
     const dayMap = { CN: 1, T2: 2, T3: 3, T4: 4, T5: 5, T6: 6, T7: 7 }
     return dayMap[day]
+  }
+
+  // Hàm helper để validate và parse input số
+  const parseNumericInput = (value, minValue = 100) => {
+    const numericValue = parseInt(value.replace(/[^0-9]/g, ''))
+    return !isNaN(numericValue) && numericValue >= minValue
+      ? numericValue
+      : null
+  }
+
+  // Cập nhật hàm xử lý input
+  const updateOtRateWeekday = (rate) => {
+    const validRate = parseNumericInput(rate)
+    if (validRate) {
+      setOtRateWeekday(validRate)
+      storage
+        .updateUserSettings({
+          otRateWeekday: validRate,
+        })
+        .catch((err) => console.error('Failed to save OT weekday rate:', err))
+    }
+  }
+
+  // Hàm helper để lưu nhiều cài đặt cùng lúc
+  const updateMultipleSettings = async (settings) => {
+    try {
+      const currentSettings = await storage.getUserSettings()
+      const updatedSettings = { ...currentSettings, ...settings }
+      await storage.setUserSettings(updatedSettings)
+      return true
+    } catch (error) {
+      console.error('Failed to update multiple settings:', error)
+      return false
+    }
+  }
+
+  // Cập nhật hàm lưu cài đặt OT
+  const handleSaveOtBaseRateSettings = async () => {
+    const settings = {
+      otRateWeekday: parseNumericInput(baseWeekdayRate),
+      otRateSaturday: parseNumericInput(baseSaturdayRate),
+      otRateSunday: parseNumericInput(baseSundayRate),
+      otRateHoliday: parseNumericInput(baseHolidayRate),
+    }
+
+    // Validate all inputs
+    if (Object.values(settings).some((value) => value === null)) {
+      Alert.alert(
+        t('Invalid Input'),
+        t('Please enter valid rates (minimum 100%)')
+      )
+      return
+    }
+
+    // Save all settings
+    const success = await updateMultipleSettings(settings)
+    if (success) {
+      setShowOtBaseRateModal(false)
+    } else {
+      Alert.alert(t('Error'), t('Failed to save settings'))
+    }
   }
 
   return (

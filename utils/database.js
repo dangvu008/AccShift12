@@ -4,9 +4,26 @@ import { STORAGE_KEYS } from './constants'
 // Initialize database and load sample data
 export const initializeDatabase = async () => {
   try {
+    console.log('Bắt đầu khởi tạo cơ sở dữ liệu...')
+
     // Check if shifts are already initialized
-    const shiftsJson = await AsyncStorage.getItem(STORAGE_KEYS.SHIFT_LIST)
+    let shiftsJson
+    try {
+      shiftsJson = await AsyncStorage.getItem(STORAGE_KEYS.SHIFT_LIST)
+      console.log(
+        'Đã đọc dữ liệu ca làm việc từ AsyncStorage:',
+        shiftsJson ? 'Có dữ liệu' : 'Không có dữ liệu'
+      )
+    } catch (storageError) {
+      console.error(
+        'Lỗi khi đọc dữ liệu ca làm việc từ AsyncStorage:',
+        storageError
+      )
+      shiftsJson = null
+    }
+
     if (!shiftsJson) {
+      console.log('Không tìm thấy dữ liệu ca làm việc, tạo dữ liệu mẫu...')
       // Initialize with sample shifts
       const sampleShifts = [
         {
@@ -22,87 +39,6 @@ export const initializeDatabase = async () => {
           roundUpMinutes: 30,
           showCheckInButton: true,
           showCheckInButtonWhileWorking: true,
-        },
-        {
-          id: '2',
-          name: 'Ca Chiều',
-          startTime: '13:00',
-          endTime: '17:00',
-          officeEndTime: '17:15',
-          daysApplied: ['T2', 'T3', 'T4', 'T5', 'T6'],
-          reminderBefore: 15,
-          reminderAfter: 15,
-          breakTime: 60,
-          roundUpMinutes: 30,
-          showCheckInButton: true,
-          showCheckInButtonWhileWorking: true,
-        },
-        {
-          id: '3',
-          name: 'Ca Tối',
-          startTime: '18:00',
-          endTime: '22:00',
-          adminEndTime: '22:15',
-          daysApplied: ['T2', 'T3', 'T4', 'T5', 'T6'],
-          reminderBefore: 15,
-          reminderAfter: 15,
-          breakTime: 60,
-          roundUpMinutes: 30,
-          showCheckInButton: true,
-          showCheckInButtonWhileWorking: true,
-        },
-      ]
-      await AsyncStorage.setItem(
-        STORAGE_KEYS.SHIFT_LIST,
-        JSON.stringify(sampleShifts)
-      )
-    }
-
-    // Check if check-in history is already initialized
-    const checkInHistoryJson = await AsyncStorage.getItem(
-      STORAGE_KEYS.ATTENDANCE_RECORDS
-    )
-    if (!checkInHistoryJson) {
-      // Initialize with empty array
-      await AsyncStorage.setItem(
-        STORAGE_KEYS.ATTENDANCE_RECORDS,
-        JSON.stringify([])
-      )
-    }
-
-    // Check if notes are already initialized
-    const notesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
-    if (!notesJson) {
-      // Initialize with empty array
-      await AsyncStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify([]))
-    }
-  } catch (error) {
-    console.error('Error initializing database:', error)
-  }
-}
-
-// Get shifts
-export const getShifts = async () => {
-  try {
-    const shiftsJson = await AsyncStorage.getItem(STORAGE_KEYS.SHIFT_LIST)
-    if (shiftsJson) {
-      return JSON.parse(shiftsJson)
-    } else {
-      // Trả về dữ liệu mẫu nếu không có dữ liệu nào được lưu trữ
-      const sampleShifts = [
-        {
-          id: '1',
-          name: 'Ca Sáng',
-          startTime: '08:00',
-          endTime: '12:00',
-          adminEndTime: '12:15',
-          daysApplied: ['T2', 'T3', 'T4', 'T5', 'T6'],
-          reminderBefore: 15,
-          reminderAfter: 15,
-          breakTime: 60,
-          roundUpMinutes: 30,
-          showCheckInButton: true,
-          showCheckInButtonWhileWorking: true,
           isActive: true,
           isDefault: false,
         },
@@ -111,7 +47,7 @@ export const getShifts = async () => {
           name: 'Ca Chiều',
           startTime: '13:00',
           endTime: '17:00',
-          adminEndTime: '17:15',
+          officeEndTime: '17:15',
           daysApplied: ['T2', 'T3', 'T4', 'T5', 'T6'],
           reminderBefore: 15,
           reminderAfter: 15,
@@ -149,15 +85,213 @@ export const getShifts = async () => {
           isDefault: true,
         },
       ]
-      // Lưu dữ liệu mẫu vào AsyncStorage
+
+      try {
+        await AsyncStorage.setItem(
+          STORAGE_KEYS.SHIFT_LIST,
+          JSON.stringify(sampleShifts)
+        )
+        console.log('Đã lưu dữ liệu mẫu ca làm việc thành công')
+
+        // Kiểm tra lại xem dữ liệu đã được lưu chưa
+        const checkShiftsJson = await AsyncStorage.getItem(
+          STORAGE_KEYS.SHIFT_LIST
+        )
+        if (checkShiftsJson) {
+          console.log('Xác nhận dữ liệu ca làm việc đã được lưu thành công')
+        } else {
+          console.error('Dữ liệu ca làm việc không được lưu thành công')
+        }
+      } catch (saveError) {
+        console.error('Lỗi khi lưu dữ liệu mẫu ca làm việc:', saveError)
+      }
+    }
+
+    // Check if check-in history is already initialized
+    let checkInHistoryJson
+    try {
+      checkInHistoryJson = await AsyncStorage.getItem(
+        STORAGE_KEYS.ATTENDANCE_RECORDS
+      )
+      console.log(
+        'Đã đọc dữ liệu điểm danh từ AsyncStorage:',
+        checkInHistoryJson ? 'Có dữ liệu' : 'Không có dữ liệu'
+      )
+    } catch (storageError) {
+      console.error(
+        'Lỗi khi đọc dữ liệu điểm danh từ AsyncStorage:',
+        storageError
+      )
+      checkInHistoryJson = null
+    }
+
+    if (!checkInHistoryJson) {
+      console.log('Không tìm thấy dữ liệu điểm danh, khởi tạo mảng rỗng...')
+      // Initialize with empty array
+      try {
+        await AsyncStorage.setItem(
+          STORAGE_KEYS.ATTENDANCE_RECORDS,
+          JSON.stringify([])
+        )
+        console.log('Đã khởi tạo dữ liệu điểm danh thành công')
+      } catch (saveError) {
+        console.error('Lỗi khi khởi tạo dữ liệu điểm danh:', saveError)
+      }
+    }
+
+    // Check if notes are already initialized
+    let notesJson
+    try {
+      notesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
+      console.log(
+        'Đã đọc dữ liệu ghi chú từ AsyncStorage:',
+        notesJson ? 'Có dữ liệu' : 'Không có dữ liệu'
+      )
+    } catch (storageError) {
+      console.error(
+        'Lỗi khi đọc dữ liệu ghi chú từ AsyncStorage:',
+        storageError
+      )
+      notesJson = null
+    }
+
+    if (!notesJson) {
+      console.log('Không tìm thấy dữ liệu ghi chú, khởi tạo mảng rỗng...')
+      // Initialize with empty array
+      try {
+        await AsyncStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify([]))
+        console.log('Đã khởi tạo dữ liệu ghi chú thành công')
+      } catch (saveError) {
+        console.error('Lỗi khi khởi tạo dữ liệu ghi chú:', saveError)
+      }
+    }
+
+    console.log('Hoàn thành khởi tạo cơ sở dữ liệu')
+    return true
+  } catch (error) {
+    console.error('Lỗi khi khởi tạo cơ sở dữ liệu:', error)
+    return false
+  }
+}
+
+// Get shifts
+export const getShifts = async () => {
+  try {
+    console.log('Đang lấy dữ liệu ca làm việc...')
+
+    let shiftsJson
+    try {
+      shiftsJson = await AsyncStorage.getItem(STORAGE_KEYS.SHIFT_LIST)
+      console.log(
+        'Kết quả đọc dữ liệu ca làm việc:',
+        shiftsJson ? 'Thành công' : 'Không có dữ liệu'
+      )
+    } catch (storageError) {
+      console.error(
+        'Lỗi khi đọc dữ liệu ca làm việc từ AsyncStorage:',
+        storageError
+      )
+      shiftsJson = null
+    }
+
+    if (shiftsJson) {
+      try {
+        const shifts = JSON.parse(shiftsJson)
+        console.log(`Đã tìm thấy ${shifts.length} ca làm việc`)
+        return shifts
+      } catch (parseError) {
+        console.error('Lỗi khi phân tích dữ liệu ca làm việc:', parseError)
+        // Nếu có lỗi khi parse, tiếp tục tạo dữ liệu mẫu
+      }
+    }
+
+    // Trả về dữ liệu mẫu nếu không có dữ liệu nào được lưu trữ hoặc có lỗi
+    console.log('Tạo dữ liệu mẫu ca làm việc...')
+    const sampleShifts = [
+      {
+        id: '1',
+        name: 'Ca Sáng',
+        startTime: '08:00',
+        endTime: '12:00',
+        officeEndTime: '12:15',
+        daysApplied: ['T2', 'T3', 'T4', 'T5', 'T6'],
+        reminderBefore: 15,
+        reminderAfter: 15,
+        breakTime: 60,
+        roundUpMinutes: 30,
+        showCheckInButton: true,
+        showCheckInButtonWhileWorking: true,
+        isActive: true,
+        isDefault: false,
+      },
+      {
+        id: '2',
+        name: 'Ca Chiều',
+        startTime: '13:00',
+        endTime: '17:00',
+        officeEndTime: '17:15',
+        daysApplied: ['T2', 'T3', 'T4', 'T5', 'T6'],
+        reminderBefore: 15,
+        reminderAfter: 15,
+        breakTime: 60,
+        roundUpMinutes: 30,
+        showCheckInButton: true,
+        showCheckInButtonWhileWorking: true,
+        isActive: true,
+        isDefault: false,
+      },
+      {
+        id: '3',
+        name: 'Ca Tối',
+        startTime: '18:00',
+        endTime: '22:00',
+        officeEndTime: '22:15',
+        daysApplied: ['T2', 'T3', 'T4', 'T5', 'T6'],
+        reminderBefore: 15,
+        reminderAfter: 15,
+        breakTime: 60,
+        roundUpMinutes: 30,
+        showCheckInButton: true,
+        showCheckInButtonWhileWorking: true,
+        isActive: true,
+        isDefault: false,
+      },
+      {
+        id: '4',
+        name: 'Ca Hành Chính',
+        startTime: '08:00',
+        endTime: '17:00',
+        breakTime: 60,
+        daysApplied: ['T2', 'T3', 'T4', 'T5', 'T6'],
+        isActive: true,
+        isDefault: true,
+      },
+    ]
+
+    // Lưu dữ liệu mẫu vào AsyncStorage
+    try {
       await AsyncStorage.setItem(
         STORAGE_KEYS.SHIFT_LIST,
         JSON.stringify(sampleShifts)
       )
-      return sampleShifts
+      console.log('Đã lưu dữ liệu mẫu ca làm việc thành công')
+
+      // Kiểm tra lại xem dữ liệu đã được lưu chưa
+      const checkShiftsJson = await AsyncStorage.getItem(
+        STORAGE_KEYS.SHIFT_LIST
+      )
+      if (checkShiftsJson) {
+        console.log('Xác nhận dữ liệu ca làm việc đã được lưu thành công')
+      } else {
+        console.error('Dữ liệu ca làm việc không được lưu thành công')
+      }
+    } catch (saveError) {
+      console.error('Lỗi khi lưu dữ liệu mẫu ca làm việc:', saveError)
     }
+
+    return sampleShifts
   } catch (error) {
-    console.error('Error getting shifts:', error)
+    console.error('Lỗi khi lấy dữ liệu ca làm việc:', error)
     return []
   }
 }
@@ -331,10 +465,56 @@ export const addCheckInRecord = async (record) => {
 // Get notes
 export const getNotes = async () => {
   try {
-    const notesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
-    return notesJson ? JSON.parse(notesJson) : []
+    console.log('Đang lấy dữ liệu ghi chú...')
+
+    let notesJson
+    try {
+      notesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
+      console.log(
+        'Kết quả đọc dữ liệu ghi chú:',
+        notesJson ? 'Thành công' : 'Không có dữ liệu'
+      )
+    } catch (storageError) {
+      console.error(
+        'Lỗi khi đọc dữ liệu ghi chú từ AsyncStorage:',
+        storageError
+      )
+      notesJson = null
+    }
+
+    if (notesJson) {
+      try {
+        const notes = JSON.parse(notesJson)
+        console.log(`Đã tìm thấy ${notes.length} ghi chú`)
+        return notes
+      } catch (parseError) {
+        console.error('Lỗi khi phân tích dữ liệu ghi chú:', parseError)
+        // Nếu có lỗi khi parse, trả về mảng rỗng
+      }
+    }
+
+    // Nếu không có dữ liệu hoặc có lỗi, khởi tạo mảng rỗng
+    console.log('Không tìm thấy dữ liệu ghi chú, trả về mảng rỗng')
+
+    // Thử khởi tạo dữ liệu ghi chú mẫu
+    try {
+      const { createSampleNotes } = require('./sampleNotes')
+      await createSampleNotes()
+
+      // Thử đọc lại sau khi tạo dữ liệu mẫu
+      const newNotesJson = await AsyncStorage.getItem(STORAGE_KEYS.NOTES)
+      if (newNotesJson) {
+        const notes = JSON.parse(newNotesJson)
+        console.log(`Đã tạo và đọc được ${notes.length} ghi chú mẫu`)
+        return notes
+      }
+    } catch (sampleError) {
+      console.error('Lỗi khi tạo dữ liệu ghi chú mẫu:', sampleError)
+    }
+
+    return []
   } catch (error) {
-    console.error('Error getting notes:', error)
+    console.error('Lỗi khi lấy dữ liệu ghi chú:', error)
     return []
   }
 }

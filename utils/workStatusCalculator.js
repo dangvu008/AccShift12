@@ -1,6 +1,13 @@
 import { WORK_STATUS } from '../config/appConfig'
 import { storage } from './storage'
 import { formatDate } from './helpers'
+import {
+  intersection,
+  difference,
+  durationInHours,
+  sumDurationInHours,
+  createNightInterval,
+} from './timeIntervalUtils'
 
 /**
  * Kiểm tra xem một thời điểm có nằm trong khoảng thời gian làm đêm hay không
@@ -501,33 +508,35 @@ export const calculateDailyWorkStatus = async (date, shift) => {
       }
     }
 
-    // Phân loại chi tiết giờ làm việc vào các bucket cố định
-    const standardHours = workMinutes / 60
-    const standardDayHours = standardHours - standardHoursNightPortionActual
-    const otHours = otMinutes / 60
-    const otDayHours = otHours - otHoursNightPortion
+    // Phân loại chi tiết giờ làm việc theo thuật toán mới
+    const detailedHours = calculateDetailedWorkHours(
+      checkInTime,
+      checkOutTime,
+      shift,
+      dayType,
+      userSettings,
+      lateMinutes,
+      earlyMinutes
+    )
 
     // Khởi tạo các bucket giờ làm việc
-    let standardDayHoursActual = standardDayHours
-    let standardNightHoursActual = standardHoursNightPortionActual
-    let otWeekdayDayHours = 0
-    let otWeekdayNightHours = 0
-    let otWeekendDayHours = 0
-    let otWeekendNightHours = 0
-    let otHolidayDayHours = 0
-    let otHolidayNightHours = 0
+    let standardDayHoursActual = detailedHours.stdDayHrs
+    let standardNightHoursActual = detailedHours.stdNightHrs
+    let otWeekdayDayHours = detailedHours.otWeekdayDayHrs
+    let otWeekdayNightHours = detailedHours.otWeekdayNightHrs
+    let otSaturdayDayHours = detailedHours.otSaturdayDayHrs
+    let otSaturdayNightHours = detailedHours.otSaturdayNightHrs
+    let otSundayDayHours = detailedHours.otSundayDayHrs
+    let otSundayNightHours = detailedHours.otSundayNightHrs
+    let otHolidayDayHours = detailedHours.otHolidayDayHrs
+    let otHolidayNightHours = detailedHours.otHolidayNightHrs
 
-    // Phân bổ giờ OT vào các bucket tương ứng
-    if (dayType === 'weekday') {
-      otWeekdayDayHours = otDayHours
-      otWeekdayNightHours = otHoursNightPortion
-    } else if (dayType === 'saturday' || dayType === 'sunday') {
-      otWeekendDayHours = otDayHours
-      otWeekendNightHours = otHoursNightPortion
-    } else if (dayType === 'holiday') {
-      otHolidayDayHours = otDayHours
-      otHolidayNightHours = otHoursNightPortion
-    }
+    // Tính tổng giờ OT làm tròn
+    const totalRoundedOtHrs = detailedHours.totalRoundedOtHrs
+
+    // Tính tổng giờ OT cuối tuần (để tương thích với code cũ)
+    let otWeekendDayHours = otSaturdayDayHours + otSundayDayHours
+    let otWeekendNightHours = otSaturdayNightHours + otSundayNightHours
 
     // Tính toán tỷ lệ cho giờ làm đêm dựa trên quy tắc tính lương đêm
     let standardNightRate = 100 // Tỷ lệ mặc định cho giờ chuẩn
@@ -593,10 +602,15 @@ export const calculateDailyWorkStatus = async (date, shift) => {
       standardNightHours: standardNightHoursActual,
       otWeekdayDayHours,
       otWeekdayNightHours,
+      otSaturdayDayHours,
+      otSaturdayNightHours,
+      otSundayDayHours,
+      otSundayNightHours,
       otWeekendDayHours,
       otWeekendNightHours,
       otHolidayDayHours,
       otHolidayNightHours,
+      totalRoundedOtHrs: detailedHours.totalRoundedOtHrs,
       // Tỷ lệ áp dụng
       standardNightRate,
       otWeekdayNightRate,
@@ -717,6 +731,213 @@ export const calculateTodayWorkStatus = async () => {
       error
     )
     return null
+  }
+}
+
+/**
+ * Tính toán phân loại chi tiết giờ làm việc
+ * @param {Date} firstCheckInTime Thời gian check-in đầu tiên
+ * @param {Date} lastCheckOutTime Thời gian check-out cuối cùng
+ * @param {Object} shift Thông tin ca làm việc
+ * @param {string} dayType Loại ngày (weekday, saturday, sunday, holiday)
+ * @param {Object} userSettings Cài đặt người dùng
+ * @returns {Object} Các bucket giờ làm việc đã phân loại
+ */
+const calculateDetailedWorkHours = (
+  firstCheckInTime,
+  lastCheckOutTime,
+  shift,
+  dayType,
+  userSettings,
+  lateMinutes = 0,
+  earlyMinutes = 0
+) => {
+  // Nếu không có check-in hoặc check-out, trả về giá trị mặc định
+  if (!firstCheckInTime || !lastCheckOutTime || !shift) {
+    return {
+      stdDayHrs: 0,
+      stdNightHrs: 0,
+      otWeekdayDayHrs: 0,
+      otWeekdayNightHrs: 0,
+      otSaturdayDayHrs: 0,
+      otSaturdayNightHrs: 0,
+      otSundayDayHrs: 0,
+      otSundayNightHrs: 0,
+      otHolidayDayHrs: 0,
+      otHolidayNightHrs: 0,
+      totalRoundedOtHrs: 0,
+    }
+  }
+
+  // Khởi tạo các "Xô" chứa giờ
+  let stdDayHrs = 0
+  let stdNightHrs = 0
+  let otWeekdayDayHrs = 0
+  let otWeekdayNightHrs = 0
+  let otSaturdayDayHrs = 0
+  let otSaturdayNightHrs = 0
+  let otSundayDayHrs = 0
+  let otSundayNightHrs = 0
+  let otHolidayDayHrs = 0
+  let otHolidayNightHrs = 0
+  let totalRoundedOtHrs = 0
+
+  // Xác định khoảng thời gian làm việc thực tế
+  const actualWorkInterval = {
+    start: firstCheckInTime,
+    end: lastCheckOutTime,
+  }
+
+  // Xác định thời gian bắt đầu và kết thúc ca chuẩn
+  const [startHour, startMinute] = shift.startTime.split(':').map(Number)
+  const [endHour, endMinute] = shift.officeEndTime.split(':').map(Number)
+
+  // Tạo đối tượng Date cho thời gian bắt đầu và kết thúc ca chuẩn
+  const scheduledStartTime = new Date(firstCheckInTime)
+  scheduledStartTime.setHours(startHour, startMinute, 0, 0)
+
+  const scheduledOfficeEndTime = new Date(firstCheckInTime)
+  scheduledOfficeEndTime.setHours(endHour, endMinute, 0, 0)
+
+  // Nếu thời gian kết thúc ca nhỏ hơn thời gian bắt đầu, đó là ca qua đêm
+  if (scheduledOfficeEndTime < scheduledStartTime) {
+    scheduledOfficeEndTime.setDate(scheduledOfficeEndTime.getDate() + 1)
+  }
+
+  // Xác định thời gian kết thúc ca tối đa (bao gồm OT)
+  let scheduledEndTime
+  if (shift.endTime && shift.endTime !== shift.officeEndTime) {
+    const [maxEndHour, maxEndMinute] = shift.endTime.split(':').map(Number)
+    scheduledEndTime = new Date(firstCheckInTime)
+    scheduledEndTime.setHours(maxEndHour, maxEndMinute, 0, 0)
+
+    // Nếu thời gian kết thúc tối đa nhỏ hơn thời gian bắt đầu, đó là ca qua đêm
+    if (scheduledEndTime < scheduledStartTime) {
+      scheduledEndTime.setDate(scheduledEndTime.getDate() + 1)
+    }
+  } else {
+    // Nếu không có thời gian kết thúc tối đa, sử dụng thời gian kết thúc ca chuẩn
+    scheduledEndTime = new Date(scheduledOfficeEndTime)
+  }
+
+  // Xác định thời gian nghỉ và phạt
+  const breakMinutes = shift.breakMinutes || 0
+  const penaltyDeductionHours = (lateMinutes + earlyMinutes) / 60
+
+  // Phân tách Giờ Hành chính (Standard) và Giờ Tăng ca (OT) Thực tế
+  const standardWorkInterval = {
+    start: scheduledStartTime,
+    end: scheduledOfficeEndTime,
+  }
+
+  const otWorkInterval = {
+    start: scheduledOfficeEndTime,
+    end: scheduledEndTime,
+  }
+
+  // Tìm phần giao của khoảng thời gian làm việc thực tế với khoảng thời gian chuẩn và OT
+  const actualStandardWorkInterval = intersection(
+    actualWorkInterval,
+    standardWorkInterval
+  )
+
+  const actualOtWorkInterval = intersection(actualWorkInterval, otWorkInterval)
+
+  // Xác định khoảng thời gian làm đêm
+  const nightStartTime = userSettings?.nightWorkStartTime || '22:00'
+  const nightEndTime = userSettings?.nightWorkEndTime || '05:00'
+  const nightInterval = createNightInterval(
+    firstCheckInTime,
+    nightStartTime,
+    nightEndTime
+  )
+
+  // Phân tách Giờ Ngày / Đêm cho từng loại
+  let standardDayIntervals = []
+  let standardNightIntervals = []
+  let otDayIntervals = []
+  let otNightIntervals = []
+
+  if (actualStandardWorkInterval) {
+    // Tìm phần giao và phần chênh lệch của khoảng thời gian chuẩn với khoảng thời gian đêm
+    standardNightIntervals = [
+      intersection(actualStandardWorkInterval, nightInterval),
+    ].filter(Boolean)
+    standardDayIntervals = difference(actualStandardWorkInterval, nightInterval)
+  }
+
+  if (actualOtWorkInterval) {
+    // Tìm phần giao và phần chênh lệch của khoảng thời gian OT với khoảng thời gian đêm
+    otNightIntervals = [
+      intersection(actualOtWorkInterval, nightInterval),
+    ].filter(Boolean)
+    otDayIntervals = difference(actualOtWorkInterval, nightInterval)
+  }
+
+  // Tính tổng thời lượng (giờ) cho từng phân loại
+  const totalStandardDayDuration = sumDurationInHours(standardDayIntervals)
+  const totalStandardNightDuration = sumDurationInHours(standardNightIntervals)
+  const totalOtDayDuration = sumDurationInHours(otDayIntervals)
+  const totalOtNightDuration = sumDurationInHours(otNightIntervals)
+
+  // Áp dụng trừ giờ nghỉ & giờ phạt vào giờ hành chính
+  const totalStandardDuration =
+    totalStandardDayDuration + totalStandardNightDuration
+  const totalDeduction = breakMinutes / 60 + penaltyDeductionHours
+  const effectiveTotalStandardDuration = Math.max(
+    0,
+    totalStandardDuration - totalDeduction
+  )
+
+  // Phân bổ lại giờ HC sau khi trừ
+  if (totalStandardDuration > 0) {
+    stdDayHrs =
+      effectiveTotalStandardDuration *
+      (totalStandardDayDuration / totalStandardDuration)
+    stdNightHrs =
+      effectiveTotalStandardDuration *
+      (totalStandardNightDuration / totalStandardDuration)
+  } else {
+    stdDayHrs = 0
+    stdNightHrs = 0
+  }
+
+  // Làm tròn tổng giờ OT (nếu giữ quy tắc)
+  const totalActualOtHrs = totalOtDayDuration + totalOtNightDuration
+  totalRoundedOtHrs = Math.ceil(totalActualOtHrs * 2) / 2 // Làm tròn lên 0.5h
+
+  // Phân loại giờ OT vào các bucket tương ứng dựa trên loại ngày
+  const isHolidayWork = dayType === 'holiday'
+  const isSunday = dayType === 'sunday'
+  const isSaturday = dayType === 'saturday'
+
+  if (isHolidayWork) {
+    otHolidayDayHrs = totalOtDayDuration
+    otHolidayNightHrs = totalOtNightDuration
+  } else if (isSunday) {
+    otSundayDayHrs = totalOtDayDuration
+    otSundayNightHrs = totalOtNightDuration
+  } else if (isSaturday) {
+    otSaturdayDayHrs = totalOtDayDuration
+    otSaturdayNightHrs = totalOtNightDuration
+  } else {
+    // Ngày thường (T2-T6)
+    otWeekdayDayHrs = totalOtDayDuration
+    otWeekdayNightHrs = totalOtNightDuration
+  }
+
+  return {
+    stdDayHrs,
+    stdNightHrs,
+    otWeekdayDayHrs,
+    otWeekdayNightHrs,
+    otSaturdayDayHrs,
+    otSaturdayNightHrs,
+    otSundayDayHrs,
+    otSundayNightHrs,
+    otHolidayDayHrs,
+    otHolidayNightHrs,
+    totalRoundedOtHrs,
   }
 }
 

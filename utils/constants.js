@@ -8,6 +8,10 @@ export const STORAGE_KEYS = {
   ATTENDANCE_RECORDS: 'accshift_attendance_records',
   THEME: 'accshift_theme',
   LANGUAGE: 'accshift_language',
+  USER_SETTINGS: 'accshift_user_settings',
+  DEVICE_ID: 'accshift_device_id',
+  IS_WORKING: 'accshift_is_working',
+  WORK_START_TIME: 'accshift_work_start_time',
 }
 
 // Notification configuration

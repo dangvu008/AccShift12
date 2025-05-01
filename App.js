@@ -286,15 +286,30 @@ export default function App() {
         }
       )
 
-    // Khởi tạo dữ liệu mẫu cho ghi chú
+    // Khởi tạo dữ liệu mẫu cho ghi chú và ca làm việc
     const initSampleData = async () => {
       try {
-        await createSampleNotes()
+        console.log('Bắt đầu khởi tạo dữ liệu mẫu...')
+
+        // Khởi tạo cơ sở dữ liệu và dữ liệu mẫu ca làm việc
+        const { initializeDatabase } = require('./utils/database')
+        await initializeDatabase()
+        console.log('Đã khởi tạo cơ sở dữ liệu và ca làm việc mẫu')
+
+        // Khởi tạo dữ liệu mẫu cho ghi chú
+        const notesResult = await createSampleNotes()
+        console.log(
+          'Kết quả khởi tạo ghi chú mẫu:',
+          notesResult ? 'Thành công' : 'Không cần thiết'
+        )
+
+        console.log('Hoàn thành khởi tạo dữ liệu mẫu')
       } catch (error) {
         console.error('Lỗi khi khởi tạo dữ liệu mẫu:', error)
       }
     }
 
+    // Đảm bảo khởi tạo dữ liệu mẫu
     initSampleData()
 
     return () => {

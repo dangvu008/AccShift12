@@ -35,6 +35,8 @@ export const translations = {
     'Location Management': 'Quản lý vị trí',
     'Home Location': 'Vị trí nhà',
     'Work Location': 'Vị trí nơi làm việc',
+    'Select Language': 'Chọn ngôn ngữ',
+    Cancel: 'Hủy',
     'Set your home address': 'Thiết lập địa chỉ nhà',
     'Set your workplace address': 'Thiết lập địa chỉ nơi làm việc',
     'Map functionality has been simplified. Please enter your location details manually.':
@@ -454,6 +456,8 @@ export const translations = {
     'Location Management': 'Location Management',
     'Home Location': 'Home Location',
     'Work Location': 'Work Location',
+    'Select Language': 'Select Language',
+    Cancel: 'Cancel',
     'Set your home address': 'Set your home address',
     'Set your workplace address': 'Set your workplace address',
     'Attendance Photo': 'Attendance Photo',
