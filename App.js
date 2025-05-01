@@ -13,7 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import './types.js'
 import { AppProvider, AppContext } from './context/AppContext'
 import { createSampleNotes } from './utils/sampleNotes'
-import { STORAGE_KEYS } from './utils/constants'
+import { STORAGE_KEYS } from './config/appConfig'
 
 // Import screens
 import HomeScreen from './screens/HomeScreen'
@@ -36,7 +36,7 @@ import ImageViewerScreen from './screens/ImageViewerScreen'
 import AlarmScreen from './screens/AlarmScreen'
 import MapPickerScreen from './screens/MapPickerScreen'
 import DebugScreen from './screens/DebugScreen'
-import NotesDebugScreen from './screens/NotesDebugScreen'
+import NotesDebugScreen from './screens/NotesDebugScreen.js'
 
 // Set up notification handler
 Notifications.setNotificationHandler({
