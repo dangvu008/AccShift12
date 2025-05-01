@@ -85,12 +85,24 @@ const NotesScreen = ({ navigation }) => {
     }
   }, [t, sortNotes])
 
-  // Tải danh sách ghi chú khi màn hình được focus
+  // Tải danh sách ghi chú khi màn hình được focus hoặc khi có thông báo cập nhật
   useFocusEffect(
     useCallback(() => {
+      console.log('NotesScreen được focus, tải lại dữ liệu ghi chú')
       loadNotes()
     }, [loadNotes])
   )
+
+  // Theo dõi thay đổi từ tham số route
+  useEffect(() => {
+    if (route.params?.notesUpdated) {
+      console.log(
+        'Nhận thông báo cập nhật ghi chú từ tham số route, timestamp:',
+        route.params.timestamp
+      )
+      loadNotes()
+    }
+  }, [route.params?.notesUpdated, route.params?.timestamp, loadNotes])
 
   // Xử lý tìm kiếm
   const handleSearch = (text) => {

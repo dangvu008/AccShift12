@@ -82,13 +82,16 @@ const WeatherWidget = ({ onPress }) => {
           )
 
           if (homeForecast && homeForecast.length > 0) {
-            // Lọc dự báo để lấy 4 giờ tiếp theo cách 1 giờ
-            homeHourlyForecast = [
-              homeForecast[0],
-              homeForecast[1],
-              homeForecast[2],
-              homeForecast[3],
-            ].filter(Boolean) // Lọc bỏ các giá trị undefined nếu có
+            // Lấy thời gian hiện tại
+            const now = new Date()
+
+            // Lọc và sắp xếp dự báo để lấy 4 giờ tiếp theo liên tiếp
+            const filteredForecast = homeForecast
+              .filter((item) => new Date(item.dt * 1000) > now)
+              .sort((a, b) => a.dt - b.dt)
+              .slice(0, 4)
+
+            homeHourlyForecast = filteredForecast
           }
 
           // Lấy cảnh báo thời tiết
@@ -126,13 +129,16 @@ const WeatherWidget = ({ onPress }) => {
           )
 
           if (workForecast && workForecast.length > 0) {
-            // Lọc dự báo để lấy 4 giờ tiếp theo cách 1 giờ
-            workHourlyForecast = [
-              workForecast[0],
-              workForecast[1],
-              workForecast[2],
-              workForecast[3],
-            ].filter(Boolean) // Lọc bỏ các giá trị undefined nếu có
+            // Lấy thời gian hiện tại
+            const now = new Date()
+
+            // Lọc và sắp xếp dự báo để lấy 4 giờ tiếp theo liên tiếp
+            const filteredForecast = workForecast
+              .filter((item) => new Date(item.dt * 1000) > now)
+              .sort((a, b) => a.dt - b.dt)
+              .slice(0, 4)
+
+            workHourlyForecast = filteredForecast
           }
 
           // Lấy cảnh báo thời tiết

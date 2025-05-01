@@ -264,6 +264,8 @@ const NoteForm = ({ noteId, onSave, onDelete }) => {
       // Save note
       await saveNote(noteData)
 
+      console.log('Ghi chú đã được lưu:', noteData.id, 'title:', noteData.title)
+
       // Call onSave callback
       if (onSave) {
         onSave(noteData.id)

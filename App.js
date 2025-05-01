@@ -2,7 +2,11 @@
 
 import { useEffect, useState, useContext } from 'react'
 import { StatusBar } from 'expo-status-bar'
-import { TouchableOpacity } from 'react-native'
+import {
+  TouchableOpacity,
+  NativeEventEmitter,
+  NativeModules,
+} from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { createStackNavigator } from '@react-navigation/stack'
@@ -15,6 +19,9 @@ import './types.js'
 import { AppProvider, AppContext } from './context/AppContext'
 import { createSampleNotes } from './utils/sampleNotes'
 import { STORAGE_KEYS } from './config/appConfig'
+
+// Sử dụng DeviceEventEmitter có sẵn trong React Native để các component có thể giao tiếp với nhau
+console.log('Sử dụng DeviceEventEmitter cho giao tiếp giữa các component')
 
 // Import screens
 import HomeScreen from './screens/HomeScreen'

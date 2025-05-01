@@ -26,9 +26,22 @@ const NoteDetailScreen = ({ navigation, route }) => {
   }
 
   const handleNoteSaved = (noteId, isDeleted = false) => {
-    // Close modal and navigate back
+    console.log(
+      'Ghi chú đã được lưu/xóa, noteId:',
+      noteId,
+      'isDeleted:',
+      isDeleted
+    )
+
+    // Close modal and navigate back with params to indicate data has changed
     setModalVisible(false)
-    navigation.goBack()
+    navigation.navigate({
+      name:
+        navigation.getState().routes[navigation.getState().index - 1]?.name ||
+        'HomeStack',
+      params: { notesUpdated: true, timestamp: Date.now() },
+      merge: true,
+    })
   }
 
   if (isLoading) {

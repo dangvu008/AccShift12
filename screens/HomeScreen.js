@@ -17,7 +17,7 @@ import WeeklyStatusGrid from '../components/WeeklyStatusGrid'
 import WeatherWidget from '../components/WeatherWidget'
 import WorkNotesSection from '../components/WorkNotesSection'
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({ navigation, route }) => {
   const {
     t,
     theme,
@@ -274,7 +274,7 @@ const HomeScreen = ({ navigation }) => {
       </View>
 
       {/* 8. Khu vực Ghi Chú Công Việc */}
-      <WorkNotesSection navigation={navigation} />
+      <WorkNotesSection navigation={navigation} route={route} />
     </ScrollView>
   )
 }

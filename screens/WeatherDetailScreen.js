@@ -41,10 +41,16 @@ const WeatherDetailScreen = ({ navigation }) => {
       )
 
       // Lấy dự báo theo giờ
-      const hourlyForecast = await weatherService.getHourlyForecast(
+      const hourlyData = await weatherService.getHourlyForecast(
         location.latitude,
         location.longitude
       )
+
+      // Lọc và sắp xếp dự báo để lấy các giờ tiếp theo liên tiếp
+      const now = new Date()
+      const hourlyForecast = hourlyData
+        .filter((item) => new Date(item.dt * 1000) > now)
+        .sort((a, b) => a.dt - b.dt)
 
       // Lấy dự báo theo ngày
       const dailyForecast = await weatherService.getDailyForecast(

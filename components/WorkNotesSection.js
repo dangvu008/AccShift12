@@ -14,8 +14,9 @@ import { AppContext } from '../context/AppContext'
 import { getNotes, getShifts } from '../utils/database'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { STORAGE_KEYS } from '../utils/constants'
+import { useFocusEffect } from '@react-navigation/native'
 
-const WorkNotesSection = ({ navigation }) => {
+const WorkNotesSection = ({ navigation, route }) => {
   const { t, darkMode, currentShift, shifts } = useContext(AppContext)
   const [filteredNotes, setFilteredNotes] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -407,6 +408,28 @@ const WorkNotesSection = ({ navigation }) => {
     loadNotes()
   }, [loadNotes])
 
+  // Tải lại dữ liệu khi màn hình được focus
+  useFocusEffect(
+    useCallback(() => {
+      console.log('WorkNotesSection được focus, tải lại dữ liệu ghi chú')
+      loadNotes()
+      return () => {
+        // Cleanup khi component bị unfocus
+      }
+    }, [loadNotes])
+  )
+
+  // Theo dõi thay đổi từ tham số route
+  useEffect(() => {
+    if (route?.params?.notesUpdated) {
+      console.log(
+        'WorkNotesSection: Phát hiện cập nhật ghi chú từ tham số route, timestamp:',
+        route.params.timestamp
+      )
+      loadNotes()
+    }
+  }, [route?.params?.notesUpdated, route?.params?.timestamp, loadNotes])
+
   // Handle adding a new note
   const handleAddNote = () => {
     navigation.navigate('NoteDetail')
@@ -645,6 +668,19 @@ const WorkNotesSection = ({ navigation }) => {
                     style={styles.actionButton}
                     onPress={(e) => {
                       e.stopPropagation()
+                      navigation.navigate('NoteDetail', { noteId: note.id })
+                    }}
+                  >
+                    <Ionicons
+                      name="pencil-outline"
+                      size={18}
+                      color={darkMode ? '#aaa' : '#666'}
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={(e) => {
+                      e.stopPropagation()
                       handleHideNote(note.id)
                     }}
                   >
@@ -863,6 +899,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     padding: 6,
+    marginHorizontal: 3,
   },
 })
 

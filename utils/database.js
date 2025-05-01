@@ -807,6 +807,7 @@ export const checkDuplicateNote = async (title, content, excludeId = null) => {
 // Save note
 export const saveNote = async (note) => {
   try {
+    console.log('Đang lưu ghi chú:', note.id, 'title:', note.title)
     const notes = await getNotes()
 
     // Check if note already exists
@@ -814,6 +815,7 @@ export const saveNote = async (note) => {
 
     if (existingNoteIndex >= 0) {
       // Update existing note
+      console.log('Cập nhật ghi chú đã tồn tại:', note.id)
       notes[existingNoteIndex] = {
         ...notes[existingNoteIndex],
         ...note,
@@ -821,6 +823,7 @@ export const saveNote = async (note) => {
       }
     } else {
       // Add new note
+      console.log('Thêm ghi chú mới:', note.id)
       notes.push({
         ...note,
         id: note.id || Date.now().toString(),
@@ -830,6 +833,16 @@ export const saveNote = async (note) => {
     }
 
     await AsyncStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify(notes))
+    console.log('Đã lưu ghi chú thành công:', note.id)
+
+    // Debug AsyncStorage sau khi lưu
+    try {
+      const { debugAsyncStorage } = require('./sampleNotes')
+      await debugAsyncStorage()
+    } catch (debugError) {
+      console.error('Lỗi khi debug AsyncStorage:', debugError)
+    }
+
     return note
   } catch (error) {
     console.error('Error saving note:', error)
