@@ -36,7 +36,43 @@ import ImageViewerScreen from './screens/ImageViewerScreen'
 import AlarmScreen from './screens/AlarmScreen'
 import MapPickerScreen from './screens/MapPickerScreen'
 import DebugScreen from './screens/DebugScreen'
-import SimpleNotesDebugScreen from './screens/SimpleNotesDebugScreen'
+// Tạo component NotesDebugScreen trực tiếp trong App.js thay vì import
+import React from 'react'
+import { View, Text, ScrollView } from 'react-native'
+const SimpleNotesDebugScreen = () => {
+  const { darkMode } = useContext(AppContext)
+  return (
+    <View
+      style={{
+        flex: 1,
+        padding: 16,
+        backgroundColor: darkMode ? '#121212' : '#f5f5f5',
+      }}
+    >
+      <Text
+        style={{
+          fontSize: 24,
+          fontWeight: 'bold',
+          marginBottom: 16,
+          color: darkMode ? '#fff' : '#333',
+        }}
+      >
+        Debug Ghi Chú Đơn Giản
+      </Text>
+      <ScrollView style={{ flex: 1 }}>
+        <Text
+          style={{
+            fontSize: 16,
+            color: darkMode ? '#fff' : '#333',
+            marginBottom: 12,
+          }}
+        >
+          Đây là màn hình debug đơn giản cho ghi chú.
+        </Text>
+      </ScrollView>
+    </View>
+  )
+}
 
 // Set up notification handler
 Notifications.setNotificationHandler({
