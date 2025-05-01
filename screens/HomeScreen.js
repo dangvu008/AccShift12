@@ -1,6 +1,6 @@
 'use client'
 
-import { useContext, useState, useEffect } from 'react'
+import { useContext, useState, useEffect, useRef } from 'react'
 import {
   View,
   Text,
@@ -34,36 +34,47 @@ const HomeScreen = ({ navigation }) => {
     !alarmPermissionGranted
   )
 
-  // Update current time every second - optimized to prevent flickering
+  // Sử dụng useRef để lưu trữ giá trị mà không gây re-render
+  const isWorkingRef = useRef(isWorking)
+  const workStartTimeRef = useRef(workStartTime)
+
+  // Cập nhật ref khi props thay đổi
   useEffect(() => {
-    // Sử dụng setInterval thay vì requestAnimationFrame để giảm số lần render
-    let intervalId
-
-    const updateTime = () => {
-      const currentDate = new Date()
-      setCurrentTime(currentDate)
-
-      // Calculate work duration if working
-      if (isWorking && workStartTime) {
-        const currentTimeMs = currentDate.getTime()
-        const workStartTimeMs = workStartTime.getTime()
-        const duration = Math.floor(
-          (currentTimeMs - workStartTimeMs) / (1000 * 60)
-        )
-        setWorkDuration(duration)
-      }
-    }
-
-    // Cập nhật thời gian ngay lập tức
-    updateTime()
-
-    // Sau đó cập nhật mỗi giây
-    intervalId = setInterval(updateTime, 1000)
-
-    return () => {
-      clearInterval(intervalId)
-    }
+    isWorkingRef.current = isWorking
+    workStartTimeRef.current = workStartTime
   }, [isWorking, workStartTime])
+
+  // Update current time mỗi giây, nhưng tối ưu hóa để tránh re-render quá nhiều
+  useEffect(() => {
+    // Chỉ cập nhật UI mỗi 2 giây để giảm số lần render
+    const intervalId = setInterval(() => {
+      const now = new Date()
+
+      // Chỉ cập nhật state nếu thời gian thay đổi đáng kể (giây chẵn)
+      if (now.getSeconds() % 2 === 0) {
+        setCurrentTime(now)
+
+        // Tính toán thời gian làm việc nếu đang làm việc
+        if (isWorkingRef.current && workStartTimeRef.current) {
+          const currentTimeMs = now.getTime()
+          const workStartTimeMs = workStartTimeRef.current.getTime()
+          const duration = Math.floor(
+            (currentTimeMs - workStartTimeMs) / (1000 * 60)
+          )
+
+          // Chỉ cập nhật nếu thời gian làm việc thay đổi
+          setWorkDuration((prevDuration) => {
+            if (prevDuration !== duration) {
+              return duration
+            }
+            return prevDuration
+          })
+        }
+      }
+    }, 1000)
+
+    return () => clearInterval(intervalId)
+  }, []) // Không phụ thuộc vào bất kỳ props nào để tránh re-render
 
   // Show alarm permission alert once
   useEffect(() => {

@@ -39,7 +39,8 @@ import DebugScreen from './screens/DebugScreen'
 // Tạo component NotesDebugScreen trực tiếp trong App.js thay vì import
 import React from 'react'
 import { View, Text, ScrollView } from 'react-native'
-const SimpleNotesDebugScreen = () => {
+// Sử dụng React.memo để tránh render lại không cần thiết
+const SimpleNotesDebugScreen = React.memo(() => {
   const { darkMode } = useContext(AppContext)
   return (
     <View
@@ -72,7 +73,7 @@ const SimpleNotesDebugScreen = () => {
       </ScrollView>
     </View>
   )
-}
+})
 
 // Set up notification handler
 Notifications.setNotificationHandler({

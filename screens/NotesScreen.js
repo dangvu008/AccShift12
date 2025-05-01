@@ -137,9 +137,7 @@ const NotesScreen = ({ navigation }) => {
         </Text>
         <TouchableOpacity
           style={styles.debugButton}
-          onPress={() =>
-            navigation.navigate('SettingsStack', { screen: 'NotesDebug' })
-          }
+          onPress={() => navigation.navigate('NotesDebug')}
         >
           <Ionicons
             name="bug-outline"

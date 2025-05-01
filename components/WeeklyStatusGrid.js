@@ -59,7 +59,7 @@ const WeeklyStatusGrid = () => {
   useEffect(() => {
     generateWeekDays()
     loadDailyStatuses()
-  }, [generateWeekDays, loadDailyStatuses])
+  }, [])
 
   // Cập nhật trạng thái từ attendanceLogs
   const updateStatusFromAttendanceLogs = useCallback(async () => {
