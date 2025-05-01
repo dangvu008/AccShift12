@@ -259,14 +259,19 @@ const MultiFunctionButton = () => {
               const latestLogsByType = {}
 
               // Lặp qua tất cả log để tìm log mới nhất cho mỗi loại
-              attendanceLogs.forEach(log => {
-                if (!latestLogsByType[log.type] || log.timestamp > latestLogsByType[log.type].timestamp) {
+              attendanceLogs.forEach((log) => {
+                if (
+                  !latestLogsByType[log.type] ||
+                  log.timestamp > latestLogsByType[log.type].timestamp
+                ) {
                   latestLogsByType[log.type] = log
                 }
               })
 
               // Chuyển đổi object thành mảng và sắp xếp theo thời gian
-              const uniqueLogs = Object.values(latestLogsByType).sort((a, b) => a.timestamp - b.timestamp)
+              const uniqueLogs = Object.values(latestLogsByType).sort(
+                (a, b) => a.timestamp - b.timestamp
+              )
 
               // Hiển thị các log đã lọc
               return uniqueLogs.map((log, index) => {
@@ -316,7 +321,7 @@ const MultiFunctionButton = () => {
                   </View>
                 )
               })
-            })()
+            })()}
           </View>
         </View>
       )}

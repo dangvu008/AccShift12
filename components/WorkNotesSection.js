@@ -337,7 +337,7 @@ const WorkNotesSection = ({ navigation }) => {
     }
 
     loadNotes()
-  }, [currentShift, shifts])
+  }, [currentShift, shifts, calculateNextReminderTimes])
 
   // Handle adding a new note
   const handleAddNote = () => {

@@ -291,7 +291,7 @@ const WeatherWidget = ({ onPress }) => {
     return () => {
       isMounted = false
     }
-  }, [homeLocation, workLocation])
+  }, [homeLocation, workLocation, fetchWeatherData])
 
   if (loading) {
     return (

@@ -1089,9 +1089,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 3,
   },
-  deleteButton: {
-    backgroundColor: '#ff5252',
-  },
+
   resetButton: {
     backgroundColor: COLORS.SECONDARY_CARD_LIGHT,
     borderWidth: 1,
