@@ -150,44 +150,25 @@ const WorkNotesSection = ({ navigation }) => {
 
   // Calculate nextReminderTime for all notes
   const calculateNextReminderTimes = useCallback((notes, allShifts) => {
-    console.log('Calculating reminder times for notes:', notes?.length || 0)
     const now = new Date()
     const dayMap = { CN: 0, T2: 1, T3: 2, T4: 3, T5: 4, T6: 5, T7: 6 }
 
     // If no notes, return empty array
     if (!notes || notes.length === 0) {
-      console.log('No notes found')
       return []
     }
-
-    // Add debug logs
-    console.log('Notes data:', JSON.stringify(notes))
-    console.log('Shifts data:', JSON.stringify(allShifts))
 
     return notes.map((note) => {
       let nextReminderTime = null
       let reminderDescription = ''
 
-      console.log('Processing note:', note.id, note.title)
-
       // Case 1: Note has reminderTime and it's in the future
       if (note.reminderTime) {
-        console.log('Note has reminderTime:', note.reminderTime)
         const reminderDate = parseReminderTime(note.reminderTime)
         if (reminderDate && reminderDate > now) {
           nextReminderTime = reminderDate
           reminderDescription = formatReminderTime(reminderDate)
-          console.log('Valid future reminder time:', reminderDescription)
-        } else {
-          console.log(
-            'Reminder time is in the past or invalid:',
-            reminderDate ? reminderDate.toString() : 'null',
-            'now:',
-            now.toString()
-          )
         }
-      } else {
-        console.log('Note has no reminderTime')
       }
 
       // Case 2: Note has linkedShifts
@@ -196,41 +177,26 @@ const WorkNotesSection = ({ navigation }) => {
         note.linkedShifts &&
         note.linkedShifts.length > 0
       ) {
-        console.log('Note has linkedShifts:', note.linkedShifts)
         // Find the earliest reminder time from linked shifts
         let earliestReminder = null
         let associatedShiftName = ''
 
         for (const shiftId of note.linkedShifts) {
           const shift = allShifts.find((s) => s.id === shiftId)
-          if (!shift) {
-            console.log('Shift not found:', shiftId)
-            continue
-          }
-          if (!shift.daysApplied) {
-            console.log('Shift has no daysApplied:', shift.name)
+          if (!shift || !shift.daysApplied) {
             continue
           }
 
           // Use startTime instead of departureTime as departureTime doesn't exist in the data
           const departureTime = shift.startTime
           if (!departureTime) {
-            console.log('Shift has no startTime:', shift.name)
             continue
           }
-
-          console.log(
-            'Processing shift:',
-            shift.name,
-            'daysApplied:',
-            shift.daysApplied
-          )
 
           // Calculate reminder time for each day of the shift
           for (const day of shift.daysApplied) {
             const dayNumber = dayMap[day]
             if (dayNumber === undefined) {
-              console.log('Invalid day:', day)
               continue
             }
 
@@ -242,25 +208,12 @@ const WorkNotesSection = ({ navigation }) => {
               now
             )
 
-            if (reminderTime) {
-              console.log(
-                'Calculated reminder time for',
-                day,
-                ':',
-                reminderTime
-              )
-              if (!earliestReminder || reminderTime < earliestReminder) {
-                earliestReminder = reminderTime
-                associatedShiftName = shift.name
-                console.log(
-                  'New earliest reminder:',
-                  formatReminderTime(reminderTime),
-                  'for shift:',
-                  shift.name
-                )
-              }
-            } else {
-              console.log('Failed to calculate reminder time for day:', day)
+            if (
+              reminderTime &&
+              (!earliestReminder || reminderTime < earliestReminder)
+            ) {
+              earliestReminder = reminderTime
+              associatedShiftName = shift.name
             }
           }
         }
@@ -270,38 +223,30 @@ const WorkNotesSection = ({ navigation }) => {
           reminderDescription = `${associatedShiftName}, ${formatReminderTime(
             earliestReminder
           )}`
-          console.log('Final shift-based reminder:', reminderDescription)
-        } else {
-          console.log('No valid shift-based reminder found')
         }
       }
 
       // Always return the note, even if it doesn't have a nextReminderTime
-      const result = {
+      return {
         ...note,
         nextReminderTime,
         reminderDescription,
       }
-      console.log(
-        'Final note with reminder:',
-        result.id,
-        result.title,
-        result.reminderDescription || 'No reminder'
-      )
-      return result
     })
   }, [])
 
   // Load and filter notes
   useEffect(() => {
+    let isMounted = true
+
     const loadNotes = async () => {
+      if (!isMounted) return
       setIsLoading(true)
       try {
         const allNotes = await getNotes()
         const allShifts = await getShifts()
 
-        console.log('Loaded notes:', allNotes?.length || 0)
-        console.log('Loaded shifts:', allShifts?.length || 0)
+        if (!isMounted) return
 
         // Calculate nextReminderTime for each note
         const notesWithReminders = calculateNextReminderTimes(
@@ -325,19 +270,25 @@ const WorkNotesSection = ({ navigation }) => {
           )
         })
 
-        console.log('Sorted notes:', sortedNotes.length)
+        if (!isMounted) return
 
         // Limit to 3 notes
         setFilteredNotes(sortedNotes.slice(0, 3))
       } catch (error) {
         console.error('Error loading notes:', error)
       } finally {
-        setIsLoading(false)
+        if (isMounted) {
+          setIsLoading(false)
+        }
       }
     }
 
     loadNotes()
-  }, [currentShift, shifts])
+
+    return () => {
+      isMounted = false
+    }
+  }, [calculateNextReminderTimes])
 
   // Handle adding a new note
   const handleAddNote = () => {

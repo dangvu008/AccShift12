@@ -46,22 +46,38 @@ const HomeScreen = ({ navigation }) => {
     stateRef.isWorking = isWorking
     stateRef.workStartTime = workStartTime
 
-    const timer = setInterval(() => {
-      const now = new Date()
-      setCurrentTime(now)
+    // Sử dụng requestAnimationFrame thay vì setInterval để tránh re-render quá nhiều
+    let animationFrameId
+    let lastUpdate = Date.now()
 
-      // Calculate work duration if working
-      if (stateRef.isWorking && stateRef.workStartTime) {
-        const currentTimeMs = now.getTime()
-        const workStartTimeMs = stateRef.workStartTime.getTime()
-        const duration = Math.floor(
-          (currentTimeMs - workStartTimeMs) / (1000 * 60)
-        )
-        setWorkDuration(duration)
+    const updateTime = () => {
+      const now = Date.now()
+      // Chỉ cập nhật UI mỗi 1000ms
+      if (now - lastUpdate >= 1000) {
+        const currentDate = new Date()
+        setCurrentTime(currentDate)
+
+        // Calculate work duration if working
+        if (stateRef.isWorking && stateRef.workStartTime) {
+          const currentTimeMs = currentDate.getTime()
+          const workStartTimeMs = stateRef.workStartTime.getTime()
+          const duration = Math.floor(
+            (currentTimeMs - workStartTimeMs) / (1000 * 60)
+          )
+          setWorkDuration(duration)
+        }
+
+        lastUpdate = now
       }
-    }, 1000)
 
-    return () => clearInterval(timer)
+      animationFrameId = requestAnimationFrame(updateTime)
+    }
+
+    animationFrameId = requestAnimationFrame(updateTime)
+
+    return () => {
+      cancelAnimationFrame(animationFrameId)
+    }
   }, [isWorking, workStartTime])
 
   // Show alarm permission alert once

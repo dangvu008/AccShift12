@@ -1,4 +1,10 @@
-import React, { useContext, useEffect, useState, useCallback } from 'react'
+import React, {
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+} from 'react'
 import {
   View,
   Text,
@@ -290,16 +296,20 @@ const WeatherWidget = ({ onPress }) => {
     t,
   ])
 
+  // Sử dụng useRef để theo dõi lần mount đầu tiên
+  const isFirstMount = useRef(true)
+
   useEffect(() => {
-    let isMounted = true
-
-    memoizedFetchWeatherData()
-
-    // Cleanup function để tránh memory leak
-    return () => {
-      isMounted = false
+    // Chỉ fetch dữ liệu khi component được mount lần đầu
+    // hoặc khi các dependency thực sự thay đổi
+    if (isFirstMount.current) {
+      isFirstMount.current = false
+      memoizedFetchWeatherData()
+    } else if (homeLocation || workLocation) {
+      // Chỉ fetch lại khi vị trí thay đổi
+      memoizedFetchWeatherData()
     }
-  }, [memoizedFetchWeatherData])
+  }, [homeLocation, workLocation])
 
   if (loading) {
     return (
