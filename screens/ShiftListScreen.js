@@ -12,6 +12,7 @@ import {
 import { Ionicons, Feather, MaterialIcons } from '@expo/vector-icons'
 import { AppContext } from '../context/AppContext'
 import { getShifts, deleteShift, getCurrentShift } from '../utils/database'
+import ShiftRotationSettings from '../components/ShiftRotationSettings'
 
 const ShiftListScreen = ({ navigation }) => {
   const { t, darkMode, setCurrentShift } = useContext(AppContext)
@@ -195,11 +196,17 @@ const ShiftListScreen = ({ navigation }) => {
 
   return (
     <View style={[styles.container, darkMode && styles.darkContainer]}>
+      {/* Phần cài đặt nhắc nhở đổi ca */}
+      <View style={styles.listContent}>
+        <ShiftRotationSettings shifts={shifts} />
+      </View>
+
       <FlatList
         data={shifts}
         renderItem={renderShiftItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
+        ListHeaderComponent={<View style={{ height: 8 }} />}
       />
 
       <TouchableOpacity style={styles.addButton} onPress={handleAddShift}>

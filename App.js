@@ -401,7 +401,24 @@ function AppContent(props) {
   // eslint-disable-next-line no-unused-vars
   const notification = props.notification
   // Import context to use t() function, darkMode and theme
-  const { t, darkMode, theme } = useContext(AppContext)
+  const { t, darkMode, theme, checkAndApplyShiftRotation } =
+    useContext(AppContext)
+
+  // Kiểm tra và áp dụng xoay ca tự động khi component được mount
+  useEffect(() => {
+    const checkShiftRotation = async () => {
+      try {
+        const rotationApplied = await checkAndApplyShiftRotation()
+        if (rotationApplied) {
+          console.log('Đã áp dụng xoay ca tự động')
+        }
+      } catch (error) {
+        console.error('Lỗi khi kiểm tra xoay ca tự động:', error)
+      }
+    }
+
+    checkShiftRotation()
+  }, [])
 
   return (
     <>

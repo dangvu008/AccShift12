@@ -1479,6 +1479,115 @@ export const AppProvider = ({ children }) => {
     }
   }
 
+  // Hàm kiểm tra và áp dụng xoay ca tự động
+  const checkAndApplyShiftRotation = async () => {
+    try {
+      // Lấy cài đặt người dùng
+      const userSettings = await storage.getUserSettings()
+
+      // Kiểm tra điều kiện áp dụng xoay ca
+      if (!userSettings || userSettings.changeShiftReminderMode !== 'rotate') {
+        return false
+      }
+
+      // Kiểm tra cấu hình xoay ca
+      if (
+        !userSettings.rotationShifts ||
+        !Array.isArray(userSettings.rotationShifts) ||
+        userSettings.rotationShifts.length < 2 ||
+        !userSettings.rotationFrequency
+      ) {
+        console.log('Cấu hình xoay ca không hợp lệ')
+        return false
+      }
+
+      // Lấy ngày áp dụng ca hiện tại
+      const rotationLastAppliedDate = userSettings.rotationLastAppliedDate
+      if (!rotationLastAppliedDate) {
+        // Nếu chưa có ngày áp dụng, đặt ngày hiện tại làm ngày áp dụng đầu tiên
+        const today = new Date()
+        await updateMultipleSettings({
+          rotationLastAppliedDate: today.toISOString().split('T')[0],
+        })
+        return false
+      }
+
+      // Tính toán ngày xoay ca tiếp theo
+      const lastAppliedDate = new Date(rotationLastAppliedDate)
+      let nextRotationDate = new Date(lastAppliedDate)
+
+      switch (userSettings.rotationFrequency) {
+        case 'weekly':
+          nextRotationDate.setDate(lastAppliedDate.getDate() + 7)
+          break
+        case 'biweekly':
+          nextRotationDate.setDate(lastAppliedDate.getDate() + 14)
+          break
+        case 'monthly':
+          nextRotationDate.setMonth(lastAppliedDate.getMonth() + 1)
+          break
+        default:
+          nextRotationDate.setDate(lastAppliedDate.getDate() + 7)
+      }
+
+      // Kiểm tra xem đã đến ngày xoay ca chưa
+      const currentDate = new Date()
+      if (currentDate >= nextRotationDate) {
+        // Xác định ca tiếp theo
+        const activeShiftId = userSettings.activeShiftId || currentShift?.id
+        if (!activeShiftId) {
+          console.log('Không tìm thấy ca hiện tại')
+          return false
+        }
+
+        const currentIndex = userSettings.rotationShifts.indexOf(activeShiftId)
+        if (currentIndex === -1) {
+          console.log('Ca hiện tại không nằm trong danh sách xoay ca')
+          return false
+        }
+
+        // Tính vị trí của ca tiếp theo
+        const nextIndex =
+          (currentIndex + 1) % userSettings.rotationShifts.length
+        const nextShiftId = userSettings.rotationShifts[nextIndex]
+
+        // Tìm thông tin ca tiếp theo
+        const nextShift = shifts.find((shift) => shift.id === nextShiftId)
+        if (!nextShift) {
+          console.log('Không tìm thấy thông tin ca tiếp theo')
+          return false
+        }
+
+        // Áp dụng ca mới
+        setCurrentShift(nextShift)
+
+        // Cập nhật ngày áp dụng
+        await updateMultipleSettings({
+          activeShiftId: nextShiftId,
+          rotationLastAppliedDate: nextRotationDate.toISOString().split('T')[0],
+        })
+
+        // Gửi thông báo cho người dùng
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: t('Tự động đổi ca làm việc'),
+            body: t(
+              `Ca làm việc đã được tự động cập nhật. Ca tiếp theo của bạn là: ${nextShift.name}`
+            ),
+          },
+          trigger: null, // Hiển thị ngay lập tức
+        })
+
+        return true
+      }
+
+      return false
+    } catch (error) {
+      console.error('Lỗi khi kiểm tra và áp dụng xoay ca:', error)
+      return false
+    }
+  }
+
   // Cập nhật hàm lưu cài đặt OT
   const handleSaveOtBaseRateSettings = async () => {
     const settings = {
@@ -1535,6 +1644,9 @@ export const AppProvider = ({ children }) => {
         attendanceLogs,
         onlyGoWorkMode,
         showPunchButton,
+        // Shift rotation
+        checkAndApplyShiftRotation,
+        updateMultipleSettings,
         // OT Threshold settings
         otThresholdEnabled,
         otThresholdHours,
