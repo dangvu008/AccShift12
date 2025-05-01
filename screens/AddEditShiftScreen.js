@@ -49,8 +49,8 @@ const AddEditShiftScreen = ({ route, navigation }) => {
   const [breakTime, setBreakTime] = useState('60')
   const [remindBeforeStart, setRemindBeforeStart] = useState('15')
   const [remindAfterEnd, setRemindAfterEnd] = useState('15')
-  const [isActive, setIsActive] = useState(true)
-  const [showPunch, setShowPunch] = useState(true)
+  const [isActive, setIsActive] = useState(isEditing ? true : false)
+  const [showPunch, setShowPunch] = useState(isEditing ? true : false)
   const [daysApplied, setDaysApplied] = useState(['T2', 'T3', 'T4', 'T5', 'T6'])
 
   // UI state
@@ -623,8 +623,8 @@ const AddEditShiftScreen = ({ route, navigation }) => {
               setBreakTime('60')
               setRemindBeforeStart('15')
               setRemindAfterEnd('15')
-              setIsActive(true)
-              setShowPunch(true)
+              setIsActive(false)
+              setShowPunch(false)
               setDaysApplied(['T2', 'T3', 'T4', 'T5', 'T6'])
             }
 
@@ -1269,7 +1269,7 @@ const AddEditShiftScreen = ({ route, navigation }) => {
             ]}
           >
             <Text style={[styles.switchLabel, darkMode && styles.darkLabel]}>
-              {t('Kích hoạt')}
+              {t('Áp dụng')}
             </Text>
             <Switch
               value={isActive}

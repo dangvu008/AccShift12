@@ -836,11 +836,16 @@ export const AppProvider = ({ children }) => {
 
             // Nếu ở chế độ Simple, hủy tất cả nhắc nhở liên quan đến ca làm việc
             if (onlyGoWorkMode) {
+              // Trong chế độ Simple, khi bấm "Đi Làm" sẽ hủy tất cả các nhắc nhở liên quan
               await alarmManager.cancelAlarmsByPrefix(
                 `check_in_${currentShift.id}`
               )
               await alarmManager.cancelAlarmsByPrefix(
                 `check_out_${currentShift.id}`
+              )
+              // Hủy cả nhắc nhở hoàn tất nếu có
+              await alarmManager.cancelAlarmsByPrefix(
+                `complete_${currentShift.id}`
               )
             }
             break
@@ -857,7 +862,10 @@ export const AppProvider = ({ children }) => {
             )
             break
           case 'complete':
-            // Không cần hủy thêm nhắc nhở
+            // Hủy nhắc nhở "Complete Notification" nếu có
+            await alarmManager.cancelAlarmsByPrefix(
+              `complete_${currentShift.id}`
+            )
             break
         }
       } catch (error) {
@@ -875,7 +883,16 @@ export const AppProvider = ({ children }) => {
         const {
           calculateTodayWorkStatus,
         } = require('../utils/workStatusCalculator')
-        await calculateTodayWorkStatus()
+
+        // Lấy ca làm việc hiện tại
+        const shift = currentShift
+
+        // Lấy cài đặt người dùng để xác định chế độ nút
+        const userSettings = await storage.getUserSettings()
+        const isSimpleMode = userSettings?.multiButtonMode === 'simple'
+
+        // Gọi hàm tính toán với thông tin chế độ
+        await calculateTodayWorkStatus(shift, isSimpleMode)
       } catch (error) {
         console.error('Lỗi khi tính toán trạng thái làm việc:', error)
       }
@@ -934,10 +951,16 @@ export const AppProvider = ({ children }) => {
             shiftId: currentShift ? currentShift.id : null,
           }
 
-          // Nếu ở chế độ "Chỉ Đi Làm", chuyển thẳng sang trạng thái COMPLETE
+          // Xử lý khác nhau cho chế độ Simple và Full
           if (onlyGoWorkMode) {
+            // Chế độ Simple: Bấm "Đi Làm" sẽ chuyển thẳng sang trạng thái COMPLETE
+            // Đồng thời cũng đánh dấu là đang làm việc để tính toán trạng thái
             newState = BUTTON_STATES.COMPLETE
+
+            // Trong chế độ Simple, không cần set isWorking và workStartTime
+            // vì không cần theo dõi thời gian làm việc thực tế
           } else {
+            // Chế độ Full: Bấm "Đi Làm" sẽ chuyển sang trạng thái chờ Check-in
             newState = BUTTON_STATES.WAITING_CHECK_IN
           }
           break
@@ -1073,6 +1096,12 @@ export const AppProvider = ({ children }) => {
             shiftId: currentShift ? currentShift.id : null,
           }
           newState = BUTTON_STATES.COMPLETED
+
+          // Trong cả hai chế độ, khi hoàn tất, đảm bảo trạng thái làm việc được reset
+          setIsWorking(false)
+          setWorkStartTime(null)
+          await AsyncStorage.setItem('isWorking', 'false')
+          await AsyncStorage.removeItem('workStartTime')
           break
       }
 
@@ -1103,7 +1132,17 @@ export const AppProvider = ({ children }) => {
         setButtonState(newState)
 
         // Kích hoạt tính toán trạng thái làm việc
-        await calculateWorkStatus()
+        // Trong chế độ Simple, cập nhật trạng thái ngay khi bấm "Đi Làm"
+        // Trong chế độ Full, cập nhật trạng thái khi bấm "Check-out" hoặc "Complete"
+        if (onlyGoWorkMode) {
+          if (actionType === 'go_work' || actionType === 'complete') {
+            await calculateWorkStatus()
+          }
+        } else {
+          if (actionType === 'check_out' || actionType === 'complete') {
+            await calculateWorkStatus()
+          }
+        }
       }
     }
 
@@ -1202,7 +1241,13 @@ export const AppProvider = ({ children }) => {
       const {
         calculateTodayWorkStatus,
       } = require('../utils/workStatusCalculator')
-      await calculateTodayWorkStatus()
+
+      // Lấy ca làm việc hiện tại và chế độ nút
+      const shift = currentShift
+      const isSimpleMode = onlyGoWorkMode
+
+      // Gọi hàm tính toán với thông tin chế độ
+      await calculateTodayWorkStatus(shift, isSimpleMode)
     } catch (error) {
       console.error(
         'Lỗi khi tính toán trạng thái làm việc sau khi ký công:',

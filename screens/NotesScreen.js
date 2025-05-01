@@ -16,7 +16,7 @@ import { useFocusEffect } from '@react-navigation/native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { STORAGE_KEYS } from '../utils/constants'
 
-const NotesScreen = ({ navigation }) => {
+const NotesScreen = ({ navigation, route }) => {
   const { t, darkMode } = useContext(AppContext)
   const [notes, setNotes] = useState([])
   const [filteredNotes, setFilteredNotes] = useState([])
@@ -95,14 +95,14 @@ const NotesScreen = ({ navigation }) => {
 
   // Theo dõi thay đổi từ tham số route
   useEffect(() => {
-    if (route.params?.notesUpdated) {
+    if (route && route.params?.notesUpdated) {
       console.log(
         'Nhận thông báo cập nhật ghi chú từ tham số route, timestamp:',
         route.params.timestamp
       )
       loadNotes()
     }
-  }, [route.params?.notesUpdated, route.params?.timestamp, loadNotes])
+  }, [route, route?.params?.notesUpdated, route?.params?.timestamp, loadNotes])
 
   // Xử lý tìm kiếm
   const handleSearch = (text) => {
