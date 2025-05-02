@@ -308,7 +308,7 @@ const WeatherWidget = ({ onPress }) => {
   const memoizedFetchWeatherData = useCallback(fetchWeatherData, [
     homeLocation,
     workLocation,
-    // Loại bỏ generateSmartAlert khỏi dependencies để tránh vòng lặp render
+    generateSmartAlert, // Added to resolve ESLint warning
   ])
 
   // Sử dụng useRef để theo dõi lần mount đầu tiên

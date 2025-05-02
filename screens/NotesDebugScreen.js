@@ -223,7 +223,7 @@ const NotesDebugScreen = ({ navigation }) => {
   // Tải dữ liệu khi màn hình được mount
   useEffect(() => {
     loadNotes()
-  }, [])
+  }, [loadNotes]) // Added 'loadNotes' to the dependency array to resolve the ESLint warning
 
   return (
     <View style={[styles.container, darkMode && styles.darkContainer]}>

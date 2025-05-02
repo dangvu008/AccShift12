@@ -267,7 +267,7 @@ export const createSampleNotes = async (force = false) => {
       let saveSuccess = false
 
       // Trên thiết bị Android thật, luôn sử dụng phương pháp lưu từng ghi chú một
-      const useIndividualSave =
+      let useIndividualSave =
         Platform.OS === 'android' && !Platform.constants?.isEmulator
 
       console.log(

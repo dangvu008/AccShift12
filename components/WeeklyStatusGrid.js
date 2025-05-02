@@ -59,7 +59,7 @@ const WeeklyStatusGrid = () => {
   useEffect(() => {
     generateWeekDays()
     loadDailyStatuses()
-  }, [])
+  }, [generateWeekDays, loadDailyStatuses]) // Added dependencies to resolve ESLint warnings
 
   // Thêm hàm refresh để làm mới dữ liệu
   const refreshData = useCallback(() => {
