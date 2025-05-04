@@ -15,17 +15,27 @@ const STORAGE_KEYS = {
  */
 export const getCurrentLocation = async () => {
   try {
+    console.log('Location: Đang lấy vị trí hiện tại...')
+
     // Kiểm tra quyền truy cập vị trí
     const { status } = await Location.requestForegroundPermissionsAsync()
+    console.log('Location: Trạng thái quyền vị trí:', status)
 
     if (status !== 'granted') {
-      console.error('Permission to access location was denied')
+      console.error('Location: Quyền truy cập vị trí bị từ chối')
       return null
     }
 
     // Lấy vị trí hiện tại
+    console.log('Location: Đang lấy vị trí với độ chính xác cao...')
     const location = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.High,
+    })
+
+    console.log('Location: Đã lấy được vị trí hiện tại:', {
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+      accuracy: location.coords.accuracy,
     })
 
     return {
@@ -33,8 +43,32 @@ export const getCurrentLocation = async () => {
       longitude: location.coords.longitude,
     }
   } catch (error) {
-    console.error('Error getting current location:', error)
-    return null
+    console.error('Location: Lỗi khi lấy vị trí hiện tại:', error)
+
+    // Thử lại với độ chính xác thấp hơn
+    try {
+      console.log('Location: Thử lại với độ chính xác thấp hơn...')
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      })
+
+      console.log('Location: Đã lấy được vị trí với độ chính xác thấp:', {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        accuracy: location.coords.accuracy,
+      })
+
+      return {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      }
+    } catch (retryError) {
+      console.error(
+        'Location: Lỗi khi thử lại với độ chính xác thấp:',
+        retryError
+      )
+      return null
+    }
   }
 }
 
@@ -46,17 +80,103 @@ export const getCurrentLocation = async () => {
  */
 export const getAddressFromCoordinates = async (latitude, longitude) => {
   try {
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
-    )
+    console.log('Location: Đang lấy địa chỉ từ tọa độ:', {
+      latitude,
+      longitude,
+    })
+
+    // Thêm tham số ngẫu nhiên để tránh cache
+    const randomParam = Math.random().toString(36).substring(7)
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1&_=${randomParam}`
+
+    console.log('Location: Gọi API Nominatim:', url)
+
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 giây timeout
+
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'AccShift Weather App',
+        'Accept-Language': 'vi,en;q=0.9',
+      },
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeoutId))
+
     const data = await response.json()
+    console.log('Location: Kết quả từ Nominatim:', data)
 
     if (data && data.display_name) {
+      console.log('Location: Đã lấy được địa chỉ:', data.display_name)
       return data.display_name
     }
+
+    console.log('Location: Không thể lấy địa chỉ từ API')
+
+    // Thử phương pháp thứ hai với Expo Location
+    try {
+      console.log('Location: Thử phương pháp thứ hai với Expo Location')
+      const reverseResult = await Location.reverseGeocodeAsync({
+        latitude,
+        longitude,
+      })
+
+      console.log('Location: Kết quả từ Expo Location:', reverseResult)
+
+      if (reverseResult && reverseResult.length > 0) {
+        const { name, street, district, city, region, country } =
+          reverseResult[0]
+        const addressParts = []
+
+        if (name) addressParts.push(name)
+        if (street) addressParts.push(street)
+        if (district) addressParts.push(district)
+        if (city) addressParts.push(city)
+        if (region && region !== city) addressParts.push(region)
+        if (country) addressParts.push(country)
+
+        const address = addressParts.join(', ')
+        console.log('Location: Địa chỉ từ Expo Location:', address)
+        return address
+      }
+    } catch (expError) {
+      console.error('Location: Lỗi khi sử dụng Expo Location:', expError)
+    }
+
     return null
   } catch (error) {
-    console.error('Error getting address:', error)
+    console.error('Location: Lỗi khi lấy địa chỉ từ tọa độ:', error)
+
+    // Thử phương pháp thứ hai với Expo Location
+    try {
+      console.log('Location: Thử phương pháp thứ hai với Expo Location sau lỗi')
+      const reverseResult = await Location.reverseGeocodeAsync({
+        latitude,
+        longitude,
+      })
+
+      if (reverseResult && reverseResult.length > 0) {
+        const { name, street, district, city, region, country } =
+          reverseResult[0]
+        const addressParts = []
+
+        if (name) addressParts.push(name)
+        if (street) addressParts.push(street)
+        if (district) addressParts.push(district)
+        if (city) addressParts.push(city)
+        if (region && region !== city) addressParts.push(region)
+        if (country) addressParts.push(country)
+
+        const address = addressParts.join(', ')
+        console.log('Location: Địa chỉ từ Expo Location (sau lỗi):', address)
+        return address
+      }
+    } catch (expError) {
+      console.error(
+        'Location: Lỗi khi sử dụng Expo Location (sau lỗi):',
+        expError
+      )
+    }
+
     return null
   }
 }

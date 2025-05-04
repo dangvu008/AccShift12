@@ -498,6 +498,35 @@ export const translations = {
     'Notification Vibration': 'Notification Vibration',
     'Vibrate for notifications': 'Vibrate for notifications',
     'Attendance Button': 'Attendance Button',
+    // Thêm các khóa còn thiếu cho màn hình Settings
+    'Chế độ tối': 'Dark Mode',
+    'Bật chế độ tối': 'Enable Dark Mode',
+    'Bật chế độ tối để trải nghiệm giao diện tối hơn trong ứng dụng':
+      'Enable dark mode for a darker interface experience in the app',
+    'Ngôn ngữ': 'Language',
+    'Thông báo': 'Notifications',
+    'Âm thanh thông báo': 'Notification Sound',
+    'Phát âm thanh khi có thông báo': 'Play sound when notifications arrive',
+    'Rung thông báo': 'Notification Vibration',
+    'Rung khi có thông báo': 'Vibrate when notifications arrive',
+    'Cảnh báo thời tiết': 'Weather Alerts',
+    'Nhận cảnh báo về thời tiết': 'Receive weather alerts',
+    'Nhận cảnh báo về thời tiết cực đoan để bạn luôn được thông báo kịp thời':
+      'Receive alerts about extreme weather to stay informed',
+    'Nút đa năng': 'Multi-function Button',
+    'Chế độ nút đa năng': 'Multi-function Button Mode',
+    'Chọn chế độ hiển thị cho nút đa năng':
+      'Choose display mode for multi-function button',
+    'Hiển thị': 'Display',
+    'Định dạng 24 giờ': '24-hour Format',
+    'Hiển thị giờ theo định dạng 24 giờ (13:00) thay vì 12 giờ (1:00 PM)':
+      'Display time in 24-hour format (13:00) instead of 12-hour format (1:00 PM)',
+    'Ngày bắt đầu tuần': 'First Day of Week',
+    'Chọn ngày bắt đầu tuần': 'Select first day of week',
+    'Ngày đầu tiên trong tuần khi xem lịch':
+      'First day of the week when viewing calendar',
+    'Thông tin ứng dụng': 'App Information',
+    'Phiên bản': 'Version',
     'Only Go Work Mode': 'Only Go Work Mode',
     'Only show Go Work button instead of the full attendance flow':
       'Only show Go Work button instead of the full attendance flow',

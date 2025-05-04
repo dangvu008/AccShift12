@@ -89,10 +89,39 @@ const SettingsScreen = ({ navigation }) => {
     loadSettings()
   }, [onlyGoWorkMode])
 
+  // Hàm tải lại ứng dụng
+  const reloadApp = useCallback(() => {
+    // Tải lại toàn bộ ứng dụng bằng cách điều hướng qua các màn hình
+    console.log('Reloading app...')
+
+    // Đầu tiên điều hướng đến Home
+    navigation.navigate('Home')
+
+    // Sau đó quay lại Settings
+    setTimeout(() => {
+      navigation.navigate('Settings', { refresh: Date.now() })
+    }, 300)
+  }, [navigation])
+
   // Theo dõi sự thay đổi của language
   useEffect(() => {
     console.log('Language changed in SettingsScreen:', language)
-  }, [language])
+
+    // Force re-render khi ngôn ngữ thay đổi
+    const forceUpdate = async () => {
+      // Đọc ngôn ngữ từ AsyncStorage để đảm bảo đồng bộ
+      const storedLanguage = await AsyncStorage.getItem('language')
+      console.log('Stored language in AsyncStorage:', storedLanguage)
+
+      if (storedLanguage && storedLanguage !== language) {
+        console.log('Language mismatch, forcing update...')
+        // Tải lại màn hình
+        reloadApp()
+      }
+    }
+
+    forceUpdate()
+  }, [language, navigation, reloadApp])
 
   // Language options
   const languageOptions = [
@@ -102,6 +131,16 @@ const SettingsScreen = ({ navigation }) => {
 
   // Log để debug
   console.log('Current language in SettingsScreen:', language)
+
+  // Debug translations
+  console.log('Debug translations:')
+  console.log('t("Chế độ tối") =', t('Chế độ tối'))
+  console.log('t("Ngôn ngữ") =', t('Ngôn ngữ'))
+  console.log('t("Thông báo") =', t('Thông báo'))
+  console.log('t("Cảnh báo thời tiết") =', t('Cảnh báo thời tiết'))
+  console.log('t("Nút đa năng") =', t('Nút đa năng'))
+  console.log('t("Hiển thị") =', t('Hiển thị'))
+  console.log('t("Thông tin ứng dụng") =', t('Thông tin ứng dụng'))
 
   // Multi-button mode options
   const buttonModeOptions = [
@@ -118,47 +157,46 @@ const SettingsScreen = ({ navigation }) => {
   ]
 
   // Hàm thay đổi ngôn ngữ trực tiếp
-  const changeLanguageDirectly = async (value) => {
-    try {
-      console.log('SettingsScreen: Changing language directly to:', value)
+  const changeLanguageDirectly = useCallback(
+    async (value) => {
+      try {
+        console.log('SettingsScreen: Changing language directly to:', value)
 
-      // Lưu trực tiếp vào AsyncStorage
-      await AsyncStorage.setItem('language', value)
+        // Lưu trực tiếp vào AsyncStorage
+        await AsyncStorage.setItem('language', value)
 
-      // Đọc lại để xác nhận
-      const storedLanguage = await AsyncStorage.getItem('language')
-      console.log(
-        'SettingsScreen: Language in AsyncStorage after direct change:',
-        storedLanguage
-      )
-
-      // Hiển thị thông báo thành công
-      const successTitle = value === 'en' ? 'Success' : 'Thành công'
-      const successMessage =
-        value === 'en'
-          ? 'Language has been changed successfully'
-          : 'Ngôn ngữ đã được thay đổi thành công'
-
-      Alert.alert(successTitle, successMessage)
-
-      // Reload ứng dụng
-      setTimeout(() => {
+        // Đọc lại để xác nhận
+        const storedLanguage = await AsyncStorage.getItem('language')
         console.log(
-          'SettingsScreen: Reloading app after direct language change'
+          'SettingsScreen: Language in AsyncStorage after direct change:',
+          storedLanguage
         )
-        navigation.navigate('Home')
 
+        // Hiển thị thông báo thành công
+        const successTitle = value === 'en' ? 'Success' : 'Thành công'
+        const successMessage =
+          value === 'en'
+            ? 'Language has been changed successfully'
+            : 'Ngôn ngữ đã được thay đổi thành công'
+
+        Alert.alert(successTitle, successMessage)
+
+        // Reload ứng dụng
         setTimeout(() => {
-          navigation.navigate('Settings')
-        }, 300)
-      }, 500)
+          console.log(
+            'SettingsScreen: Reloading app after direct language change'
+          )
+          reloadApp()
+        }, 500)
 
-      return true
-    } catch (error) {
-      console.error('Error in direct language change:', error)
-      return false
-    }
-  }
+        return true
+      } catch (error) {
+        console.error('Error in direct language change:', error)
+        return false
+      }
+    },
+    [reloadApp]
+  )
 
   // Handle language change
   const handleLanguageChange = useCallback(
@@ -177,7 +215,7 @@ const SettingsScreen = ({ navigation }) => {
         Alert.alert('Lỗi', 'Không thể thay đổi ngôn ngữ')
       }
     },
-    [changeLanguage, navigation, language]
+    [changeLanguage, navigation, language, reloadApp]
   )
 
   // Handle dark mode toggle

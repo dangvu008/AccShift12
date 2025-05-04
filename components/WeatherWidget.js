@@ -43,17 +43,24 @@ const WeatherWidget = ({ onPress }) => {
     let isMounted = true
     try {
       setLoading(true)
+      console.log('WeatherWidget: Đang lấy dữ liệu thời tiết...')
+      console.log('WeatherWidget: homeLocation =', homeLocation)
+      console.log('WeatherWidget: workLocation =', workLocation)
 
       // Sử dụng vị trí nhà làm vị trí chính, nếu không có thì dùng vị trí công ty
       const primaryLocation = homeLocation || workLocation
 
       if (!primaryLocation) {
+        console.log('WeatherWidget: Không có vị trí nào được cài đặt')
         setLoading(false)
         return
       }
 
+      console.log('WeatherWidget: Sử dụng vị trí chính:', primaryLocation)
+
       // Nếu yêu cầu làm mới, xóa cache thời tiết trước
       if (forceRefresh) {
+        console.log('WeatherWidget: Xóa cache thời tiết để làm mới dữ liệu')
         await weatherService.clearWeatherCache()
       }
 
@@ -69,10 +76,21 @@ const WeatherWidget = ({ onPress }) => {
       // 1. Lấy dữ liệu thời tiết cho vị trí nhà (nếu có)
       if (homeLocation) {
         try {
+          console.log('WeatherWidget: Lấy dữ liệu thời tiết cho vị trí nhà:', {
+            lat: homeLocation.latitude,
+            lon: homeLocation.longitude,
+            address: homeLocation.address,
+          })
+
           // Lấy thời tiết hiện tại
           homeWeatherData = await weatherService.getCurrentWeather(
             homeLocation.latitude,
             homeLocation.longitude
+          )
+
+          console.log(
+            'WeatherWidget: Đã nhận dữ liệu thời tiết hiện tại cho vị trí nhà:',
+            homeWeatherData ? 'Thành công' : 'Thất bại'
           )
 
           // Lấy dự báo theo giờ
@@ -82,8 +100,13 @@ const WeatherWidget = ({ onPress }) => {
           )
 
           if (homeForecast && homeForecast.length > 0) {
+            console.log(
+              `WeatherWidget: Đã nhận dự báo theo giờ cho vị trí nhà: ${homeForecast.length} mục`
+            )
+
             // Lấy thời gian hiện tại
             const now = new Date()
+            console.log('WeatherWidget: Thời gian hiện tại:', now.toISOString())
 
             // Lọc và sắp xếp dự báo để lấy 4 giờ tiếp theo liên tiếp
             const filteredForecast = homeForecast
@@ -91,7 +114,15 @@ const WeatherWidget = ({ onPress }) => {
               .sort((a, b) => a.dt - b.dt)
               .slice(0, 4)
 
+            console.log(
+              `WeatherWidget: Đã lọc dự báo theo giờ: ${filteredForecast.length} mục`
+            )
+
             homeHourlyForecast = filteredForecast
+          } else {
+            console.log(
+              'WeatherWidget: Không nhận được dự báo theo giờ cho vị trí nhà'
+            )
           }
 
           // Lấy cảnh báo thời tiết
@@ -102,10 +133,18 @@ const WeatherWidget = ({ onPress }) => {
 
           if (alerts && alerts.length > 0) {
             homeAlerts = alerts
+            console.log(
+              `WeatherWidget: Đã nhận cảnh báo thời tiết cho vị trí nhà: ${alerts.length} cảnh báo`
+            )
           }
         } catch (error) {
-          console.error('Error fetching home location weather:', error)
+          console.error(
+            'WeatherWidget: Lỗi khi lấy dữ liệu thời tiết cho vị trí nhà:',
+            error
+          )
         }
+      } else {
+        console.log('WeatherWidget: Không có vị trí nhà được cài đặt')
       }
 
       // 2. Lấy dữ liệu thời tiết cho vị trí công ty (nếu có và khác vị trí nhà)
@@ -116,10 +155,24 @@ const WeatherWidget = ({ onPress }) => {
           workLocation.longitude !== homeLocation.longitude)
       ) {
         try {
+          console.log(
+            'WeatherWidget: Lấy dữ liệu thời tiết cho vị trí công ty:',
+            {
+              lat: workLocation.latitude,
+              lon: workLocation.longitude,
+              address: workLocation.address,
+            }
+          )
+
           // Lấy thời tiết hiện tại
           workWeatherData = await weatherService.getCurrentWeather(
             workLocation.latitude,
             workLocation.longitude
+          )
+
+          console.log(
+            'WeatherWidget: Đã nhận dữ liệu thời tiết hiện tại cho vị trí công ty:',
+            workWeatherData ? 'Thành công' : 'Thất bại'
           )
 
           // Lấy dự báo theo giờ
@@ -129,6 +182,10 @@ const WeatherWidget = ({ onPress }) => {
           )
 
           if (workForecast && workForecast.length > 0) {
+            console.log(
+              `WeatherWidget: Đã nhận dự báo theo giờ cho vị trí công ty: ${workForecast.length} mục`
+            )
+
             // Lấy thời gian hiện tại
             const now = new Date()
 
@@ -138,7 +195,15 @@ const WeatherWidget = ({ onPress }) => {
               .sort((a, b) => a.dt - b.dt)
               .slice(0, 4)
 
+            console.log(
+              `WeatherWidget: Đã lọc dự báo theo giờ cho vị trí công ty: ${filteredForecast.length} mục`
+            )
+
             workHourlyForecast = filteredForecast
+          } else {
+            console.log(
+              'WeatherWidget: Không nhận được dự báo theo giờ cho vị trí công ty'
+            )
           }
 
           // Lấy cảnh báo thời tiết
@@ -149,20 +214,41 @@ const WeatherWidget = ({ onPress }) => {
 
           if (alerts && alerts.length > 0) {
             workAlerts = alerts
+            console.log(
+              `WeatherWidget: Đã nhận cảnh báo thời tiết cho vị trí công ty: ${alerts.length} cảnh báo`
+            )
           }
         } catch (error) {
-          console.error('Error fetching work location weather:', error)
+          console.error(
+            'WeatherWidget: Lỗi khi lấy dữ liệu thời tiết cho vị trí công ty:',
+            error
+          )
         }
+      } else if (workLocation) {
+        console.log(
+          'WeatherWidget: Vị trí công ty giống với vị trí nhà hoặc không có vị trí nhà, bỏ qua'
+        )
       }
 
       if (!isMounted) return
 
       // 3. Cập nhật state với dữ liệu đã lấy được
+      console.log('WeatherWidget: Cập nhật state với dữ liệu đã lấy được')
+
       // Vị trí chính (nhà hoặc công ty)
-      setCurrentWeather(homeWeatherData || workWeatherData)
-      setForecast(
-        homeHourlyForecast.length > 0 ? homeHourlyForecast : workHourlyForecast
+      const mainWeather = homeWeatherData || workWeatherData
+      console.log(
+        'WeatherWidget: Dữ liệu thời tiết chính:',
+        mainWeather ? 'Có dữ liệu' : 'Không có dữ liệu'
       )
+      setCurrentWeather(mainWeather)
+
+      const mainForecast =
+        homeHourlyForecast.length > 0 ? homeHourlyForecast : workHourlyForecast
+      console.log(
+        `WeatherWidget: Dữ liệu dự báo chính: ${mainForecast.length} mục`
+      )
+      setForecast(mainForecast)
 
       // Vị trí công ty (nếu khác vị trí nhà)
       setWorkWeather(workWeatherData)
@@ -175,6 +261,10 @@ const WeatherWidget = ({ onPress }) => {
           : workAlerts.length > 0
           ? workAlerts[0]
           : null
+      console.log(
+        'WeatherWidget: Cảnh báo thời tiết chính:',
+        primaryAlert ? 'Có cảnh báo' : 'Không có cảnh báo'
+      )
       setWeatherAlert(primaryAlert)
 
       // 4. Tạo cảnh báo thông minh dựa trên dữ liệu thời tiết ở cả hai vị trí
@@ -185,10 +275,22 @@ const WeatherWidget = ({ onPress }) => {
         workHourlyForecast
       )
 
+      console.log('WeatherWidget: Hoàn thành quá trình lấy dữ liệu thời tiết')
       setLoading(false)
       setRefreshing(false)
     } catch (error) {
-      console.error('Error in weather data fetching process:', error)
+      console.error(
+        'WeatherWidget: Lỗi trong quá trình lấy dữ liệu thời tiết:',
+        error
+      )
+
+      // Hiển thị thông báo lỗi chi tiết để debug
+      console.error('WeatherWidget: Chi tiết lỗi:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+      })
+
       setLoading(false)
       setRefreshing(false)
     }
@@ -302,17 +404,19 @@ const WeatherWidget = ({ onPress }) => {
   const refreshWeatherData = async () => {
     try {
       setRefreshing(true)
-      console.log('Đang làm mới dữ liệu thời tiết...')
+      console.log('WeatherWidget: Đang làm mới dữ liệu thời tiết...')
 
       // Xóa cache trước khi làm mới
+      console.log('WeatherWidget: Xóa cache thời tiết')
       await weatherService.clearWeatherCache()
 
       // Gọi lại hàm fetchWeatherData để lấy dữ liệu mới
+      console.log('WeatherWidget: Gọi lại fetchWeatherData để lấy dữ liệu mới')
       await fetchWeatherData(true)
 
-      console.log('Đã làm mới dữ liệu thời tiết thành công')
+      console.log('WeatherWidget: Đã làm mới dữ liệu thời tiết thành công')
     } catch (error) {
-      console.error('Lỗi khi làm mới dữ liệu thời tiết:', error)
+      console.error('WeatherWidget: Lỗi khi làm mới dữ liệu thời tiết:', error)
     } finally {
       setRefreshing(false)
     }

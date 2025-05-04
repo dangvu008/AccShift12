@@ -409,9 +409,16 @@ export const AppProvider = ({ children }) => {
       // Đảm bảo cập nhật đồng bộ
       await AsyncStorage.setItem('language', lang)
 
+      // Đọc lại để xác nhận
+      const storedLanguage = await AsyncStorage.getItem('language')
+
       // Log để debug
       console.log('AppContext: Language successfully changed to:', lang)
       console.log('AppContext: Current language after change:', lang)
+      console.log('AppContext: Language in AsyncStorage:', storedLanguage)
+
+      // Force re-render của context
+      setLanguage(storedLanguage)
 
       return true
     } catch (error) {
@@ -1489,7 +1496,7 @@ export const AppProvider = ({ children }) => {
 
   const t = (key) => {
     // Log để debug
-    if (key === 'Ngôn ngữ' || key === 'Language') {
+    if (key === 'Ngôn ngữ' || key === 'Language' || key === 'Chế độ tối') {
       console.log(`t() called with key: ${key}, current language: ${language}`)
     }
 
@@ -1498,7 +1505,7 @@ export const AppProvider = ({ children }) => {
       const translated = translations[language][key]
 
       // Log để debug
-      if (key === 'Ngôn ngữ' || key === 'Language') {
+      if (key === 'Ngôn ngữ' || key === 'Language' || key === 'Chế độ tối') {
         console.log(
           `Found translation for ${key} in ${language}: ${translated}`
         )
@@ -1512,7 +1519,7 @@ export const AppProvider = ({ children }) => {
       const fallbackTranslated = translations['vi'][key]
 
       // Log để debug
-      if (key === 'Ngôn ngữ' || key === 'Language') {
+      if (key === 'Ngôn ngữ' || key === 'Language' || key === 'Chế độ tối') {
         console.log(`Fallback to vi for ${key}: ${fallbackTranslated}`)
       }
 
@@ -1524,7 +1531,7 @@ export const AppProvider = ({ children }) => {
       const fallbackTranslated = translations['en'][key]
 
       // Log để debug
-      if (key === 'Ngôn ngữ' || key === 'Language') {
+      if (key === 'Ngôn ngữ' || key === 'Language' || key === 'Chế độ tối') {
         console.log(`Fallback to en for ${key}: ${fallbackTranslated}`)
       }
 

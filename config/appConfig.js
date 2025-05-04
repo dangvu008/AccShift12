@@ -1,16 +1,16 @@
 export const API_CONFIG = {
   WEATHER_BASE_URL: 'https://api.openweathermap.org/data/2.5',
-  CACHE_TTL: 3 * 60 * 60 * 1000, // 3 giờ (giảm từ 24 giờ để cập nhật thường xuyên hơn)
-  CACHE_TTL_FALLBACK: 30 * 60 * 1000, // 30 phút cho dữ liệu dự phòng
+  CACHE_TTL: 1 * 60 * 60 * 1000, // 1 giờ (giảm từ 3 giờ để cập nhật thường xuyên hơn)
+  CACHE_TTL_FALLBACK: 15 * 60 * 1000, // 15 phút cho dữ liệu dự phòng
   KEY_USAGE_LIMIT_PER_MINUTE: 60,
   KEY_USAGE_RESET_INTERVAL: 60 * 1000, // 1 phút
   DEFAULT_LOCATION: {
-    lat: 21.0278,
+    lat: 21.0278, // Hà Nội
     lon: 105.8342,
   },
-  RETRY_DELAY: 1000, // 1 giây chờ giữa các lần thử lại
-  MAX_RETRY_COUNT: 3, // Số lần thử lại tối đa
-  TIMEOUT: 10000, // 10 giây timeout cho API calls
+  RETRY_DELAY: 2000, // 2 giây chờ giữa các lần thử lại
+  MAX_RETRY_COUNT: 5, // Tăng số lần thử lại tối đa
+  TIMEOUT: 15000, // 15 giây timeout cho API calls
   USE_FALLBACK_ON_ERROR: true, // Sử dụng dữ liệu dự phòng khi có lỗi
 }
 

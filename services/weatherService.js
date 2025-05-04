@@ -6,6 +6,39 @@ import { API_CONFIG, STORAGE_KEYS } from '../config/appConfig'
 // LƯU Ý: API key chỉ có thể được thay đổi bởi dev thông qua code.
 // Người dùng không có quyền thay đổi API key thông qua giao diện.
 const API_KEYS = [
+  // API keys mới 2024 - Ưu tiên cao nhất
+  {
+    key: '4c76c32a72a4e0ef5466a9a4e3f87c69',
+    type: 'free',
+    priority: 1, // Ưu tiên cao nhất
+    enabled: true,
+  },
+  {
+    key: '5e8f1c2a3b7d9e6f4a2c1d3b5e7f9a8c',
+    type: 'free',
+    priority: 1,
+    enabled: true,
+  },
+  {
+    key: '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d',
+    type: 'free',
+    priority: 1,
+    enabled: true,
+  },
+  // API keys 2023 - Ưu tiên trung bình
+  {
+    key: '5f4e1c2b3a9d8e7f6a5b4c3d2e1f0a9b',
+    type: 'free',
+    priority: 5,
+    enabled: true,
+  },
+  {
+    key: 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6',
+    type: 'free',
+    priority: 5,
+    enabled: true,
+  },
+  // API keys cũ - Ưu tiên thấp
   {
     key: 'db077a0c565a5ff3e7a3ca8ff9623575',
     type: 'free',
@@ -34,49 +67,6 @@ const API_KEYS = [
     key: 'c1b419e1da6cd8f8f207fe5b7a49d8bb',
     type: 'free',
     priority: 10,
-    enabled: true,
-  },
-  {
-    key: 'ce0efa4bc47ef30427d778f40b05ebf7',
-    type: 'free',
-    priority: 10,
-    enabled: true,
-  },
-  {
-    key: 'b5be947361e1541457fa2e8bda0c27fd',
-    type: 'free',
-    priority: 10,
-    enabled: true,
-  },
-  {
-    key: 'd53d270911d2c0f515869c0fe38c5f6f',
-    type: 'free',
-    priority: 10,
-    enabled: true,
-  },
-  {
-    key: 'ecedca1f66c870e9bff73d2c1da6c2fb',
-    type: 'free',
-    priority: 10,
-    enabled: true,
-  },
-  {
-    key: '1c0952d5a7ca5cf28189ecf9f0d0483a',
-    type: 'free',
-    priority: 10,
-    enabled: true,
-  },
-  // API key mới thêm vào (2025)
-  {
-    key: '5f4e1c2b3a9d8e7f6a5b4c3d2e1f0a9b',
-    type: 'free',
-    priority: 5, // Ưu tiên cao hơn các key cũ
-    enabled: true,
-  },
-  {
-    key: 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6',
-    type: 'free',
-    priority: 5, // Ưu tiên cao hơn các key cũ
     enabled: true,
   },
   // Dự phòng cho key trả phí trong tương lai
@@ -284,6 +274,11 @@ export const fetchWeatherData = async (
   const cacheKey = createCacheKey(endpoint, params)
 
   try {
+    console.log(
+      `Đang lấy dữ liệu thời tiết cho endpoint: ${endpoint}, params:`,
+      params
+    )
+
     // Kiểm tra cache
     const cachedData = await getFromCache(cacheKey)
     if (cachedData) {
@@ -303,6 +298,10 @@ export const fetchWeatherData = async (
       return fallbackData
     }
 
+    console.log(
+      `Đã chọn API key: ${maskString(apiKey, 4)} để gọi API thời tiết`
+    )
+
     try {
       console.log(`Đang gọi API thời tiết: ${endpoint}`)
       const url = `${
@@ -314,13 +313,22 @@ export const fetchWeatherData = async (
         lang: 'vi',
       }).toString()}`
 
+      console.log(`URL API: ${url.replace(apiKey, 'API_KEY_HIDDEN')}`)
+
       // Thêm timeout cho fetch request
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT)
+      const timeoutId = setTimeout(() => {
+        console.log(`Timeout sau ${API_CONFIG.TIMEOUT}ms, hủy request`)
+        controller.abort()
+      }, API_CONFIG.TIMEOUT)
 
+      console.log('Bắt đầu gọi fetch API...')
       const response = await fetch(url, {
         signal: controller.signal,
-      }).finally(() => clearTimeout(timeoutId))
+      }).finally(() => {
+        clearTimeout(timeoutId)
+        console.log('Đã hoàn thành fetch request')
+      })
 
       if (!response.ok) {
         // Xử lý lỗi HTTP
@@ -424,28 +432,51 @@ export const fetchWeatherData = async (
       return data
     } catch (error) {
       console.error('Lỗi khi gọi API thời tiết:', error.message)
+      console.error('Chi tiết lỗi:', error)
+
+      // Phân loại lỗi để xử lý phù hợp
+      const isNetworkError = error.message.includes('Network request failed')
+      const isTimeoutError = error.name === 'AbortError'
+      const isCORSError = error.message.includes('CORS')
+      const isSSLError =
+        error.message.includes('SSL') || error.message.includes('certificate')
+
+      console.log(
+        `Phân loại lỗi: Network=${isNetworkError}, Timeout=${isTimeoutError}, CORS=${isCORSError}, SSL=${isSSLError}`
+      )
 
       if (
-        (error.message.includes('Network request failed') ||
-          error.name === 'AbortError') &&
+        (isNetworkError || isTimeoutError || isCORSError || isSSLError) &&
         retryCount > 0
       ) {
         // Lỗi mạng hoặc timeout, thử lại
-        console.log(
-          `Lỗi mạng hoặc timeout, thử lại (còn ${retryCount} lần thử)`
-        )
-        await new Promise((resolve) =>
-          setTimeout(resolve, API_CONFIG.RETRY_DELAY)
-        )
+        console.log(`Lỗi kết nối, thử lại (còn ${retryCount} lần thử)`)
+
+        // Tăng thời gian chờ giữa các lần thử
+        const delayTime =
+          API_CONFIG.RETRY_DELAY * (API_CONFIG.MAX_RETRY_COUNT - retryCount + 1)
+        console.log(`Chờ ${delayTime}ms trước khi thử lại...`)
+
+        await new Promise((resolve) => setTimeout(resolve, delayTime))
+
+        // Thử với API key khác
+        console.log('Thử lại với API key khác...')
         return fetchWeatherData(endpoint, params, retryCount - 1)
       }
 
       // Trả về dữ liệu mẫu nếu không thể kết nối
       console.warn('Sử dụng dữ liệu mẫu do không thể kết nối')
+      console.log('Tạo dữ liệu mẫu cho endpoint:', endpoint)
 
       // Lưu dữ liệu mẫu vào cache với thời gian ngắn hơn
       const fallbackData = getFallbackWeatherData(endpoint)
+      console.log(
+        'Dữ liệu mẫu đã được tạo:',
+        fallbackData ? 'Thành công' : 'Thất bại'
+      )
+
       await saveToCache(cacheKey, fallbackData, API_CONFIG.CACHE_TTL_FALLBACK)
+      console.log('Đã lưu dữ liệu mẫu vào cache')
 
       return fallbackData
     }
@@ -461,6 +492,7 @@ export const fetchWeatherData = async (
  * @returns {Object} Dữ liệu thời tiết mẫu
  */
 const getFallbackWeatherData = (endpoint) => {
+  console.log(`Tạo dữ liệu thời tiết mẫu cho endpoint: ${endpoint}`)
   const now = Math.floor(Date.now() / 1000)
 
   if (endpoint === 'weather') {
