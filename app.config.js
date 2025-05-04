@@ -1,8 +1,7 @@
 // app.config.js
-import { ExpoConfig } from 'expo/config';
 
 // Đọc cấu hình từ app.json
-import appJson from './app.json';
+import appJson from './app.json'
 
 // Xuất cấu hình
 export default ({ config }) => {
@@ -13,5 +12,5 @@ export default ({ config }) => {
       ...appJson.expo.extra,
       // Thêm các biến môi trường nếu cần
     },
-  };
-};
+  }
+}

@@ -93,7 +93,7 @@ const SettingsScreen = ({ navigation }) => {
   ]
 
   // Log để debug
-  console.log('Current language:', language)
+  console.log('Current language in SettingsScreen:', language)
 
   // Multi-button mode options
   const buttonModeOptions = [
@@ -113,23 +113,38 @@ const SettingsScreen = ({ navigation }) => {
   const handleLanguageChange = useCallback(
     async (value) => {
       try {
-        console.log('Changing language to:', value)
+        console.log('SettingsScreen: Changing language to:', value)
 
         // Cập nhật ngôn ngữ trong AppContext
-        await changeLanguage(value)
+        const success = await changeLanguage(value)
 
-        // Hiển thị thông báo thành công
-        Alert.alert('Thành công', 'Ngôn ngữ đã được thay đổi thành công')
+        if (success) {
+          console.log(
+            'SettingsScreen: Language changed successfully to:',
+            value
+          )
 
-        // Reload trang để áp dụng ngôn ngữ mới
-        setTimeout(() => {
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'Settings' }],
-          })
-        }, 500)
+          // Hiển thị thông báo thành công với văn bản phù hợp với ngôn ngữ mới
+          const successTitle = value === 'en' ? 'Success' : 'Thành công'
+          const successMessage =
+            value === 'en'
+              ? 'Language has been changed successfully'
+              : 'Ngôn ngữ đã được thay đổi thành công'
+
+          Alert.alert(successTitle, successMessage)
+
+          // Reload trang để áp dụng ngôn ngữ mới
+          setTimeout(() => {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Settings' }],
+            })
+          }, 500)
+        } else {
+          throw new Error('Language change returned false')
+        }
       } catch (error) {
-        console.error('Error changing language:', error)
+        console.error('SettingsScreen: Error changing language:', error)
         Alert.alert('Lỗi', 'Không thể thay đổi ngôn ngữ')
       }
     },
@@ -217,10 +232,17 @@ const SettingsScreen = ({ navigation }) => {
         <TouchableOpacity
           style={styles.settingRow}
           onPress={() => {
-            // Show language picker
+            // Show language picker with fixed text (not using t() to avoid translation issues)
+            const title =
+              language === 'en' ? 'Select Language' : 'Chọn ngôn ngữ'
+            const message =
+              language === 'en'
+                ? 'Choose display language for the app'
+                : 'Chọn ngôn ngữ hiển thị cho ứng dụng'
+
             Alert.alert(
-              t('Chọn ngôn ngữ'),
-              t('Chọn ngôn ngữ hiển thị cho ứng dụng'),
+              title,
+              message,
               languageOptions.map((option) => ({
                 text: option.label,
                 onPress: () => handleLanguageChange(option.value),
@@ -231,8 +253,7 @@ const SettingsScreen = ({ navigation }) => {
           <Text style={styles.settingLabel}>{t('Ngôn ngữ')}</Text>
           <View style={styles.languageSelector}>
             <Text style={styles.languageText}>
-              {languageOptions.find((option) => option.value === language)
-                ?.label || 'Tiếng Việt'}
+              {language === 'en' ? 'English' : 'Tiếng Việt'}
             </Text>
             <MaterialIcons
               name="chevron-right"

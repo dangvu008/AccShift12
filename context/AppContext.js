@@ -391,6 +391,12 @@ export const AppProvider = ({ children }) => {
     try {
       console.log('AppContext: Changing language to:', lang)
 
+      // Kiểm tra xem ngôn ngữ có hợp lệ không
+      if (lang !== 'vi' && lang !== 'en') {
+        console.error('Invalid language code:', lang)
+        return false
+      }
+
       // Cập nhật state
       setLanguage(lang)
 
@@ -401,7 +407,7 @@ export const AppProvider = ({ children }) => {
       await storage.updateUserSettings({ language: lang })
 
       // Log để debug
-      console.log('Language successfully changed to:', lang)
+      console.log('AppContext: Language successfully changed to:', lang)
 
       return true
     } catch (error) {
@@ -1478,14 +1484,35 @@ export const AppProvider = ({ children }) => {
   }
 
   const t = (key) => {
+    // Log để debug
+    if (key === 'Ngôn ngữ' || key === 'Language') {
+      console.log(`t() called with key: ${key}, current language: ${language}`)
+    }
+
     // Kiểm tra xem ngôn ngữ và khóa có tồn tại không
     if (translations[language] && translations[language][key]) {
-      return translations[language][key]
+      const translated = translations[language][key]
+
+      // Log để debug
+      if (key === 'Ngôn ngữ' || key === 'Language') {
+        console.log(
+          `Found translation for ${key} in ${language}: ${translated}`
+        )
+      }
+
+      return translated
     }
 
     // Nếu không tìm thấy trong ngôn ngữ hiện tại, thử tìm trong tiếng Việt
     if (translations['vi'] && translations['vi'][key]) {
-      return translations['vi'][key]
+      const fallbackTranslated = translations['vi'][key]
+
+      // Log để debug
+      if (key === 'Ngôn ngữ' || key === 'Language') {
+        console.log(`Fallback to vi for ${key}: ${fallbackTranslated}`)
+      }
+
+      return fallbackTranslated
     }
 
     // Trả về khóa gốc nếu không tìm thấy bản dịch
