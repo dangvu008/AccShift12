@@ -406,8 +406,12 @@ export const AppProvider = ({ children }) => {
       // Cập nhật cài đặt trong storage
       await storage.updateUserSettings({ language: lang })
 
+      // Đảm bảo cập nhật đồng bộ
+      await AsyncStorage.setItem('language', lang)
+
       // Log để debug
       console.log('AppContext: Language successfully changed to:', lang)
+      console.log('AppContext: Current language after change:', lang)
 
       return true
     } catch (error) {
@@ -1510,6 +1514,18 @@ export const AppProvider = ({ children }) => {
       // Log để debug
       if (key === 'Ngôn ngữ' || key === 'Language') {
         console.log(`Fallback to vi for ${key}: ${fallbackTranslated}`)
+      }
+
+      return fallbackTranslated
+    }
+
+    // Nếu không tìm thấy trong tiếng Việt, thử tìm trong tiếng Anh
+    if (translations['en'] && translations['en'][key]) {
+      const fallbackTranslated = translations['en'][key]
+
+      // Log để debug
+      if (key === 'Ngôn ngữ' || key === 'Language') {
+        console.log(`Fallback to en for ${key}: ${fallbackTranslated}`)
       }
 
       return fallbackTranslated

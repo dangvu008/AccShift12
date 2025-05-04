@@ -33,6 +33,9 @@ const SettingsScreen = ({ navigation }) => {
     toggleOnlyGoWorkMode,
   } = useContext(AppContext)
 
+  // Log để debug sau khi lấy language từ context
+  console.log('Current language from context in SettingsScreen:', language)
+
   const { toggleTheme, colors, theme } = useTheme()
   const darkMode = theme === 'dark'
 
@@ -86,6 +89,11 @@ const SettingsScreen = ({ navigation }) => {
     loadSettings()
   }, [onlyGoWorkMode])
 
+  // Theo dõi sự thay đổi của language
+  useEffect(() => {
+    console.log('Language changed in SettingsScreen:', language)
+  }, [language])
+
   // Language options
   const languageOptions = [
     { label: 'Tiếng Việt', value: 'vi' },
@@ -109,46 +117,67 @@ const SettingsScreen = ({ navigation }) => {
     { label: 'Chủ nhật', value: 'Sun' },
   ]
 
+  // Hàm thay đổi ngôn ngữ trực tiếp
+  const changeLanguageDirectly = async (value) => {
+    try {
+      console.log('SettingsScreen: Changing language directly to:', value)
+
+      // Lưu trực tiếp vào AsyncStorage
+      await AsyncStorage.setItem('language', value)
+
+      // Đọc lại để xác nhận
+      const storedLanguage = await AsyncStorage.getItem('language')
+      console.log(
+        'SettingsScreen: Language in AsyncStorage after direct change:',
+        storedLanguage
+      )
+
+      // Hiển thị thông báo thành công
+      const successTitle = value === 'en' ? 'Success' : 'Thành công'
+      const successMessage =
+        value === 'en'
+          ? 'Language has been changed successfully'
+          : 'Ngôn ngữ đã được thay đổi thành công'
+
+      Alert.alert(successTitle, successMessage)
+
+      // Reload ứng dụng
+      setTimeout(() => {
+        console.log(
+          'SettingsScreen: Reloading app after direct language change'
+        )
+        navigation.navigate('Home')
+
+        setTimeout(() => {
+          navigation.navigate('Settings')
+        }, 300)
+      }, 500)
+
+      return true
+    } catch (error) {
+      console.error('Error in direct language change:', error)
+      return false
+    }
+  }
+
   // Handle language change
   const handleLanguageChange = useCallback(
     async (value) => {
       try {
         console.log('SettingsScreen: Changing language to:', value)
+        console.log('SettingsScreen: Current language before change:', language)
 
-        // Cập nhật ngôn ngữ trong AppContext
-        const success = await changeLanguage(value)
+        // Sử dụng phương pháp thay đổi ngôn ngữ trực tiếp
+        await changeLanguageDirectly(value)
 
-        if (success) {
-          console.log(
-            'SettingsScreen: Language changed successfully to:',
-            value
-          )
-
-          // Hiển thị thông báo thành công với văn bản phù hợp với ngôn ngữ mới
-          const successTitle = value === 'en' ? 'Success' : 'Thành công'
-          const successMessage =
-            value === 'en'
-              ? 'Language has been changed successfully'
-              : 'Ngôn ngữ đã được thay đổi thành công'
-
-          Alert.alert(successTitle, successMessage)
-
-          // Reload trang để áp dụng ngôn ngữ mới
-          setTimeout(() => {
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'Settings' }],
-            })
-          }, 500)
-        } else {
-          throw new Error('Language change returned false')
-        }
+        // Sau đó cập nhật trong AppContext
+        await changeLanguage(value)
       } catch (error) {
         console.error('SettingsScreen: Error changing language:', error)
         Alert.alert('Lỗi', 'Không thể thay đổi ngôn ngữ')
       }
     },
-    [changeLanguage, navigation]
+    [changeLanguage, navigation, language]
   )
 
   // Handle dark mode toggle
@@ -261,7 +290,60 @@ const SettingsScreen = ({ navigation }) => {
               color={colors.darkTextSecondary}
             />
           </View>
+          {/* Debug info */}
+          <Text style={{ fontSize: 10, color: colors.darkTextSecondary }}>
+            (Lang: {language})
+          </Text>
         </TouchableOpacity>
+
+        {/* Direct language change buttons for debugging */}
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-around',
+            marginTop: 10,
+          }}
+        >
+          <TouchableOpacity
+            style={{
+              backgroundColor:
+                language === 'vi' ? colors.switchActive : colors.cardBackground,
+              padding: 8,
+              borderRadius: 5,
+              width: '45%',
+            }}
+            onPress={() => changeLanguageDirectly('vi')}
+          >
+            <Text
+              style={{
+                color: language === 'vi' ? '#fff' : colors.darkTextPrimary,
+                textAlign: 'center',
+              }}
+            >
+              Tiếng Việt (Direct)
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={{
+              backgroundColor:
+                language === 'en' ? colors.switchActive : colors.cardBackground,
+              padding: 8,
+              borderRadius: 5,
+              width: '45%',
+            }}
+            onPress={() => changeLanguageDirectly('en')}
+          >
+            <Text
+              style={{
+                color: language === 'en' ? '#fff' : colors.darkTextPrimary,
+                textAlign: 'center',
+              }}
+            >
+              English (Direct)
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Notifications Section */}
