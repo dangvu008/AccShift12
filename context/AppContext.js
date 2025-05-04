@@ -388,14 +388,26 @@ export const AppProvider = ({ children }) => {
   }
 
   const changeLanguage = async (lang) => {
-    setLanguage(lang)
-    // Lưu vào AsyncStorage
-    await saveSettings('language', lang)
-    // Cập nhật cài đặt trong storage
-    await storage.updateUserSettings({ language: lang })
+    try {
+      console.log('AppContext: Changing language to:', lang)
 
-    // Log để debug
-    console.log('Language changed to:', lang)
+      // Cập nhật state
+      setLanguage(lang)
+
+      // Lưu vào AsyncStorage
+      await saveSettings('language', lang)
+
+      // Cập nhật cài đặt trong storage
+      await storage.updateUserSettings({ language: lang })
+
+      // Log để debug
+      console.log('Language successfully changed to:', lang)
+
+      return true
+    } catch (error) {
+      console.error('Error in AppContext.changeLanguage:', error)
+      return false
+    }
   }
 
   const toggleDarkMode = () => {

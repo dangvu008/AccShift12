@@ -50,7 +50,6 @@ const SettingsScreen = ({ navigation }) => {
   const [timeFormat, setTimeFormat] = useState('24h')
   const [firstDayOfWeek, setFirstDayOfWeek] = useState('Mon')
   const [weatherAlertsEnabled, setWeatherAlertsEnabled] = useState(true)
-  const [shiftReminderMode, setShiftReminderMode] = useState('ask_weekly')
   const [multiButtonMode, setMultiButtonMode] = useState(
     onlyGoWorkMode ? 'simple' : 'full'
   )
@@ -77,12 +76,6 @@ const SettingsScreen = ({ navigation }) => {
           setFirstDayOfWeek(firstDay)
         }
 
-        // Load shift reminder mode
-        const reminderMode = await AsyncStorage.getItem('shiftReminderMode')
-        if (reminderMode !== null) {
-          setShiftReminderMode(reminderMode)
-        }
-
         // Set multiButtonMode based on onlyGoWorkMode
         setMultiButtonMode(onlyGoWorkMode ? 'simple' : 'full')
       } catch (error) {
@@ -99,18 +92,16 @@ const SettingsScreen = ({ navigation }) => {
     { label: 'English', value: 'en' },
   ]
 
+  // Log để debug
+  console.log('Current language:', language)
+
   // Multi-button mode options
   const buttonModeOptions = [
     { label: 'Đầy đủ', value: 'full' },
     { label: 'Đơn giản', value: 'simple' },
   ]
 
-  // Shift reminder mode options
-  const reminderModeOptions = [
-    { label: 'Hỏi hàng tuần', value: 'ask_weekly' },
-    { label: 'Tự động xoay ca', value: 'rotate' },
-    { label: 'Tắt', value: 'disabled' },
-  ]
+  // Đã loại bỏ Shift reminder mode options
 
   // First day of week options
   const weekStartOptions = [
@@ -122,31 +113,35 @@ const SettingsScreen = ({ navigation }) => {
   const handleLanguageChange = useCallback(
     async (value) => {
       try {
-        // Cập nhật ngôn ngữ trong LocalizationContext
+        console.log('Changing language to:', value)
+
+        // Cập nhật ngôn ngữ trong AppContext
         await changeLanguage(value)
 
         // Hiển thị thông báo thành công
-        Alert.alert(
-          t('common.success'),
-          t('settings.languageChanged') ||
-            'Ngôn ngữ đã được thay đổi thành công'
-        )
+        Alert.alert('Thành công', 'Ngôn ngữ đã được thay đổi thành công')
+
+        // Reload trang để áp dụng ngôn ngữ mới
+        setTimeout(() => {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Settings' }],
+          })
+        }, 500)
       } catch (error) {
         console.error('Error changing language:', error)
-        Alert.alert(
-          t('common.error'),
-          t('settings.languageChangeFailed') || 'Không thể thay đổi ngôn ngữ'
-        )
+        Alert.alert('Lỗi', 'Không thể thay đổi ngôn ngữ')
       }
     },
-    [changeLanguage, t]
+    [changeLanguage, navigation]
   )
 
   // Handle dark mode toggle
   const handleDarkModeToggle = useCallback(
     (value) => {
       // Sử dụng toggleTheme từ ThemeContext
-      toggleTheme(value ? 'dark' : 'light')
+      // Đảo ngược giá trị để sửa lỗi chế độ tối ngược với toàn bộ ứng dụng
+      toggleTheme(!value ? 'dark' : 'light')
     },
     [toggleTheme]
   )
@@ -174,11 +169,7 @@ const SettingsScreen = ({ navigation }) => {
     toggleOnlyGoWorkMode()
   }, [toggleOnlyGoWorkMode])
 
-  // Handle shift reminder mode change
-  const handleReminderModeChange = useCallback((value) => {
-    setShiftReminderMode(value)
-    AsyncStorage.setItem('shiftReminderMode', value)
-  }, [])
+  // Đã loại bỏ handleReminderModeChange
 
   // Handle time format toggle
   const handleTimeFormatToggle = useCallback((value) => {
@@ -358,41 +349,7 @@ const SettingsScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Shift Reminder Section */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t('Nhắc nhở ca làm việc')}</Text>
-        </View>
-
-        <TouchableOpacity
-          style={styles.settingRow}
-          onPress={() => {
-            // Show reminder mode picker
-            Alert.alert(
-              t('Chế độ nhắc nhở đổi ca'),
-              t('Chọn chế độ nhắc nhở đổi ca'),
-              reminderModeOptions.map((option) => ({
-                text: option.label,
-                onPress: () => handleReminderModeChange(option.value),
-              }))
-            )
-          }}
-        >
-          <Text style={styles.settingLabel}>{t('Chế độ nhắc nhở đổi ca')}</Text>
-          <View style={styles.languageSelector}>
-            <Text style={styles.languageText}>
-              {reminderModeOptions.find(
-                (option) => option.value === shiftReminderMode
-              )?.label || 'Hỏi hàng tuần'}
-            </Text>
-            <MaterialIcons
-              name="chevron-right"
-              size={20}
-              color={colors.darkTextSecondary}
-            />
-          </View>
-        </TouchableOpacity>
-      </View>
+      {/* Đã loại bỏ phần Shift Reminder Section */}
 
       {/* Display Settings Section */}
       <View style={styles.section}>
