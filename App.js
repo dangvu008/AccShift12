@@ -103,6 +103,7 @@ function HomeStack() {
   return (
     <Stack.Navigator
       screenOptions={{
+        headerShown: false,
         headerStyle: {
           backgroundColor: theme.headerBackgroundColor,
         },
@@ -173,6 +174,7 @@ function ShiftsStack() {
   return (
     <Stack.Navigator
       screenOptions={{
+        headerShown: false,
         headerStyle: {
           backgroundColor: theme.headerBackgroundColor,
         },
@@ -208,6 +210,7 @@ function StatisticsStack() {
   return (
     <Stack.Navigator
       screenOptions={{
+        headerShown: false,
         headerStyle: {
           backgroundColor: theme.headerBackgroundColor,
         },
@@ -262,6 +265,7 @@ function SettingsStack() {
   return (
     <Stack.Navigator
       screenOptions={{
+        headerShown: false,
         headerStyle: {
           backgroundColor: theme.headerBackgroundColor,
         },

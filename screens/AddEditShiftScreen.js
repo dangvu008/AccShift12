@@ -823,6 +823,16 @@ const AddEditShiftScreen = ({ route, navigation }) => {
                 ? t('Chỉnh sửa ca làm việc')
                 : t('Thêm ca làm việc mới')}
             </Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Ionicons
+                name="close"
+                size={24}
+                color={darkMode ? '#fff' : '#333'}
+              />
+            </TouchableOpacity>
           </View>
 
           {/* Shift Name */}
@@ -1412,12 +1422,19 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
     paddingBottom: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   formTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: COLORS.TEXT_LIGHT,
-    textAlign: 'center',
+    flex: 1,
+  },
+  closeButton: {
+    padding: 5,
+    borderRadius: 20,
   },
   darkText: {
     color: COLORS.TEXT_DARK,
