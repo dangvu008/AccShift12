@@ -1,5 +1,8 @@
-import { registerRootComponent } from 'expo';
-import App from './App';
+import { registerRootComponent } from 'expo'
+import App from './App'
 
 // Đăng ký component gốc
-registerRootComponent(App);
+registerRootComponent(App)
+
+// Thêm export mặc định
+export default App

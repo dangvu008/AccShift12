@@ -20,5 +20,7 @@ module.exports = function (api) {
       ],
       'react-native-reanimated/plugin',
     ],
+    // Đảm bảo hỗ trợ export default
+    sourceMaps: true,
   }
 }

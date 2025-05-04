@@ -1,4 +1,4 @@
-'use client'
+// App.js - Component chính của ứng dụng
 
 import { useEffect, useState, useContext } from 'react'
 import { StatusBar } from 'expo-status-bar'
