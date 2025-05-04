@@ -300,8 +300,22 @@ const WeatherWidget = ({ onPress }) => {
 
   // Hàm làm mới dữ liệu thời tiết
   const refreshWeatherData = async () => {
-    setRefreshing(true)
-    await fetchWeatherData(true) // Truyền true để xóa cache
+    try {
+      setRefreshing(true)
+      console.log('Đang làm mới dữ liệu thời tiết...')
+
+      // Xóa cache trước khi làm mới
+      await weatherService.clearWeatherCache()
+
+      // Gọi lại hàm fetchWeatherData để lấy dữ liệu mới
+      await fetchWeatherData(true)
+
+      console.log('Đã làm mới dữ liệu thời tiết thành công')
+    } catch (error) {
+      console.error('Lỗi khi làm mới dữ liệu thời tiết:', error)
+    } finally {
+      setRefreshing(false)
+    }
   }
 
   // Sử dụng useCallback để tránh tạo lại hàm fetchWeatherData mỗi khi render
@@ -378,18 +392,47 @@ const WeatherWidget = ({ onPress }) => {
           padding: 16,
           marginBottom: 16,
         }}
-        onPress={onPress}
+        onPress={refreshWeatherData}
       >
-        <Text
-          style={{
-            fontSize: 16,
-            color: theme.textColor,
-            textAlign: 'center',
-            padding: 16,
-          }}
-        >
-          {t('Unable to load weather data')}
-        </Text>
+        <View style={{ alignItems: 'center', padding: 16 }}>
+          <Ionicons
+            name="cloud-offline-outline"
+            size={32}
+            color={theme.textColor}
+            style={{ marginBottom: 8 }}
+          />
+          <Text
+            style={{
+              fontSize: 16,
+              color: theme.textColor,
+              textAlign: 'center',
+              marginBottom: 12,
+            }}
+          >
+            {t('Unable to load weather data')}
+          </Text>
+          <TouchableOpacity
+            style={{
+              backgroundColor: theme.primaryColor,
+              paddingHorizontal: 16,
+              paddingVertical: 8,
+              borderRadius: 20,
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}
+            onPress={refreshWeatherData}
+          >
+            <Ionicons
+              name="refresh-outline"
+              size={18}
+              color="#fff"
+              style={{ marginRight: 6 }}
+            />
+            <Text style={{ color: '#fff', fontWeight: 'bold' }}>
+              {t('Refresh')}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </TouchableOpacity>
     )
   }

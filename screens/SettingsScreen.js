@@ -1,18 +1,19 @@
 'use client'
 
-import { useContext, useState, useEffect } from 'react'
 import {
   View,
   Text,
-  StyleSheet,
-  TouchableOpacity,
-  Switch,
   ScrollView,
-  TextInput,
-  Modal,
+  TouchableOpacity,
+  Alert,
+  Switch,
 } from 'react-native'
-import { Ionicons, Feather, MaterialIcons } from '@expo/vector-icons'
+import { useCallback, useState, useMemo, useEffect, useContext } from 'react'
+import { MaterialIcons } from '@expo/vector-icons'
 import { AppContext } from '../context/AppContext'
+import Constants from 'expo-constants' // Import Constants to get app version
+import { useTheme } from '../context/ThemeContext'
+import { createSettingsScreenStyles } from '../styles/screens/settingsScreenThemed'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 const SettingsScreen = ({ navigation }) => {
@@ -21,498 +22,450 @@ const SettingsScreen = ({ navigation }) => {
 
   const {
     t,
-    darkMode,
     language,
     notificationSound,
     notificationVibration,
-    alarmPermissionGranted,
     onlyGoWorkMode,
     // Functions
-    toggleDarkMode,
     changeLanguage,
     toggleNotificationSound,
     toggleNotificationVibration,
     toggleOnlyGoWorkMode,
-    requestAlarmPermission,
   } = useContext(AppContext)
 
-  const languages = [
-    { id: 'vi', name: 'Tiếng Việt' },
-    { id: 'en', name: 'English' },
-  ]
+  const { toggleTheme, colors, theme } = useTheme()
+  const darkMode = theme === 'dark'
 
-  const [showLanguageModal, setShowLanguageModal] = useState(false)
+  // Tạo styles dựa trên theme hiện tại
+  const styles = useMemo(() => createSettingsScreenStyles(colors), [colors])
 
-  const handleLanguageChange = (langId) => {
-    changeLanguage(langId)
-    setShowLanguageModal(false)
-  }
+  // Get app version from app.json via Constants
+  // Handle both older and newer versions of Expo Constants
+  const appVersion =
+    Constants.manifest?.version || // older versions of Expo
+    Constants.expoConfig?.version || // newer versions of Expo
+    '1.0.0'
 
+  // Local state for settings
+  const [timeFormat, setTimeFormat] = useState('24h')
+  const [firstDayOfWeek, setFirstDayOfWeek] = useState('Mon')
   const [weatherAlertsEnabled, setWeatherAlertsEnabled] = useState(true)
+  const [shiftReminderMode, setShiftReminderMode] = useState('ask_weekly')
+  const [multiButtonMode, setMultiButtonMode] = useState(
+    onlyGoWorkMode ? 'simple' : 'full'
+  )
 
+  // Load settings from AsyncStorage
   useEffect(() => {
-    // Load weather alerts setting
-    const loadWeatherAlertsSetting = async () => {
+    const loadSettings = async () => {
       try {
-        const value = await AsyncStorage.getItem('weatherAlertsEnabled')
-        if (value !== null) {
-          setWeatherAlertsEnabled(value === 'true')
+        // Load weather alerts setting
+        const weatherAlerts = await AsyncStorage.getItem('weatherAlertsEnabled')
+        if (weatherAlerts !== null) {
+          setWeatherAlertsEnabled(weatherAlerts === 'true')
         }
+
+        // Load time format
+        const format = await AsyncStorage.getItem('timeFormat')
+        if (format !== null) {
+          setTimeFormat(format)
+        }
+
+        // Load first day of week
+        const firstDay = await AsyncStorage.getItem('firstDayOfWeek')
+        if (firstDay !== null) {
+          setFirstDayOfWeek(firstDay)
+        }
+
+        // Load shift reminder mode
+        const reminderMode = await AsyncStorage.getItem('shiftReminderMode')
+        if (reminderMode !== null) {
+          setShiftReminderMode(reminderMode)
+        }
+
+        // Set multiButtonMode based on onlyGoWorkMode
+        setMultiButtonMode(onlyGoWorkMode ? 'simple' : 'full')
       } catch (error) {
-        console.error('Error loading weather alerts setting:', error)
+        console.error('Error loading settings:', error)
       }
     }
 
-    loadWeatherAlertsSetting()
-  }, [])
+    loadSettings()
+  }, [onlyGoWorkMode])
 
-  const toggleWeatherAlerts = (value) => {
+  // Language options
+  const languageOptions = [
+    { label: 'Tiếng Việt', value: 'vi' },
+    { label: 'English', value: 'en' },
+  ]
+
+  // Multi-button mode options
+  const buttonModeOptions = [
+    { label: 'Đầy đủ', value: 'full' },
+    { label: 'Đơn giản', value: 'simple' },
+  ]
+
+  // Shift reminder mode options
+  const reminderModeOptions = [
+    { label: 'Hỏi hàng tuần', value: 'ask_weekly' },
+    { label: 'Tự động xoay ca', value: 'rotate' },
+    { label: 'Tắt', value: 'disabled' },
+  ]
+
+  // First day of week options
+  const weekStartOptions = [
+    { label: 'Thứ 2', value: 'Mon' },
+    { label: 'Chủ nhật', value: 'Sun' },
+  ]
+
+  // Handle language change
+  const handleLanguageChange = useCallback(
+    async (value) => {
+      try {
+        // Cập nhật ngôn ngữ trong LocalizationContext
+        await changeLanguage(value)
+
+        // Hiển thị thông báo thành công
+        Alert.alert(
+          t('common.success'),
+          t('settings.languageChanged') ||
+            'Ngôn ngữ đã được thay đổi thành công'
+        )
+      } catch (error) {
+        console.error('Error changing language:', error)
+        Alert.alert(
+          t('common.error'),
+          t('settings.languageChangeFailed') || 'Không thể thay đổi ngôn ngữ'
+        )
+      }
+    },
+    [changeLanguage, t]
+  )
+
+  // Handle dark mode toggle
+  const handleDarkModeToggle = useCallback(
+    (value) => {
+      // Sử dụng toggleTheme từ ThemeContext
+      toggleTheme(value ? 'dark' : 'light')
+    },
+    [toggleTheme]
+  )
+
+  // Handle notification sound toggle
+  const handleNotificationSoundToggle = useCallback(() => {
+    toggleNotificationSound()
+  }, [toggleNotificationSound])
+
+  // Handle notification vibration toggle
+  const handleNotificationVibrationToggle = useCallback(() => {
+    toggleNotificationVibration()
+  }, [toggleNotificationVibration])
+
+  // Handle weather alerts toggle
+  const handleWeatherAlertsToggle = useCallback((value) => {
     setWeatherAlertsEnabled(value)
     // Save setting to AsyncStorage
     AsyncStorage.setItem('weatherAlertsEnabled', value.toString())
-  }
+  }, [])
+
+  // Handle multi-button mode change
+  const handleButtonModeChange = useCallback(() => {
+    // Cập nhật onlyGoWorkMode dựa trên giá trị multiButtonMode
+    toggleOnlyGoWorkMode()
+  }, [toggleOnlyGoWorkMode])
+
+  // Handle shift reminder mode change
+  const handleReminderModeChange = useCallback((value) => {
+    setShiftReminderMode(value)
+    AsyncStorage.setItem('shiftReminderMode', value)
+  }, [])
+
+  // Handle time format toggle
+  const handleTimeFormatToggle = useCallback((value) => {
+    const newFormat = value ? '24h' : '12h'
+    setTimeFormat(newFormat)
+    AsyncStorage.setItem('timeFormat', newFormat)
+  }, [])
+
+  // Handle first day of week change
+  const handleWeekStartChange = useCallback((value) => {
+    setFirstDayOfWeek(value)
+    AsyncStorage.setItem('firstDayOfWeek', value)
+  }, [])
 
   return (
-    <ScrollView style={[styles.container, darkMode && styles.darkContainer]}>
-      {/* 1. General Settings */}
+    <ScrollView style={styles.container}>
+      {/* Theme Section */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <MaterialIcons
-            name="settings"
-            size={24}
-            color={darkMode ? '#fff' : '#000'}
-          />
-          <Text style={[styles.sectionTitle, darkMode && styles.darkText]}>
-            {t('General Settings')}
+          <Text style={styles.sectionTitle}>{t('Chế độ tối')}</Text>
+          <Text style={styles.sectionDescription}>
+            {t(
+              'Bật chế độ tối để trải nghiệm giao diện tối hơn trong ứng dụng'
+            )}
           </Text>
         </View>
-
-        {/* Dark Mode Setting */}
-        <View style={styles.settingItem}>
-          <View style={styles.settingLabelContainer}>
-            <Text style={[styles.settingLabel, darkMode && styles.darkText]}>
-              {t('Dark Mode')}
-            </Text>
-          </View>
+        <View style={styles.settingRow}>
+          <Text style={styles.settingLabel}>{t('Bật chế độ tối')}</Text>
           <Switch
+            trackColor={{ false: '#D1D1D6', true: colors.switchActive }}
+            thumbColor={'#FFFFFF'}
+            ios_backgroundColor="#D1D1D6"
+            onValueChange={handleDarkModeToggle}
             value={darkMode}
-            onValueChange={toggleDarkMode}
-            trackColor={{ false: '#767577', true: '#8a56ff' }}
-            thumbColor={darkMode ? '#fff' : '#f4f3f4'}
+            style={styles.switch}
           />
         </View>
+      </View>
 
-        {/* Language Setting */}
+      {/* Language Section */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>{t('Ngôn ngữ')}</Text>
+        </View>
         <TouchableOpacity
-          style={[styles.menuItem, darkMode && styles.darkCard]}
-          onPress={() => setShowLanguageModal(true)}
+          style={styles.settingRow}
+          onPress={() => {
+            // Show language picker
+            Alert.alert(
+              t('Chọn ngôn ngữ'),
+              t('Chọn ngôn ngữ hiển thị cho ứng dụng'),
+              languageOptions.map((option) => ({
+                text: option.label,
+                onPress: () => handleLanguageChange(option.value),
+              }))
+            )
+          }}
         >
-          <View style={styles.menuIconContainer}>
+          <Text style={styles.settingLabel}>{t('Ngôn ngữ')}</Text>
+          <View style={styles.languageSelector}>
+            <Text style={styles.languageText}>
+              {languageOptions.find((option) => option.value === language)
+                ?.label || 'Tiếng Việt'}
+            </Text>
             <MaterialIcons
-              name="language"
-              size={24}
-              color={darkMode ? '#fff' : '#000'}
+              name="chevron-right"
+              size={20}
+              color={colors.darkTextSecondary}
             />
-          </View>
-          <View style={styles.menuTextContainer}>
-            <Text style={[styles.menuTitle, darkMode && styles.darkText]}>
-              {t('Language')}
-            </Text>
-            <Text
-              style={[styles.menuDescription, darkMode && styles.darkSubtitle]}
-            >
-              {languages.find((lang) => lang.id === language)?.name}
-            </Text>
           </View>
         </TouchableOpacity>
       </View>
 
-      {/* 2. Work Settings */}
+      {/* Notifications Section */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <MaterialIcons
-            name="work"
-            size={24}
-            color={darkMode ? '#fff' : '#000'}
-          />
-          <Text style={[styles.sectionTitle, darkMode && styles.darkText]}>
-            {t('Work Settings')}
-          </Text>
+          <Text style={styles.sectionTitle}>{t('Thông báo')}</Text>
         </View>
 
-        <View style={styles.settingItem}>
-          <View style={styles.settingLabelContainer}>
-            <Text style={[styles.settingLabel, darkMode && styles.darkText]}>
-              {t('Only Go Work Mode')}
+        <View style={styles.settingRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.settingLabel}>{t('Âm thanh thông báo')}</Text>
+            <Text style={styles.settingDescription}>
+              {t('Phát âm thanh khi có thông báo')}
             </Text>
-            <Text
-              style={[
-                styles.settingDescription,
-                darkMode && styles.darkSubtitle,
-              ]}
-            >
+          </View>
+          <Switch
+            trackColor={{ false: '#D1D1D6', true: colors.switchActive }}
+            thumbColor={'#FFFFFF'}
+            ios_backgroundColor="#D1D1D6"
+            value={notificationSound}
+            onValueChange={handleNotificationSoundToggle}
+            style={styles.switch}
+          />
+        </View>
+
+        <View style={styles.settingRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.settingLabel}>{t('Rung thông báo')}</Text>
+            <Text style={styles.settingDescription}>
+              {t('Rung khi có thông báo')}
+            </Text>
+          </View>
+          <Switch
+            trackColor={{ false: '#D1D1D6', true: colors.switchActive }}
+            thumbColor={'#FFFFFF'}
+            ios_backgroundColor="#D1D1D6"
+            value={notificationVibration}
+            onValueChange={handleNotificationVibrationToggle}
+            style={styles.switch}
+          />
+        </View>
+      </View>
+
+      {/* Weather Alerts Section */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>{t('Cảnh báo thời tiết')}</Text>
+        </View>
+
+        <View style={styles.settingRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.settingLabel}>
+              {t('Nhận cảnh báo về thời tiết')}
+            </Text>
+            <Text style={styles.settingDescription}>
               {t(
-                'Only show Go Work button instead of the full attendance flow'
+                'Nhận cảnh báo về thời tiết cực đoan để bạn luôn được thông báo kịp thời'
               )}
             </Text>
           </View>
           <Switch
-            value={onlyGoWorkMode}
-            onValueChange={toggleOnlyGoWorkMode}
-            trackColor={{ false: '#767577', true: '#8a56ff' }}
-            thumbColor={onlyGoWorkMode ? '#fff' : '#f4f3f4'}
-          />
-        </View>
-      </View>
-
-      {/* 3. Notification Settings */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <MaterialIcons
-            name="notifications"
-            size={24}
-            color={darkMode ? '#fff' : '#000'}
-          />
-          <Text style={[styles.sectionTitle, darkMode && styles.darkText]}>
-            {t('Notification Settings')}
-          </Text>
-        </View>
-
-        <View style={styles.settingItem}>
-          <View style={styles.settingLabelContainer}>
-            <Text style={[styles.settingLabel, darkMode && styles.darkText]}>
-              {t('Sound')}
-            </Text>
-          </View>
-          <Switch
-            value={notificationSound}
-            onValueChange={toggleNotificationSound}
-            trackColor={{ false: '#767577', true: '#8a56ff' }}
-            thumbColor={notificationSound ? '#fff' : '#f4f3f4'}
-          />
-        </View>
-
-        <View style={styles.settingItem}>
-          <View style={styles.settingLabelContainer}>
-            <Text style={[styles.settingLabel, darkMode && styles.darkText]}>
-              {t('Vibration')}
-            </Text>
-          </View>
-          <Switch
-            value={notificationVibration}
-            onValueChange={toggleNotificationVibration}
-            trackColor={{ false: '#767577', true: '#8a56ff' }}
-            thumbColor={notificationVibration ? '#fff' : '#f4f3f4'}
-          />
-        </View>
-      </View>
-
-      {/* 4. Weather Settings */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <MaterialIcons
-            name="cloud"
-            size={24}
-            color={darkMode ? '#fff' : '#000'}
-          />
-          <Text style={[styles.sectionTitle, darkMode && styles.darkText]}>
-            {t('Weather Settings')}
-          </Text>
-        </View>
-
-        <View style={styles.settingItem}>
-          <View style={styles.settingLabelContainer}>
-            <Text style={[styles.settingLabel, darkMode && styles.darkText]}>
-              {t('Weather Alerts')}
-            </Text>
-          </View>
-          <Switch
+            trackColor={{ false: '#D1D1D6', true: colors.switchActive }}
+            thumbColor={'#FFFFFF'}
+            ios_backgroundColor="#D1D1D6"
             value={weatherAlertsEnabled}
-            onValueChange={toggleWeatherAlerts}
-            trackColor={{ false: '#767577', true: '#8a56ff' }}
-            thumbColor={weatherAlertsEnabled ? '#fff' : '#f4f3f4'}
+            onValueChange={handleWeatherAlertsToggle}
+            style={styles.switch}
           />
         </View>
       </View>
 
-      {/* 5. Debug Section */}
+      {/* Multi-function Button Section */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <MaterialIcons
-            name="bug-report"
-            size={24}
-            color={darkMode ? '#fff' : '#000'}
-          />
-          <Text style={[styles.sectionTitle, darkMode && styles.darkText]}>
-            {t('Debug')}
-          </Text>
+          <Text style={styles.sectionTitle}>{t('Nút đa năng')}</Text>
         </View>
 
         <TouchableOpacity
-          style={[styles.menuItem, darkMode && styles.darkCard]}
-          onPress={() => navigation.navigate('Debug')}
+          style={styles.settingRow}
+          onPress={() => {
+            // Show button mode picker
+            Alert.alert(
+              t('Chế độ nút đa năng'),
+              t('Chọn chế độ hiển thị cho nút đa năng'),
+              buttonModeOptions.map((option) => ({
+                text: option.label,
+                onPress: () => handleButtonModeChange(option.value),
+              }))
+            )
+          }}
         >
-          <View style={styles.menuIconContainer}>
+          <Text style={styles.settingLabel}>{t('Chế độ nút đa năng')}</Text>
+          <View style={styles.languageSelector}>
+            <Text style={styles.languageText}>
+              {buttonModeOptions.find(
+                (option) =>
+                  option.value === (onlyGoWorkMode ? 'simple' : 'full')
+              )?.label || 'Đầy đủ'}
+            </Text>
             <MaterialIcons
-              name="code"
-              size={24}
-              color={darkMode ? '#fff' : '#000'}
+              name="chevron-right"
+              size={20}
+              color={colors.darkTextSecondary}
             />
-          </View>
-          <View style={styles.menuTextContainer}>
-            <Text style={[styles.menuTitle, darkMode && styles.darkText]}>
-              {t('Debug Tools')}
-            </Text>
-            <Text
-              style={[styles.menuDescription, darkMode && styles.darkSubtitle]}
-            >
-              {t('Troubleshoot data loading issues')}
-            </Text>
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.menuItem, darkMode && styles.darkCard]}
-          onPress={() => navigation.navigate('NotesDebug')}
-        >
-          <View style={styles.menuIconContainer}>
-            <MaterialIcons
-              name="note"
-              size={24}
-              color={darkMode ? '#fff' : '#000'}
-            />
-          </View>
-          <View style={styles.menuTextContainer}>
-            <Text style={[styles.menuTitle, darkMode && styles.darkText]}>
-              {t('Notes Debug')}
-            </Text>
-            <Text
-              style={[styles.menuDescription, darkMode && styles.darkSubtitle]}
-            >
-              {t('Fix issues with notes loading')}
-            </Text>
           </View>
         </TouchableOpacity>
       </View>
-      {/* Language Selection Modal */}
-      <Modal
-        visible={showLanguageModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowLanguageModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View
-            style={[styles.modalContent, darkMode && styles.darkModalContent]}
-          >
-            <Text style={[styles.modalTitle, darkMode && styles.darkText]}>
-              {t('Select Language')}
-            </Text>
 
-            {languages.map((lang) => (
-              <TouchableOpacity
-                key={lang.id}
-                style={[
-                  styles.languageOption,
-                  darkMode && styles.darkLanguageOption,
-                  language === lang.id && styles.selectedLanguageOption,
-                  language === lang.id &&
-                    darkMode &&
-                    styles.darkSelectedLanguageOption,
-                ]}
-                onPress={() => handleLanguageChange(lang.id)}
-              >
-                <Text
-                  style={[
-                    styles.languageText,
-                    darkMode && styles.darkText,
-                    language === lang.id && styles.selectedLanguageText,
-                  ]}
-                >
-                  {lang.name}
-                </Text>
-                {language === lang.id && (
-                  <MaterialIcons name="check" size={24} color="#8a56ff" />
-                )}
-              </TouchableOpacity>
-            ))}
-
-            <TouchableOpacity
-              style={[styles.cancelButton, darkMode && styles.darkCancelButton]}
-              onPress={() => setShowLanguageModal(false)}
-            >
-              <Text style={styles.cancelButtonText}>{t('Cancel')}</Text>
-            </TouchableOpacity>
-          </View>
+      {/* Shift Reminder Section */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>{t('Nhắc nhở ca làm việc')}</Text>
         </View>
-      </Modal>
+
+        <TouchableOpacity
+          style={styles.settingRow}
+          onPress={() => {
+            // Show reminder mode picker
+            Alert.alert(
+              t('Chế độ nhắc nhở đổi ca'),
+              t('Chọn chế độ nhắc nhở đổi ca'),
+              reminderModeOptions.map((option) => ({
+                text: option.label,
+                onPress: () => handleReminderModeChange(option.value),
+              }))
+            )
+          }}
+        >
+          <Text style={styles.settingLabel}>{t('Chế độ nhắc nhở đổi ca')}</Text>
+          <View style={styles.languageSelector}>
+            <Text style={styles.languageText}>
+              {reminderModeOptions.find(
+                (option) => option.value === shiftReminderMode
+              )?.label || 'Hỏi hàng tuần'}
+            </Text>
+            <MaterialIcons
+              name="chevron-right"
+              size={20}
+              color={colors.darkTextSecondary}
+            />
+          </View>
+        </TouchableOpacity>
+      </View>
+
+      {/* Display Settings Section */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>{t('Hiển thị')}</Text>
+        </View>
+
+        <View style={styles.settingRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.settingLabel}>{t('Định dạng 24 giờ')}</Text>
+            <Text style={styles.settingDescription}>
+              {t(
+                'Hiển thị giờ theo định dạng 24 giờ (13:00) thay vì 12 giờ (1:00 PM)'
+              )}
+            </Text>
+          </View>
+          <Switch
+            trackColor={{ false: '#D1D1D6', true: colors.switchActive }}
+            thumbColor={'#FFFFFF'}
+            ios_backgroundColor="#D1D1D6"
+            value={timeFormat === '24h'}
+            onValueChange={handleTimeFormatToggle}
+            style={styles.switch}
+          />
+        </View>
+
+        <TouchableOpacity
+          style={styles.settingRow}
+          onPress={() => {
+            // Show week start picker
+            Alert.alert(
+              t('Ngày bắt đầu tuần'),
+              t('Chọn ngày bắt đầu tuần'),
+              weekStartOptions.map((option) => ({
+                text: option.label,
+                onPress: () => handleWeekStartChange(option.value),
+              }))
+            )
+          }}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={styles.settingLabel}>{t('Ngày bắt đầu tuần')}</Text>
+            <Text style={styles.settingDescription}>
+              {t('Ngày đầu tiên trong tuần khi xem lịch')}
+            </Text>
+          </View>
+          <View style={styles.languageSelector}>
+            <Text style={styles.languageText}>
+              {weekStartOptions.find(
+                (option) => option.value === firstDayOfWeek
+              )?.label || 'Thứ 2'}
+            </Text>
+            <MaterialIcons
+              name="chevron-right"
+              size={20}
+              color={colors.darkTextSecondary}
+            />
+          </View>
+        </TouchableOpacity>
+      </View>
+
+      {/* App Info Section */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>{t('Thông tin ứng dụng')}</Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>{t('Phiên bản')}</Text>
+          <Text style={styles.infoValue}>{appVersion}</Text>
+        </View>
+      </View>
     </ScrollView>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 16,
-  },
-  darkContainer: {
-    backgroundColor: '#121212',
-  },
-  darkText: {
-    color: '#fff',
-  },
-  darkSubtitle: {
-    color: '#aaa',
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000',
-    marginLeft: 8,
-  },
-  darkCard: {
-    backgroundColor: '#1e1e1e',
-  },
-  settingItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  settingLabelContainer: {
-    flex: 1,
-  },
-  settingLabel: {
-    fontSize: 16,
-    color: '#000',
-    marginBottom: 4,
-  },
-  settingDescription: {
-    fontSize: 12,
-    color: '#666',
-  },
-
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  menuIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  menuTextContainer: {
-    flex: 1,
-  },
-  menuTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#000',
-    marginBottom: 4,
-  },
-  menuDescription: {
-    fontSize: 14,
-    color: '#666',
-  },
-
-  modalOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  modalContent: {
-    width: '80%',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    maxHeight: '80%',
-  },
-
-  darkModalContent: {
-    backgroundColor: '#2a2a2a',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
-    color: '#333',
-  },
-  languageOption: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginBottom: 8,
-    backgroundColor: '#f0f0f0',
-  },
-  darkLanguageOption: {
-    backgroundColor: '#3a3a3a',
-  },
-  selectedLanguageOption: {
-    backgroundColor: '#e6e0ff',
-  },
-  darkSelectedLanguageOption: {
-    backgroundColor: '#4a3b80',
-  },
-  languageText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  selectedLanguageText: {
-    fontWeight: 'bold',
-    color: '#8a56ff',
-  },
-
-  cancelButton: {
-    flex: 1,
-    marginRight: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    backgroundColor: '#f0f0f0',
-    alignItems: 'center',
-  },
-  darkCancelButton: {
-    backgroundColor: '#3a3a3a',
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    color: '#8a56ff',
-    fontWeight: 'bold',
-  },
-})
 
 export default SettingsScreen

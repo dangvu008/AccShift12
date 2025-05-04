@@ -17,6 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 // @ts-ignore
 import './types.js'
 import { AppProvider, AppContext } from './context/AppContext'
+import { ThemeProvider } from './context/ThemeContext'
 import { createSampleNotes } from './utils/sampleNotes'
 import { STORAGE_KEYS } from './config/appConfig'
 
@@ -500,13 +501,13 @@ export default function App() {
   }, [])
 
   return (
-    <AppProvider
-      children={
+    <AppProvider>
+      <ThemeProvider>
         <NavigationContainer>
           <AppContent notification={notification} />
         </NavigationContainer>
-      }
-    ></AppProvider>
+      </ThemeProvider>
+    </AppProvider>
   )
 }
 
